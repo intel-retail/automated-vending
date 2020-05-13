@@ -1,0 +1,21 @@
+---
+
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+version: '3.4'
+
+services:
+
+#################################################################
+# Automated Checkout Microservices
+#################################################################
+
+  # this device service must be run as root to mount the device
+  ds-controller-board:
+    user: "0:0"
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    environment:
+      Driver_VirtualControllerBoard: "false"
+...

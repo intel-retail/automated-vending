@@ -1,0 +1,39 @@
+{
+    "accounts": [{
+        "accountID": 1,
+        "address": "1234 Somewhere Blvd",
+        "creditCardNumber": "1234123412341234",
+        "phoneNumber": "5554441234",
+        "emailAddress": "someone@site.com",
+        "createdAt": "1560815799",
+        "updatedAt": "1560815799",
+        "isActive": true
+    }, {
+        "accountID": 2,
+        "address": "1234 Somewhere Blvd",
+        "creditCardNumber": "1234123412341234",
+        "phoneNumber": "5554441234",
+        "emailAddress": "someone@site.com",
+        "createdAt": "1560815799",
+        "updatedAt": "1560815799",
+        "isActive": true
+    }, {
+        "accountID": 3,
+        "address": "1234 Somewhere Blvd",
+        "creditCardNumber": "1234123412341234",
+        "phoneNumber": "5554441234",
+        "emailAddress": "someone@site.com",
+        "createdAt": "1560815799",
+        "updatedAt": "1560815799",
+        "isActive": true
+    }, {
+        "accountID": 4,
+        "address": "1234 Somewhere Blvd",
+        "creditCardNumber": "1234123412341234",
+        "phoneNumber": "5554441234",
+        "emailAddress": "someone@site.com",
+        "createdAt": "1560815799",
+        "updatedAt": "1560815799",
+        "isActive": true
+    }]
+}

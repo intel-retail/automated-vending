@@ -1,0 +1,316 @@
+---
+
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+version: '3.4'
+
+# all common shared environment variables defined here:
+x-common-env-variables: &common-variables
+  EDGEX_SECURITY_SECRET_STORE: "false"
+  edgex_registry: consul://edgex-core-consul:8500
+  Clients_CoreData_Host: edgex-core-data
+  Clients_Logging_Host: edgex-support-logging
+
+x-logging: &logging
+  logging:
+    options: {max-file: '5', max-size: 100m}
+
+volumes:
+  db-data:
+  log-data:
+  consul-config:
+  consul-data:
+  portainer_data:
+
+services:
+  volume:
+    image: edgexfoundry/docker-edgex-volume:1.1.0
+    container_name: edgex-files
+    volumes:
+      - db-data:/data/db:z
+      - log-data:/edgex/logs:z
+      - consul-config:/consul/config:z
+      - consul-data:/consul/data:z
+    restart: always
+
+  consul:
+    image: consul:1.3.1
+    container_name: edgex-core-consul
+    hostname: edgex-core-consul
+    volumes:
+      # The consul-config volume offers more security features like Kong, but
+      # this reference implementation does not use it. To prevent Kong service
+      # health checks from flooding DNS, the consul-config mount has been
+      # commented out.
+      # - consul-config:/consul/config:z
+      - consul-data:/consul/data:z
+    depends_on:
+      - volume
+    restart: always
+    ports:
+      - "127.0.0.1:8400:8400"
+      - "127.0.0.1:8500:8500"
+      - "127.0.0.1:8600:8600"
+
+  config-seed:
+    image: edgexfoundry/docker-core-config-seed-go:1.1.0
+    container_name: edgex-config-seed
+    hostname: edgex-core-config-seed
+    volumes:
+      - log-data:/edgex/logs:z
+    depends_on:
+      - volume
+      - consul
+    environment:
+      <<: *common-variables
+      Logging_EnableRemote: "true"
+      Smtp_Username: "your-email@site.com"
+      Smtp_Password: "SomePassword00000!"
+      Smtp_Sender: "your-email@site.com"
+      Smtp_Subject: "Automated Checkout Maintenance Alert"
+
+  mongo:
+    image: edgexfoundry/docker-edgex-mongo:1.1.0
+    container_name: edgex-mongo
+    hostname: edgex-mongo
+    environment:
+      <<: *common-variables
+    volumes:
+      - db-data:/data/db:z
+    depends_on:
+      - volume
+    restart: always
+    ports:
+      - "127.0.0.1:27017:27017"
+
+  logging:
+    image: edgexfoundry/docker-support-logging-go:1.1.0
+    container_name: edgex-support-logging
+    hostname: edgex-support-logging
+    environment:
+      <<: *common-variables
+    volumes:
+      - log-data:/edgex/logs:z
+    depends_on:
+      - config-seed
+      - mongo
+      - volume
+    restart: always
+    ports:
+      - "127.0.0.1:48061:48061"
+
+  notifications:
+    image: edgexfoundry/docker-support-notifications-go:1.1.0
+    container_name: edgex-support-notifications
+    hostname: edgex-support-notifications
+    environment:
+      <<: *common-variables
+    depends_on:
+      - logging
+    restart: always
+    ports:
+      - "127.0.0.1:48060:48060"
+
+  metadata:
+    image: edgexfoundry/docker-core-metadata-go:1.1.0
+    container_name: edgex-core-metadata
+    hostname: edgex-core-metadata
+    environment:
+      <<: *common-variables
+    depends_on:
+      - logging
+    restart: always
+    ports:
+      - "127.0.0.1:48081:48081"
+
+  data:
+    image: edgexfoundry/docker-core-data-go:1.1.0
+    container_name: edgex-core-data
+    hostname: edgex-core-data
+    environment:
+      <<: *common-variables
+    depends_on:
+      - logging
+    restart: always
+    ports:
+      - "127.0.0.1:48080:48080"
+      - "127.0.0.1:5563:5563"
+
+  command:
+    image: edgexfoundry/docker-core-command-go:1.1.0
+    container_name: edgex-core-command
+    hostname: edgex-core-command
+    environment:
+      <<: *common-variables
+    depends_on:
+      - metadata
+    restart: always
+    ports:
+      - "127.0.0.1:48082:48082"
+
+#################################################################
+# Automated Checkout Microservices
+#################################################################
+
+  ds-card-reader:
+    user: "2000:2000"
+    image: "automated-checkout/ds-card-reader:dev"
+    container_name: automated-checkout_ds-card-reader
+    environment:
+      <<: *common-variables
+    <<: *logging
+    depends_on:
+      - data
+      - command
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48098:48098"
+
+  as-vending:
+    user: "2000:2000"
+    image: "automated-checkout/as-vending:dev"
+    container_name: automated-checkout_as-vending
+    environment:
+      <<: *common-variables
+    <<: *logging
+    depends_on:
+      - data
+      - command
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48099:48099"
+
+  ds-controller-board:
+    user: "2000:2000"
+    image: "automated-checkout/ds-controller-board:dev"
+    container_name: automated-checkout_ds-controller-board
+    environment:
+      <<: *common-variables
+    <<: *logging
+    depends_on:
+      - data
+      - command
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48097:48097"
+
+  ms-authentication:
+    user: "2000:2000"
+    image: "automated-checkout/ms-authentication:dev"
+    container_name: automated-checkout_ms-authentication
+    environment:
+      <<: *common-variables
+    <<: *logging
+    depends_on:
+      - data
+      - command
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48096:48096"
+
+  ms-ledger:
+    user: "2000:2000"
+    image: "automated-checkout/ms-ledger:dev"
+    container_name: automated-checkout_ms-ledger
+    environment:
+      <<: *common-variables
+    <<: *logging
+    depends_on:
+      - data
+      - command
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48093:48093"
+
+  ms-inventory:
+    user: "2000:2000"
+    image: "automated-checkout/ms-inventory:dev"
+    container_name: automated-checkout_ms-inventory
+    depends_on:
+      - data
+      - command
+    environment:
+      <<: *common-variables
+    <<: *logging
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48095:48095"
+
+  as-controller-board-status:
+    user: "2000:2000"
+    image: "automated-checkout/as-controller-board-status:dev"
+    container_name: automated-checkout_as-controller-board-status
+    environment:
+      <<: *common-variables
+    <<: *logging
+    depends_on:
+      - data
+      - command
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48094:48094"
+
+  ds-inference-mock:
+    user: "2000:2000"
+    image: "automated-checkout/ds-inference-mock:dev"
+    container_name: automated-checkout_ds-inference-mock
+    environment:
+      <<: *common-variables
+    volumes:
+      - ./ds-inference-mock/sku_delta_sequence.json:/sku_delta_sequence.json:ro
+    command: --broker mqtt-broker --port 1883 --test_sequence sku_delta_sequence.json
+    <<: *logging
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:1884:1883"
+
+
+  device-mqtt:
+    user: "2000:2000"
+    image: edgexfoundry/docker-device-mqtt-go:1.1.0
+    container_name: edgex-device-mqtt
+    hostname: edgex-device-mqtt
+    environment:
+      <<: *common-variables
+    entrypoint:
+      - /device-mqtt
+      - --profile=docker
+      - --confdir=/res
+    <<: *logging
+    volumes:
+      - ./res/device-mqtt:/res:ro
+    depends_on:
+      - data
+      - command
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:48100:48100"
+
+  mqtt-broker:
+    image: eclipse-mosquitto:1.6.3
+    container_name: mqtt-broker
+    volumes:
+      - ./res/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    <<: *logging
+    depends_on:
+      - data
+    restart: always
+    ipc: none
+    ports:
+      - "127.0.0.1:1883:1883"
+      - "127.0.0.1:9001:9001"
+
+networks:
+  default:
+
+...

@@ -1,0 +1,77 @@
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Writable]
+LogLevel = "INFO"
+
+[Service]
+Host = "ds-controller-board"
+Port = 48097
+ConnectRetries = 100
+Labels = []
+OpenMsg = "device controller board started"
+ReadMaxLimit = 256
+Timeout = 5000
+EnableAsyncReadings = true
+AsyncBufferSize = 16
+
+[Registry]
+Host = "edgex-core-consul"
+Port = 8500
+CheckInterval = "10s"
+FailLimit = 3
+FailWaitTime = 10
+Type = "consul"
+
+[Logging]
+EnableRemote = true
+
+[Clients]
+  [Clients.Data]
+  Host = "edgex-core-data"
+  Protocol = "http"
+  Port = 48080
+  Timeout = 5000
+
+  [Clients.Metadata]
+  Host = "edgex-core-metadata"
+  Protocol = "http"
+  Port = 48081
+  Timeout = 5000
+
+  [Clients.Logging]
+  Host = "edgex-support-logging"
+  Protocol = "http"
+  Port = 48061
+
+[Device]
+  DataTransform = true
+  InitCmd = ""
+  InitCmdArgs = ""
+  MaxCmdOps = 128
+  MaxCmdValueLen = 256
+  RemoveCmd = ""
+  RemoveCmdArgs = ""
+  ProfilesDir = "./res"
+
+[Driver]
+  VID = "2341"
+  PID = "8037"
+  DisplayTimeout = "10s"
+  LockTimeout = "30s"
+  VirtualControllerBoard = "true"
+
+# Pre-define Devices
+[[DeviceList]]
+  Name = "ds-controller-board"
+  Profile = "ds-controller-board"
+  Description = "ds-controller-board-description"
+  Labels = [ "ds-controller-board-label" ]
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.other]
+      Address = "device-scale-01"
+      Port = "300"
+    [[DeviceList.AutoEvents]]
+      Frequency = "3s"
+      OnChange = true
+      Resource = "controller-board-status"

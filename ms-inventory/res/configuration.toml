@@ -1,0 +1,43 @@
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Writable]
+LogLevel = 'INFO'
+
+[Service]
+BootTimeout = '30'
+ClientMonitor = '15s'
+CheckInterval = '10s'
+Host = 'localhost'
+Port = 48095
+Protocol = 'http'
+ReadMaxLimit = 100
+StartupMsg = 'This microservice exposes a CRUD interface for an inventory of items in a Automated Checkout'
+Timeout = '30s'
+
+[Registry]
+Host = "localhost"
+Port = 8500
+Type = 'consul'
+
+[MessageBus]
+Type = 'zero'
+    [MessageBus.PublishHost]
+        Host = '*'
+        Port = 5564
+        Protocol = 'tcp'
+    [MessageBus.SubscribeHost]
+        Host = 'localhost'
+        Port = 5563
+        Protocol = 'tcp'
+
+[Logging]
+EnableRemote = false
+File = './logs/ms-inventory-publish.log'
+
+[Binding]
+Type="http"
+SubscribeTopic=""
+PublishTopic=""
+
+[ApplicationSettings]

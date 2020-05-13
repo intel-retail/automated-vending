@@ -1,0 +1,413 @@
+// Copyright © 2020 Intel Corporation. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+
+package functions
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+
+	"github.com/edgexfoundry/app-functions-sdk-go/appcontext"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+var eventClient coredata.EventClient
+
+var edgexcontext appcontext.Context
+
+func TestMain(m *testing.M) {
+	edgexcontext.CorrelationID = "correlationId"
+	edgexcontext.EventClient = eventClient
+	edgexcontext.LoggingClient = logger.NewClient("output_test", false, "", "DEBUG")
+	err := m.Run()
+	os.Exit(err)
+}
+
+// TestGetMaintenanceMode tests the HTTP GET endpoint '/maintenanceMode' to
+// verify that it reports the correct value of MaintenanceMode in its instance
+// of VendingState.
+func TestGetMaintenanceMode(t *testing.T) {
+	maintModeTrue := MaintenanceMode{
+		MaintenanceMode: true,
+	}
+	maintModeFalse := MaintenanceMode{
+		MaintenanceMode: false,
+	}
+	t.Run("TestGetMaintenanceMode MaintenanceMode=True", func(t *testing.T) {
+		var vendingState VendingState
+		var maintModeAPIResponse MaintenanceMode
+
+		// set the vendingState's MaintenanceMode boolean accordingly
+		vendingState.MaintenanceMode = true
+
+		req := httptest.NewRequest("GET", "/maintenanceMode", nil)
+		w := httptest.NewRecorder()
+
+		// run the actual function in question
+		vendingState.GetMaintenanceMode(w, req)
+
+		// parse the response
+		resp := w.Result()
+		_, err := utilities.ParseJSONHTTPResponseContent(resp.Body, &maintModeAPIResponse)
+		require.NoError(t, err)
+
+		defer resp.Body.Close()
+		assert.Equal(t, maintModeAPIResponse, maintModeTrue, "Received a maintenance mode response that was different than anticipated")
+	})
+	t.Run("TestGetMaintenanceMode MaintenanceMode=False", func(t *testing.T) {
+		var vendingState VendingState
+		var maintModeAPIResponse MaintenanceMode
+
+		// set the vendingState's MaintenanceMode boolean accordingly
+		vendingState.MaintenanceMode = false
+
+		req := httptest.NewRequest("GET", "/maintenanceMode", nil)
+		w := httptest.NewRecorder()
+
+		// run the actual function in question
+		vendingState.GetMaintenanceMode(w, req)
+
+		// parse the response
+		resp := w.Result()
+		_, err := utilities.ParseJSONHTTPResponseContent(resp.Body, &maintModeAPIResponse)
+		require.NoError(t, err)
+
+		defer resp.Body.Close()
+		assert.Equal(t, maintModeAPIResponse, maintModeFalse, "Received a maintenance mode response that was different than anticipated")
+	})
+	t.Run("TestGetMaintenanceMode OPTIONS", func(t *testing.T) {
+		var vendingState VendingState
+
+		req := httptest.NewRequest("OPTIONS", "/maintenanceMode", nil)
+		w := httptest.NewRecorder()
+
+		vendingState.GetMaintenanceMode(w, req)
+
+		// parse the response
+		resp := w.Result()
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		require.NoError(t, err, "Parsing response body threw error")
+		assert.Equal(t, string(body), "", "Response body was not an empty string, expected it to be empty for a pre-flight CORS OPTIONS response")
+		assert.Equal(t, resp.Status, "200 OK", "OPTIONS request did not return 200")
+	})
+}
+
+func TestSetDefaultTimeouts(t *testing.T) {
+	testCases := []struct {
+		TestCaseName string
+		Settings     map[string]string
+		Expected     error
+	}{
+		{"Success", map[string]string{"DoorOpenStateTimeout": "20", "DoorCloseStateTimeout": "20", "InferenceTimeout": "20"}, nil},
+
+		{"DoorOpenStateTimeout error", map[string]string{"DoorOpenStateTimeout": "somestring", "DoorCloseStateTimeout": "20", "InferenceTimeout": "20"},
+			fmt.Errorf("Door Open event timeout not set in configuration. Using default value of %v", DefaultTimeOuts)},
+
+		{"DoorCloseStateTimeout error", map[string]string{"DoorOpenStateTimeout": "20", "DoorCloseStateTimeout": "somestring", "InferenceTimeout": "20"},
+			fmt.Errorf("Door close event timeout not set in configuration. Using default value of %v", DefaultTimeOuts)},
+
+		{"InferenceTimeout error", map[string]string{"DoorOpenStateTimeout": "20", "DoorCloseStateTimeout": "20", "InferenceTimeout": "somestring"},
+			fmt.Errorf("Door close event timeout not set in configuration. Using default value of %v", DefaultTimeOuts)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.TestCaseName, func(t *testing.T) {
+			SetDefaultTimeouts(&VendingState{}, tc.Settings, edgexcontext.LoggingClient)
+		})
+	}
+}
+
+func TestCheckInferenceStatus(t *testing.T) {
+	testCases := []struct {
+		TestCaseName string
+		statusCode   int
+		Expected     bool
+	}{
+		{"Successful case", http.StatusOK, true},
+		{"Negative case", http.StatusInternalServerError, false},
+	}
+
+	for _, tc := range testCases {
+
+		t.Run(tc.TestCaseName, func(t *testing.T) {
+
+			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.statusCode)
+				_, err := w.Write([]byte{})
+				if err != nil {
+					t.Fatal(err.Error())
+				}
+			}))
+			defer testServer.Close()
+			assert.Equal(t, tc.Expected, checkInferenceStatus(&edgexcontext, testServer.URL), "Expected value to match output")
+		})
+	}
+
+}
+
+func TestGetCardAuthInfo(t *testing.T) {
+	testCases := []struct {
+		TestCaseName string
+		statusCode   int
+		cardID       string
+		Expected     string
+	}{
+		{"Successful case", http.StatusOK, "1234567890", "1234567890"},
+		{"Internal error case", http.StatusInternalServerError, "1234567890", ""},
+	}
+
+	var vendingState VendingState
+
+	for _, tc := range testCases {
+
+		t.Run(tc.TestCaseName, func(t *testing.T) {
+
+			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+				output := OutputData{
+					CardID: tc.cardID,
+				}
+				authDataJSON, _ := utilities.GetAsJSON(output)
+				utilities.WriteJSONHTTPResponse(w, r, tc.statusCode, authDataJSON, false)
+			}))
+
+			defer testServer.Close()
+			vendingState.getCardAuthInfo(&edgexcontext, testServer.URL, tc.cardID)
+			assert.Equal(t, tc.Expected, vendingState.CurrentUserData.CardID, "Expected value to match output")
+		})
+	}
+}
+
+func TestResetDoorLock(t *testing.T) {
+	stopChannel := make(chan int)
+	var vendingState VendingState
+	vendingState.ThreadStopChannel = stopChannel
+
+	request, _ := http.NewRequest("POST", "", nil)
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(vendingState.ResetDoorLock)
+	handler.ServeHTTP(recorder, request)
+
+	assert.Equal(t, false, vendingState.MaintenanceMode, "MaintanceMode should be false")
+	assert.Equal(t, false, vendingState.CVWorkflowStarted, "CVWorkflowStarted should be false")
+	assert.Equal(t, false, vendingState.DoorClosed, "DoorClosed should be false")
+	assert.Equal(t, false, vendingState.DoorClosedDuringCVWorkflow, "DoorClosedDuringCVWorkflow should be false")
+	assert.Equal(t, false, vendingState.DoorOpenedDuringCVWorkflow, "DoorOpenedDuringCVWorkflow should be false")
+	assert.Equal(t, false, vendingState.InferenceDataReceived, "InferenceDataReceived should be false")
+}
+
+func TestDisplayLedger(t *testing.T) {
+	edgexcontext.Configuration.ApplicationSettings = make(map[string]string)
+	edgexcontext.Configuration.ApplicationSettings["LCDRowLength"] = "20"
+	// Http test servers
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte{})
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	}))
+
+	edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayReset"] = testServer.URL
+	edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"] = testServer.URL
+
+	ledger := Ledger{
+		LineItems: []LineItem{{ProductName: "itemX", ItemCount: 2, ItemPrice: 1.50, SKU: "1234"}},
+	}
+	err := displayLedger(&edgexcontext, ledger)
+	assert.NoError(t, err)
+}
+
+// TODO: BoardStatus handler needs to return proper http status code for unit tests
+func TestBoardStatus(t *testing.T) {
+	doorOpenStopChannel := make(chan int)
+	doorCloseStopChannel := make(chan int)
+
+	vendingState := VendingState{
+		DoorClosed:                     false,
+		CVWorkflowStarted:              true,
+		DoorOpenWaitThreadStopChannel:  doorOpenStopChannel,
+		DoorCloseWaitThreadStopChannel: doorCloseStopChannel,
+	}
+	boardStatus := ControllerBoardStatus{
+		MaxTemperatureStatus: true,
+		MinTemperatureStatus: true,
+		DoorClosed:           true,
+	}
+
+	b, _ := json.Marshal(boardStatus)
+
+	request, _ := http.NewRequest("POST", "", bytes.NewBuffer(b))
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(vendingState.BoardStatus)
+	handler.ServeHTTP(recorder, request)
+}
+
+func TestHandleMqttDeviceReading(t *testing.T) {
+	testCases := []struct {
+		TestCaseName string
+		statusCode   int
+		Expected     error
+	}{
+		{"Successful case", http.StatusOK, nil},
+		{"Internal error case", http.StatusInternalServerError, fmt.Errorf("Error sending DeviceControllerBoard: Received status code 500 Internal Server Error")},
+		{"Bad request case", http.StatusBadRequest, fmt.Errorf("Error sending DeviceControllerBoard: Received status code 400 Bad Request")},
+	}
+
+	// edgexContext initialization
+	edgexctx := appcontext.Context{
+		CorrelationID: "correlationId",
+		EventClient:   eventClient,
+		LoggingClient: logger.NewClient("output_test", false, "", "DEBUG"),
+	}
+	edgexctx.Configuration.ApplicationSettings = make(map[string]string)
+
+	// VendingState initialization
+	inferenceStopChannel := make(chan int)
+	stopChannel := make(chan int)
+
+	vendingState := VendingState{
+		InferenceWaitThreadStopChannel: inferenceStopChannel,
+		ThreadStopChannel:              stopChannel,
+		CurrentUserData:                OutputData{RoleID: 1},
+	}
+
+	event := models.Event{
+		Device:   InferenceMQTTDevice,
+		Readings: []models.Reading{{Name: "inferenceSkuDelta", Value: `[{"SKU": "HXI86WHU", "delta": -2}]`}},
+	}
+
+	for _, tc := range testCases {
+
+		t.Run(tc.TestCaseName, func(t *testing.T) {
+
+			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				output := Ledger{
+					IsPaid:        false,
+					LineItems:     []LineItem{},
+					TransactionID: 123,
+					LineTotal:     20.5,
+				}
+
+				outputJSON, _ := utilities.GetAsJSON(output)
+
+				writeError := false
+				writeContentType := "json"
+				if tc.Expected != nil {
+					writeError = true
+					writeContentType = "string"
+				}
+
+				httpResponse := utilities.HTTPResponse{
+					Content:     outputJSON,
+					ContentType: writeContentType,
+					StatusCode:  tc.statusCode,
+					Error:       writeError,
+				}
+
+				httpResponse.WriteHTTPResponse(w, r)
+			}))
+
+			edgexctx.Configuration.ApplicationSettings["InventoryService"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["InventoryAuditLogService"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayReset"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["LedgerService"] = testServer.URL
+
+			_, err := vendingState.HandleMqttDeviceReading(&edgexctx, event)
+
+			e, ok := err.(error)
+			if ok {
+				assert.Equal(t, tc.Expected, e)
+			}
+
+		})
+	}
+}
+
+func TestVerifyDoorAccess(t *testing.T) {
+	testCases := []struct {
+		TestCaseName    string
+		StatusCode      int
+		MaintenanceMode bool
+		RoleID          int
+	}{
+		{"Successful case", http.StatusOK, false, 1},
+		{"MaintanceMode on", http.StatusOK, true, 1},
+		{"Role 3", http.StatusOK, false, 3},
+	}
+
+	// edgexContext initialization
+	edgexctx := appcontext.Context{
+		CorrelationID: "correlationId",
+		EventClient:   eventClient,
+		LoggingClient: logger.NewClient("output_test", false, "", "DEBUG"),
+	}
+	edgexctx.Configuration.ApplicationSettings = make(map[string]string)
+
+	// VendingState initialization
+	inferenceStopChannel := make(chan int)
+	stopChannel := make(chan int)
+
+	event := models.Event{
+		Device:   "ds-card-reader",
+		Readings: []models.Reading{{Name: "ds-card-reader", Value: `[{"SKU": "HXI86WHU", "delta": -2}]`}},
+	}
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write(nil)
+		assert.NoError(t, err)
+	}))
+
+	for _, tc := range testCases {
+
+		t.Run(tc.TestCaseName, func(t *testing.T) {
+
+			authServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				output := OutputData{
+					RoleID: tc.RoleID,
+				}
+				authDataJSON, _ := utilities.GetAsJSON(output)
+				utilities.WriteJSONHTTPResponse(w, r, http.StatusOK, authDataJSON, false)
+			}))
+
+			edgexctx.Configuration.ApplicationSettings["InferenceHeartbeat"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow2"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow3"] = testServer.URL
+			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoardLock1"] = testServer.URL
+
+			edgexctx.Configuration.ApplicationSettings["AuthenticationEndpoint"] = authServer.URL
+
+			vendingState := VendingState{
+				InferenceWaitThreadStopChannel: inferenceStopChannel,
+				ThreadStopChannel:              stopChannel,
+				CurrentUserData:                OutputData{RoleID: 1},
+				CVWorkflowStarted:              false,
+				MaintenanceMode:                tc.MaintenanceMode,
+			}
+
+			_, err := vendingState.VerifyDoorAccess(&edgexctx, event)
+
+			e, ok := err.(error)
+			if ok {
+				assert.NoError(t, e)
+			}
+		})
+	}
+}

@@ -1,0 +1,32 @@
+site_name: Automated Checkout
+docs_dir: ./docs_src
+site_dir: ./docs
+use_directory_urls: false
+theme:
+  name: 'material'
+plugins: []
+nav:
+  - 'index.md'
+  - Phases:
+    - './phases/phase1.md'
+    - './phases/phase2.md'
+    - './phases/phase3.md'
+  - Additional Documentation:
+    - Automated Checkout Services:
+      - './automated-checkout-services/device_services.md'
+      - './automated-checkout-services/application_services.md'
+      - './automated-checkout-services/micro_services.md'
+    - 'events.md'
+    - 'configuration.md'
+    - 'modifying_source_code.md'
+    - 'notifications.md'
+    - 'references.md'
+  - 'troubleshooting.md'
+extra_css:
+  - 'https://fonts.googleapis.com/icon?family=Material+Icons'
+  - './stylesheets/extra.css'
+extra_javascript:
+  - 'https://unpkg.com/lunr/lunr.js'
+markdown_extensions:
+  - codehilite
+  - admonition

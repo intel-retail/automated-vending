@@ -1,0 +1,84 @@
+---
+
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+name: "Inference.MQTT.Device.Profile"
+manufacturer: "Inference"
+model: "MQTT-2"
+description: "Inference CV Module over MQTT device profile"
+labels:
+- "MQTT"
+- "Inference"
+deviceResources:
+- name: "inferenceDoorStatus"
+  description: "Trigger Inference's CV algo to compute SKU delta"
+  properties:
+    value:
+      { type: "String", readWrite: "R" }
+    units:
+      { type: "String", readWrite: "R" }
+
+- name: "inferenceSkuDelta"
+  description: "SKU added or removed since last inference"
+  properties:
+    value:
+      { type: "String", readWrite: "R", defaultValue: ""}
+    units:
+      { type: "String", readWrite: "R", defaultValue: ""}
+
+- name: "inferenceHeartbeat"
+  description: "Device heartbeat"
+  properties:
+    value:
+      { type: "String", size: "0", readWrite: "R", defaultValue: "" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "" }
+
+deviceCommands:
+- name: "inferenceDoorStatus"
+  set:
+  - { operation: "set", object: "inferenceDoorStatus", parameter: "inferenceDoorStatus" }
+- name: "inferenceSkuDelta"
+  get:
+  - { operation: "get", object: "inferenceSkuDelta", parameter: "inferenceSkuDelta" }
+- name: "inferenceHeartbeat"
+  get:
+  - { operation: "get", object: "inferenceHeartbeat", parameter: "inferenceHeartbeat" }
+
+coreCommands:
+- name: "inferenceDoorStatus"
+  put:
+    path: "/api/v1/device/{deviceId}/inferenceDoorStatus"
+    parameterNames: ["inferenceDoorStatus"]
+    responses:
+    -
+      code: "200"
+      description: "CV trigger received"
+      expectedValues: []
+    -
+      code: "503"
+      description: "service unavailable"
+      expectedValues: []
+- name: "inferenceSkuDelta"
+  get:
+    path: "/api/v1/device/{deviceId}/inferenceSkuDelta"
+    responses:
+      - code: "200"
+        description: "SKU delta computed"
+        expectedValues: ["inferenceSkuDelta"]
+      - code: "503"
+        description: "service unavailable"
+        expectedValues: []
+- name: "inferenceHeartbeat"
+  get:
+    path: "/api/v1/device/{deviceId}/inferenceHeartbeat"
+    responses:
+    -
+      code: "200"
+      description: "Ping sent"
+      expectedValues: ["inferenceHeartbeat"]
+    -
+      code: "503"
+      description: "service unavailable"
+      expectedValues: []

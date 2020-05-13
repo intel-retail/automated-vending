@@ -1,0 +1,22 @@
+---
+
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+version: '3.4'
+
+services:
+
+#################################################################
+# Automated Checkout Microservices
+#################################################################
+
+  # this device service must be run as root to mount the device
+  ds-card-reader:
+    user: "0:0"
+    devices:
+      - /dev/input:/dev/input
+    environment:
+      Driver_SimulateDevice: "false"
+
+...

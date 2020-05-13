@@ -1,0 +1,28 @@
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+run:
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  timeout: 5m
+linters-settings:
+  misspell:
+    locale: US
+linters:
+   enable:
+     - bodyclose
+     - errcheck
+     - goconst
+     - golint
+     - govet
+     - gosimple
+     - ineffassign
+     - misspell
+     - staticcheck
+     - structcheck
+     - typecheck
+     - unused
+     - unconvert
+     - unparam
+     - varcheck
+   disable-all: true
+   fast: true

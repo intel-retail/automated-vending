@@ -1,0 +1,80 @@
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Writable]
+LogLevel = "INFO"
+
+[Service]
+Host = "localhost"
+Port = 48098
+ConnectRetries = 100
+Labels = []
+OpenMsg = "Card Reader device service started"
+ReadMaxLimit = 256
+Timeout = 5000
+EnableAsyncReadings = true
+AsyncBufferSize = 16
+
+[Registry]
+Host = "localhost"
+Port = 8500
+CheckInterval = "10s"
+FailLimit = 3
+FailWaitTime = 10
+Type = "consul"
+
+[Logging]
+EnableRemote = true
+
+[Clients]
+  [Clients.Data]
+  Name = "edgex-core-data"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48080
+  Timeout = 5000
+
+  [Clients.Metadata]
+  Name = "edgex-core-metadata"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48081
+  Timeout = 5000
+
+  [Clients.Logging]
+  Name = "edgex-support-logging"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48061
+
+[Device]
+  DataTransform = true
+  InitCmd = ""
+  InitCmdArgs = ""
+  MaxCmdOps = 128
+  MaxCmdValueLen = 256
+  RemoveCmd = ""
+  RemoveCmdArgs = ""
+  ProfilesDir = "./res"
+
+[Driver]
+  DeviceName = "ds-card-reader"
+  DeviceSearchPath = "/dev/input/event*"
+  VID = "65535" # 0xFFFF
+  PID = "53"    # 0x0035
+  SimulateDevice = "true"
+
+# Pre-define Devices
+[[DeviceList]]
+  Name = "ds-card-reader"
+  Profile = "ds-card-reader"
+  Description = "ds-card-reader-description"
+  Labels = [ "ds-card-reader-label" ]
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.other]
+      Address = "device-ds-card-reader01"
+      Port = "300"
+    [[DeviceList.AutoEvents]]
+      Frequency = "3s"
+      OnChange = true
+      Resource = "card-reader-status"
