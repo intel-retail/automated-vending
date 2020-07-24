@@ -1,7 +1,7 @@
 # Copyright © 2020 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM golang:1.12-alpine
+FROM golang:1.13-alpine
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2020: Intel'

@@ -5,7 +5,7 @@
 LogLevel = 'INFO'
 
 [Service]
-BootTimeout = '30'
+BootTimeout = '30s'
 ClientMonitor = '15s'
 CheckInterval = '10s'
 Host = 'localhost'
@@ -33,7 +33,7 @@ Type = 'zero'
 
 [Logging]
 EnableRemote = false
-File = './logs/ms-inventory-publish.log'
+File = ''
 
 [Binding]
 Type="http"

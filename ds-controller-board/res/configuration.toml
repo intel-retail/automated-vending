@@ -2,77 +2,75 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 [Writable]
-LogLevel = "INFO"
+LogLevel = 'INFO'
 
 [Service]
-Host = "localhost"
-Port = 8080
+Host = 'localhost'
+Port = 48097
+Protocol = 'http'
 ConnectRetries = 100
-Labels = []
-OpenMsg = "device controller board started"
+BootTimeout = 30000
+CheckInterval = '10s'
+StartupMsg = 'device controller board started'
 ReadMaxLimit = 256
+Labels = []
 Timeout = 5000
 EnableAsyncReadings = true
 AsyncBufferSize = 16
 
 [Registry]
-Host = "localhost"
+Host = 'localhost'
 Port = 8500
-CheckInterval = "10s"
-FailLimit = 3
-FailWaitTime = 10
-Type = "consul"
+Type = 'consul'
 
 [Logging]
-EnableRemote = true
-File = "/edgex/logs/device-random.log"
+EnableRemote = false
+File = ''
 
 [Clients]
   [Clients.Data]
-  Protocol = "http"
-  Host = "localhost"
+  Protocol = 'http'
+  Host = 'localhost'
   Port = 48080
   Timeout = 5000
 
   [Clients.Metadata]
-  Protocol = "http"
-  Host = "localhost"
+  Protocol = 'http'
+  Host = 'localhost'
   Port = 48081
   Timeout = 5000
 
-  [Clients.Logging]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 48061
-
 [Device]
   DataTransform = true
-  InitCmd = ""
-  InitCmdArgs = ""
+  InitCmd = ''
+  InitCmdArgs = ''
   MaxCmdOps = 128
   MaxCmdValueLen = 256
-  RemoveCmd = ""
-  RemoveCmdArgs = ""
-  ProfilesDir = "./res"
+  RemoveCmd = ''
+  RemoveCmdArgs = ''
+  ProfilesDir = './res'
+  [Device.Discovery]
+    Enabled = false
+    Interval = '30s'
 
 [Driver]
-  VID = "2341"
-  PID = "8037"
-  DisplayTimeout = "10s"
-  LockTimeout = "30s"
-  VirtualControllerBoard = "true"
- 
+  VID = '2341'
+  PID = '8037'
+  DisplayTimeout = '10s'
+  LockTimeout = '30s'
+  VirtualControllerBoard = 'true'
+
 # Pre-define Devices
 [[DeviceList]]
-  Name = "ds-controller-board"
-  Profile = "ds-controller-board"
-  Description = "ds-controller-board-description"
-  Labels = [ "ds-controller-board-label" ]
+  Name = 'ds-controller-board'
+  Profile = 'ds-controller-board'
+  Description = 'ds-controller-board-description'
+  Labels = [ 'ds-controller-board-label' ]
   [DeviceList.Protocols]
     [DeviceList.Protocols.other]
-      Address = "device-scale-01"
-      Port = "300"
+      Address = 'device-scale-01'
+      Port = '300'
     [[DeviceList.AutoEvents]]
-      Frequency = "3s"
+      Frequency = '3s'
       OnChange = true
-      Resource = "controller-board-status"
+      Resource = 'controller-board-status'

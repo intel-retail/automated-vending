@@ -13,6 +13,58 @@ import (
 	assert "github.com/stretchr/testify/assert"
 )
 
+// These constants are used to simplify code repetition when working with the
+// config map/struct
+const (
+	AverageTemperatureMeasurementDuration     = "AverageTemperatureMeasurementDuration"
+	DeviceName                                = "DeviceName"
+	MaxTemperatureThreshold                   = "MaxTemperatureThreshold"
+	MinTemperatureThreshold                   = "MinTemperatureThreshold"
+	MQTTEndpoint                              = "MQTTEndpoint"
+	NotificationCategory                      = "NotificationCategory"
+	NotificationEmailAddresses                = "NotificationEmailAddresses"
+	NotificationHost                          = "NotificationHost"
+	NotificationLabels                        = "NotificationLabels"
+	NotificationReceiver                      = "NotificationReceiver"
+	NotificationSender                        = "NotificationSender"
+	NotificationSeverity                      = "NotificationSeverity"
+	NotificationSlug                          = "NotificationSlug"
+	NotificationSlugPrefix                    = "NotificationSlugPrefix"
+	NotificationSubscriptionMaxRESTRetries    = "NotificationSubscriptionMaxRESTRetries"
+	NotificationSubscriptionRESTRetryInterval = "NotificationSubscriptionRESTRetryInterval"
+	NotificationThrottleDuration              = "NotificationThrottleDuration"
+	RESTCommandTimeout                        = "RESTCommandTimeout"
+	SubscriptionHost                          = "SubscriptionHost"
+	VendingEndpoint                           = "VendingEndpoint"
+)
+
+// GetCommonSuccessConfig is used in test cases to quickly build out
+// an example of a successful ControllerBoardStatusAppSettings configuration
+func GetCommonSuccessConfig() ControllerBoardStatusAppSettings {
+	return ControllerBoardStatusAppSettings{
+		AverageTemperatureMeasurementDuration:     -15 * time.Second,
+		DeviceName:                                "ds-controller-board",
+		MaxTemperatureThreshold:                   83.0,
+		MinTemperatureThreshold:                   10.0,
+		MQTTEndpoint:                              "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/vendingDoorStatus",
+		NotificationCategory:                      "HW_HEALTH",
+		NotificationEmailAddresses:                []string{"test@site.com", "test@site.com"},
+		NotificationHost:                          "http://localhost:48060/api/v1/notification",
+		NotificationLabels:                        []string{"HW_HEALTH"},
+		NotificationReceiver:                      "System Administrator",
+		NotificationSender:                        "Automated Checkout Maintenance Notification",
+		NotificationSeverity:                      "CRITICAL",
+		NotificationSlug:                          "sys-admin",
+		NotificationSlugPrefix:                    "maintenance-notification",
+		NotificationSubscriptionMaxRESTRetries:    10,
+		NotificationSubscriptionRESTRetryInterval: 10 * time.Second,
+		NotificationThrottleDuration:              1 * time.Minute,
+		RESTCommandTimeout:                        15 * time.Second,
+		SubscriptionHost:                          "http://localhost:48060/api/v1/subscription",
+		VendingEndpoint:                           "http://localhost:48099/boardStatus",
+	}
+}
+
 // GetHTTPTestServer returns a basic HTTP test server that does nothing more than respond with
 // a desired status code
 func GetHTTPTestServer(statusCodeResponse int, response string) *httptest.Server {
@@ -107,7 +159,7 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 			InputRESTMethod: RESTGet,
 			InputInterface:  "",
 			HTTPTestServer:  testServerThrowError,
-			Output:          fmt.Errorf("Failed to submit REST %v request due to error: %v %v: %v", RESTGet, "Get", testServerThrowError.URL, "EOF"),
+			Output:          fmt.Errorf("Failed to submit REST %v request due to error: %v \"%v\": %v", RESTGet, "Get", testServerThrowError.URL, "EOF"),
 		})
 	output = append(output,
 		testTableRESTCommandJSONStruct{
@@ -150,7 +202,7 @@ func TestRESTCommandJSON(t *testing.T) {
 		t.Run(ct.TestCaseName, func(t *testing.T) {
 			assert := assert.New(t)
 			err := testCase.Config.RESTCommandJSON(testCase.HTTPTestServer.URL, testCase.InputRESTMethod, testCase.InputInterface)
-			assert.Equal(err, ct.Output, "Expected output to be the same")
+			assert.Equal(ct.Output, err, "Expected output to be the same")
 		})
 	}
 

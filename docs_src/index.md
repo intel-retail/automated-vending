@@ -25,7 +25,7 @@ The high-level diagram below shows the sensors and services used with the Automa
 
 The following items are required to build the Automated Checkout Reference Design. You will need additional hardware and software when you are ready to build your own solution.
 
-- **An inferencing solution that integrates with an MQTT broker.** Intel provides a simulated inference that produces random inventory changes. See [MQTT](./automated-checkout-services/device_services.md#inference-mock) for information on this process.
+- **A deep learning model for CV inferencing.** Intel provides a reference inference service using openVINO that produces inventory changes based on preloaded images. See [cv inference service](./automated-checkout-services/device_services.md#cv-inference) for information on this process.
 - **A device that allows badging-in to the Automated Checkout.** Intel provides a card reader service that can be simulated or integrated with a physical USB device. See the [Card Reader](./automated-checkout-services/device_services.md#card-reader) device service page for information on this service.
 - **A controller device that locks the door to the Automated Checkout**, as well as providing readouts (such as a small text-based LCD screen) to display authorization state, items purchased, and other sensor readings. This could be an Arduino-powered circuit. Intel provides a display service that can run in a simulated mode or with a physical USB/serial interface. See the [Controller Board](./automated-checkout-services/device_services.md#controller-board) device service page for implementation details.
 
@@ -59,7 +59,7 @@ Additionally, frequently throughout this documentation, we will refer to a "cool
 - Communication over serial on Linux, if using serial devices such as Arduino
 - Computer Vision concepts, if using CV inferencing components
 - Basic RFID concepts, if using RFID components (i.e. for badge-in card reader)
-- <a href="https://www.portainer.io/" rel="noopener noreferrer" target="_blank">Portainer</a>- included with the Automated Checkout reference design. Usage is optional, but this is a highly recommended utility for managing Docker containers, and we provide easy ways to run it.
+- <a href="https://www.portainer.io/" rel="noopener noreferrer" target="_blank">Portainer</a> - included with the Automated Checkout reference design. Usage is optional, but this is a highly recommended utility for managing Docker containers, and we provide easy ways to run it.
 
 ## Getting started
 
@@ -80,7 +80,7 @@ make build
 !!! note
     This command may take a while to run depending on your internet connection and machine specifications.
 
-#### Check for success
+#### Check for build success
 
 Make sure the command was successful. To do so, run:
 
@@ -96,7 +96,7 @@ docker images | grep automated-checkout
     - `automated-checkout/build` (latest tag)
     - `automated-checkout/ds-card-reader`
     - `automated-checkout/ds-controller-board`
-    - `automated-checkout/ds-inference-mock`
+    - `automated-checkout/ds-cv-inference`
     - `automated-checkout/ms-authentication`
     - `automated-checkout/ms-inventory`
     - `automated-checkout/ms-ledger`
@@ -125,26 +125,24 @@ docker ps --format 'table{{.Image}}\t{{.Status}}'
 !!! success
     Your output is as follows:
 
-    | IMAGE                                              | STATUS       |
-    |----------------------------------------------------|--------------|
-    | consul:1.3.1                                       | Up 4 minutes |
-    | eclipse-mosquitto:1.6.3                            | Up 3 minutes |
-    | edgexfoundry/docker-core-command-go:1.1.0          | Up 3 minutes |
-    | edgexfoundry/docker-core-data-go:1.1.0             | Up 3 minutes |
-    | edgexfoundry/docker-core-metadata-go:1.1.0         | Up 3 minutes |
-    | edgexfoundry/docker-device-mqtt-go:1.1.0           | Up 3 minutes |
-    | edgexfoundry/docker-edgex-mongo:1.1.0              | Up 4 minutes |
-    | edgexfoundry/docker-edgex-volume:1.1.0             | Up 4 minutes |
-    | edgexfoundry/docker-support-logging-go:1.1.0       | Up 4 minutes |
-    | edgexfoundry/docker-support-notifications-go:1.1.0 | Up 3 minutes |
-    | automated-checkout/as-controller-board-status:dev        | Up 3 minutes |
-    | automated-checkout/as-vending:dev                        | Up 3 minutes |
-    | automated-checkout/ds-card-reader:dev                    | Up 3 minutes |
-    | automated-checkout/ds-controller-board:dev               | Up 3 minutes |
-    | automated-checkout/ds-inference-mock:dev                 | Up 3 minutes |
-    | automated-checkout/ms-authentication:dev                 | Up 3 minutes |
-    | automated-checkout/ms-inventory:dev                      | Up 3 minutes |
-    | automated-checkout/ms-ledger:dev                         | Up 3 minutes |
+    | IMAGE                                                | STATUS            |
+    |------------------------------------------------------|-------------------|
+    | automated-checkout/ms-ledger:dev                     | Up 53 seconds     |
+    | eclipse-mosquitto:1.6.3                              | Up 52 seconds     |
+    | automated-checkout/as-vending:dev                    | Up 52 seconds     |
+    | automated-checkout/ms-inventory:dev                  | Up 52 seconds     |
+    | automated-checkout/ds-controller-board:dev           | Up 52 seconds     |
+    | automated-checkout/ms-authentication:dev             | Up 55 seconds     |
+    | edgexfoundry/docker-device-mqtt-go:1.2.0             | Up 53 seconds     |
+    | automated-checkout/ds-card-reader:dev                | Up 53 seconds     |
+    | automated-checkout/as-controller-board-status:dev    | Up 52 seconds     |
+    | edgexfoundry/docker-core-command-go:1.2.0            | Up About a minute |
+    | edgexfoundry/docker-core-data-go:1.2.0               | Up About a minute |
+    | edgexfoundry/docker-core-metadata-go:1.2.0           | Up About a minute |
+    | edgexfoundry/docker-support-notifications-go:1.2.0   | Up About a minute |
+    | edgexfoundry/docker-edgex-consul:1.2.0               | Up About a minute |
+    | automated-checkout/ds-cv-inference:dev             | Up 51 seconds     |
+    | redis:5.0.8-alpine                                   | Up About a minute |
 
 You can also use Portainer to check the status of the services. You must run Portainer service first:
 
@@ -196,4 +194,4 @@ The reference design you created is not a complete solution. It provides the bas
 |----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | RFID card reader                 | A card reader device service is provided for a USB based RFID card reader. As an alternative, you can also use a regular USB keyboard to enter 10-digit number. See *[Phase 2 - Add Card Reader Device](./phases/phase2.md)* for more information.                                                                                                                  |
 | Micro-controller board           | A controller board device service is provided for an Arduino based micro-controller. This micro-controller is in charge of controlling the locks of the automated checkout door and the LED display. Also, it uses modules such as temperature and humidity. See *[Phase 3 - Bring Your Own Hardware and Software](./phases/phase3.md)* for more information.       |
-| Computer vision inference engine | The Automated Checkout reference design provides a computer vision inference mock service for simulation purposes. See more information [here](./automated-checkout-services/device_services.md#inference-mock). You can create your own mock service and send events to EdgeX using the [EdgeX MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go). |
+| Deep learning model | The Automated Checkout reference design provides a computer vision inference service using openVINO inference engine and openVINO product detection model for demonstration purposes. See more information [here](./automated-checkout-services/device_services.md#cv-inference). You can create your own service and send events to EdgeX using the [EdgeX MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go). |

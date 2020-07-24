@@ -3,29 +3,46 @@
 
 package functions
 
+import "time"
+
 // VendingState is a representation of the entire state of vending workflow.
 // The information stored in this is shared across this application service.
 // Information about the state of the vending workflow should generally
 // be stored in this struct.
 type VendingState struct {
-	CVWorkflowStarted bool       `json:"cvWorkflowStarted"`
-	MaintenanceMode   bool       `json:"MaintenanceMode"`
-	CurrentUserData   OutputData `json:"personID"`
-	DoorClosed        bool       `json:"doorClosed"`
-	// global stop channel for threads
-	ThreadStopChannel chan int `json:"threadStopChannel"`
-	// door open event
-	DoorOpenedDuringCVWorkflow    bool     `json:"doorOpenedDuringCVWorkflow  "`
-	DoorOpenWaitThreadStopChannel chan int `json:"doorOpenWaitThreadStopChannel"`
-	DoorOpenStateTimeout          int      `json:"doorOpenStateTimeout"`
-	//door close event
-	DoorClosedDuringCVWorkflow     bool     `json:"doorClosedDuringCVWorkflow  "`
-	DoorCloseWaitThreadStopChannel chan int `json:"doorCloseWaitThreadStopChannel"`
-	DoorCloseStateTimeout          int      `json:"doorCloseStateTimeout"`
-	// inference event
-	InferenceDataReceived          bool     `json:"inferenceDataReceived"`
-	InferenceWaitThreadStopChannel chan int `json:"inferenceWaitThreadStopChannel"`
-	InferenceTimeout               int      `json:"inferenceTimeout"`
+	CVWorkflowStarted              bool       `json:"cvWorkflowStarted"`
+	MaintenanceMode                bool       `json:"MaintenanceMode"`
+	CurrentUserData                OutputData `json:"personID"`
+	DoorClosed                     bool       `json:"doorClosed"`
+	ThreadStopChannel              chan int   `json:"threadStopChannel"`            // global stop channel for threads
+	DoorOpenedDuringCVWorkflow     bool       `json:"doorOpenedDuringCVWorkflow  "` // door open event
+	DoorOpenWaitThreadStopChannel  chan int   `json:"doorOpenWaitThreadStopChannel"`
+	DoorClosedDuringCVWorkflow     bool       `json:"doorClosedDuringCVWorkflow  "` //door close event
+	DoorCloseWaitThreadStopChannel chan int   `json:"doorCloseWaitThreadStopChannel"`
+	InferenceDataReceived          bool       `json:"inferenceDataReceived"` // inference event
+	InferenceWaitThreadStopChannel chan int   `json:"inferenceWaitThreadStopChannel"`
+	Configuration                  *ServiceConfiguration
+}
+
+type ServiceConfiguration struct {
+	AuthenticationEndpoint            string        // "http://localhost:48096/authentication"
+	DeviceControllerBoarddisplayReset string        // "http://localhost:48082/api/v1/device/name/ds-controller-board/command/displayReset"
+	DeviceControllerBoarddisplayRow0  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow0"
+	DeviceControllerBoarddisplayRow1  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow1"
+	DeviceControllerBoarddisplayRow2  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow2"
+	DeviceControllerBoarddisplayRow3  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow3"
+	DeviceControllerBoardLock1        string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/lock1"
+	DeviceControllerBoardLock2        string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/lock2"
+	DeviceNames                       []string      // "ds-card-reader,Inference-MQTT-device"
+	DoorCloseStateTimeout             time.Duration // "20s"
+	DoorOpenStateTimeout              time.Duration // "15s"
+	InferenceDoorStatus               string        // "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus"
+	InferenceHeartbeat                string        // "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat"
+	InferenceTimeout                  time.Duration // "20s"
+	InventoryAuditLogService          string        // "http://localhost:48095/auditlog"
+	InventoryService                  string        // "http://localhost:48095/inventory/delta"
+	LCDRowLength                      int           // "19"
+	LedgerService                     string        // "http://localhost:48093/ledger"
 }
 
 // MaintenanceMode is a simple structure used to return the state of

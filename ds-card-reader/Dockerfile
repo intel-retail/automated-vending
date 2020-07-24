@@ -20,7 +20,7 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2020: Intel'
 
 COPY --from=builder /usr/local/bin/ds-card-reader/res/ds-card-reader.yaml /res/ds-card-reader.yaml
-COPY --from=builder /usr/local/bin/ds-card-reader/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /usr/local/bin/ds-card-reader/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ds-card-reader/main /ds-card-reader
 
-CMD [ "/ds-card-reader","--profile=docker","--confdir=/res", "-r", "consul://edgex-core-consul:8500"]
+CMD [ "/ds-card-reader", "--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r"]

@@ -6,12 +6,12 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"as-vending/functions"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/appsdk"
 	"github.com/edgexfoundry/app-functions-sdk-go/pkg/transforms"
+	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 const (
@@ -19,40 +19,39 @@ const (
 )
 
 func main() {
-	// Create an instance of the EdgeX SDK and initialize it.
+	// create an instance of the EdgeX SDK and initialize it
 	edgexSdk := &appsdk.AppFunctionsSDK{ServiceKey: serviceKey}
 	if err := edgexSdk.Initialize(); err != nil {
 		edgexSdk.LoggingClient.Error(fmt.Sprintf("SDK initialization failed: %v\n", err))
 		os.Exit(-1)
 	}
 
-	// How to access the application's specific configuration settings.
+	// get the application settings from configuration.toml
 	appSettings := edgexSdk.ApplicationSettings()
 	if appSettings == nil {
 		edgexSdk.LoggingClient.Error("No application settings found")
 		os.Exit(-1)
 	}
 
-	// Get the device name from the app settings. This could have multiple devices to listen to.
-	deviceNameList, ok := appSettings["DeviceName"]
-	if !ok {
-		edgexSdk.LoggingClient.Error("DeviceName application setting not found")
+	var vendingState functions.VendingState
+	vendingState.Configuration = new(functions.ServiceConfiguration)
+
+	// retrieve & parse the required application settings into a proper
+	// configuration struct
+	if err := utilities.MarshalSettings(appSettings, vendingState.Configuration, true); err != nil {
+		edgexSdk.LoggingClient.Error(fmt.Sprintf("Application settings could not be processed: %v", err.Error()))
 		os.Exit(-1)
 	}
 
-	// Clean up the device list from the toml file and put them in a string array
-	deviceNameList = strings.Replace(deviceNameList, " ", "", -1)
-	deviceName := strings.Split(deviceNameList, ",")
-	edgexSdk.LoggingClient.Info(fmt.Sprintf("Running the application functions for %v devices...", deviceName))
+	edgexSdk.LoggingClient.Info(fmt.Sprintf("Running the application functions for %v devices...", vendingState.Configuration.DeviceNames))
 
-	// Create stop channels for each of the wait threads
+	// create stop channels for each of the wait threads
 	stopChannel := make(chan int)
 	doorOpenStopChannel := make(chan int)
 	doorCloseStopChannel := make(chan int)
 	inferenceStopChannel := make(chan int)
 
 	// Set default values for vending state
-	var vendingState functions.VendingState
 	vendingState.CVWorkflowStarted = false
 	vendingState.MaintenanceMode = false
 	vendingState.CurrentUserData = functions.OutputData{}
@@ -69,8 +68,6 @@ func main() {
 	vendingState.InferenceDataReceived = false
 	vendingState.InferenceWaitThreadStopChannel = inferenceStopChannel
 
-	functions.SetDefaultTimeouts(&vendingState, appSettings, edgexSdk.LoggingClient)
-
 	var err error
 
 	err = edgexSdk.AddRoute("/boardStatus", vendingState.BoardStatus, "POST")
@@ -82,9 +79,9 @@ func main() {
 	err = edgexSdk.AddRoute("/maintenanceMode", vendingState.GetMaintenanceMode, "GET", "OPTIONS")
 	errorAddRouteHandler(edgexSdk, err)
 
-	// Create the function pipeline to run when an event is read on the device channels
+	// create the function pipeline to run when an event is read on the device channels
 	err = edgexSdk.SetFunctionsPipeline(
-		transforms.NewFilter(deviceName).FilterByDeviceName,
+		transforms.NewFilter(vendingState.Configuration.DeviceNames).FilterByDeviceName,
 		vendingState.DeviceHelper,
 	)
 	if err != nil {
@@ -92,14 +89,14 @@ func main() {
 		os.Exit(-1)
 	}
 
-	// Tell the SDK to "start" and begin listening for events to trigger the pipeline.
+	// tell the SDK to "start" and begin listening for events to trigger the pipeline.
 	err = edgexSdk.MakeItRun()
 	if err != nil {
 		edgexSdk.LoggingClient.Error("MakeItRun returned error: ", err.Error())
 		os.Exit(-1)
 	}
 
-	// Do any required cleanup here
+	// do any required cleanup here
 
 	os.Exit(0)
 }

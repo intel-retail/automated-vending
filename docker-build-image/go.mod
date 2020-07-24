@@ -3,25 +3,21 @@
 
 module automated-checkout/build
 
-go 1.12
+go 1.13
 
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/BurntSushi/toml v0.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
-
 	github.com/creack/goselect v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.2.0
-	// common
-	github.com/edgexfoundry/app-functions-sdk-go v1.0.0
-
-	// ds-card-reader
-	github.com/edgexfoundry/device-sdk-go v1.0.0
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.25
-	github.com/edgexfoundry/go-mod-messaging v0.1.11
-	github.com/edgexfoundry/go-mod-registry v0.1.11
+	github.com/edgexfoundry/app-functions-sdk-go v1.2.0
+	github.com/edgexfoundry/device-sdk-go v1.2.2
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.58
+	github.com/edgexfoundry/go-mod-messaging v0.1.19
+	github.com/edgexfoundry/go-mod-registry v0.1.20
 	github.com/google/uuid v1.1.1
-	github.com/gorilla/mux v1.7.2
+	github.com/gorilla/mux v1.7.4
 	github.com/gvalkov/golang-evdev v0.0.0-20180516222720-b6f418b1fe5a
 	github.com/hashicorp/consul v1.4.2
 	github.com/hashicorp/go-cleanhttp v0.5.1

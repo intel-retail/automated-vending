@@ -10,7 +10,7 @@ BootTimeout = '30s'
 ClientMonitor = '15s'
 CheckInterval = '10s'
 Host = 'localhost'
-Port = 8080
+Port = 48093
 Protocol = 'http'
 ReadMaxLimit = 100
 StartupMsg = 'This microservice exposes a CRUD interface for financial transactions in a ledger'
@@ -34,7 +34,7 @@ Type = 'zero'
 
 [Logging]
 EnableRemote = false
-File = './logs/ms-ledger-publish.log'
+File = ''
 
 [Binding]
 Type="http"

@@ -20,11 +20,11 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2019: Intel'
 
 RUN apk --no-cache add zeromq
-COPY --from=builder /usr/local/bin/ms-ledger/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /usr/local/bin/ms-ledger/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ms-ledger/main /ms-ledger
 COPY --from=builder /usr/local/bin/ms-ledger/ledger.json /ledger.json
 
 RUN chmod 640 /ledger.json && \
-    chown 2000 /ledger.json
+  chown 2000 /ledger.json
 
-CMD [ "/ms-ledger","--profile=docker","--confdir=/res", "-r" ]
+CMD [ "/ms-ledger","--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r" ]

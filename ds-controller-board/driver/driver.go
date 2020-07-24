@@ -9,27 +9,28 @@ import (
 	"time"
 
 	"ds-controller-board/device"
-	sdk "github.com/edgexfoundry/device-sdk-go"
+
 	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
+	service "github.com/edgexfoundry/device-sdk-go/pkg/service"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 const (
-    lock1 = "lock1"
-    lock2 = "lock2"
-    getStatus = "getStatus"
-    displayRow0 = "displayRow0"
-    displayRow1 = "displayRow1"
-    displayRow2 = "displayRow2"
-    displayRow3 = "displayRow3"
-    displayReset = "displayReset"
-    setHumidity = "setHumidity"
-    setTemperature= "setTemperature"
-    setDoorClosed= "setDoorClosed"
-
+	lock1          = "lock1"
+	lock2          = "lock2"
+	getStatus      = "getStatus"
+	displayRow0    = "displayRow0"
+	displayRow1    = "displayRow1"
+	displayRow2    = "displayRow2"
+	displayRow3    = "displayRow3"
+	displayReset   = "displayReset"
+	setHumidity    = "setHumidity"
+	setTemperature = "setTemperature"
+	setDoorClosed  = "setDoorClosed"
 )
+
 // ControllerBoardDriver follows EdgeX standards for a device struct.
 type ControllerBoardDriver struct {
 	lc              logger.LoggingClient
@@ -45,13 +46,13 @@ func NewControllerBoardDeviceDriver() dsModels.ProtocolDriver {
 }
 
 // Initialize is an EdgeX function that initializes the device
-func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues) (err error) {
+func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice) (err error) {
 	drv.lc = lc
 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.config == nil {
 		drv.config = new(device.Config)
-		if err = utilities.MarshalSettings(sdk.DriverConfigs(), drv.config, true); err != nil {
+		if err = utilities.MarshalSettings(service.DriverConfigs(), drv.config, true); err != nil {
 			return err
 		}
 	}
@@ -59,9 +60,9 @@ func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh ch
 	drv.StopChannel = make(chan int)
 
 	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, drv.config)
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
 	go drv.controllerBoard.Read()
 

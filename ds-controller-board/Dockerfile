@@ -19,7 +19,7 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2019: Intel'
 
 COPY --from=builder /app/res/ds-controller-board.yaml /res/ds-controller-board.yaml
-COPY --from=builder /app/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /app/res/configuration.toml /res/configuration.toml
 COPY --from=builder /app/ds-controller-board /ds-controller-board
 
-CMD [ "/ds-controller-board","--profile=docker","--confdir=/res", "-r", "consul://edgex-core-consul:8500"]
+CMD [ "/ds-controller-board","--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r" ]

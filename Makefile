@@ -16,12 +16,16 @@ DOCKERS= \
 		as-controller-board-status \
 		ds-card-reader \
 		ds-controller-board \
-		ds-inference-mock \
+		ds-cv-inference \
 		ms-authentication \
 		ms-inventory \
-		ms-ledger
+		ms-ledger \
+
 
 .PHONY: $(DOCKERS)
+
+getlatest:
+	git submodule update --init --recursive --remote
 
 docker-rm:
 	-docker rm $$(docker ps -aq)

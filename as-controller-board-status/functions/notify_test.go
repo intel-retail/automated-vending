@@ -14,7 +14,7 @@ import (
 
 type testTableBuildSubscriptionMessageStruct struct {
 	TestCaseName string
-	Config       ControllerBoardStatusAppSettings
+	BoardStatus  CheckBoardStatus
 	Output       map[string]interface{}
 }
 
@@ -23,7 +23,9 @@ func prepBuildSubscriptionMessage() []testTableBuildSubscriptionMessageStruct {
 	return []testTableBuildSubscriptionMessageStruct{
 		{
 			TestCaseName: "Success",
-			Config:       commonSuccessConfig,
+			BoardStatus: CheckBoardStatus{
+				Configuration: &commonSuccessConfig,
+			},
 			Output: map[string]interface{}{
 				"slug":     commonSuccessConfig.NotificationSlug,
 				"receiver": commonSuccessConfig.NotificationReceiver,
@@ -51,15 +53,15 @@ func TestBuildSubscriptionMessage(t *testing.T) {
 	for _, testCase := range testTable {
 		ct := testCase // pinning solves concurrency issues
 		t.Run(ct.TestCaseName, func(t *testing.T) {
-			output := buildSubscriptionMessage(testCase.Config)
-			assert.Equal(t, output, ct.Output, "Expected output to match")
+			output := ct.BoardStatus.buildSubscriptionMessage()
+			assert.Equal(t, ct.Output, output, "Expected output to match")
 		})
 	}
 }
 
 type testTablePostSubscriptionToAPIStruct struct {
 	TestCaseName        string
-	Config              ControllerBoardStatusAppSettings
+	BoardStatus         CheckBoardStatus
 	SubscriptionMessage map[string]interface{}
 	Output              error
 	HTTPTestServer      *httptest.Server
@@ -84,48 +86,59 @@ func prepPostSubscriptionToAPITest() ([]testTablePostSubscriptionToAPIStruct, []
 	testServerThrowError := GetErrorHTTPTestServer()
 
 	// Assemble a typical set of configs
-	edgexconfig := GetCommonSuccessConfig()
-	edgexconfigCreatedServer := GetCommonSuccessConfig()
-	edgexconfigConflictServer := GetCommonSuccessConfig()
-	edgexconfigThrowErrorServer := GetCommonSuccessConfig()
-	edgexconfigConflictServer.SubscriptionHost = testServerConflict.URL
-	edgexconfigCreatedServer.SubscriptionHost = testServerCreated.URL
-	edgexconfigThrowErrorServer.SubscriptionHost = testServerThrowError.URL
+	configSuccess := GetCommonSuccessConfig()
+	configCreated := GetCommonSuccessConfig()
+	configConflict := GetCommonSuccessConfig()
+	configThrowError := GetCommonSuccessConfig()
+	configConflict.SubscriptionHost = testServerConflict.URL
+	configCreated.SubscriptionHost = testServerCreated.URL
+	configThrowError.SubscriptionHost = testServerThrowError.URL
 
 	// Assemble a configuration that doesn't want to try very many times at all
-	edgexconfigImpatient := GetCommonSuccessConfig()
-	edgexconfigImpatient.NotificationSubscriptionMaxRESTRetries = 2
-	edgexconfigImpatient.NotificationSubscriptionRESTRetryInterval = 1
-	edgexconfigImpatient.SubscriptionHost = testServer500.URL
+	configImpatient := GetCommonSuccessConfig()
+	configImpatient.NotificationSubscriptionMaxRESTRetries = 2
+	configImpatient.NotificationSubscriptionRESTRetryInterval = 1
+	configImpatient.SubscriptionHost = testServer500.URL
 
 	// Assemble a common subscription message
-	commonSubscriptionMessage := buildSubscriptionMessage(edgexconfig)
+	commonBoardStatus := CheckBoardStatus{
+		Configuration: &configSuccess,
+	}
+	commonSubscriptionMessage := commonBoardStatus.buildSubscriptionMessage()
 
 	output = append(output,
 		testTablePostSubscriptionToAPIStruct{
-			TestCaseName:        "Success Created",
-			Config:              edgexconfigCreatedServer,
+			TestCaseName: "Success Created",
+			BoardStatus: CheckBoardStatus{
+				Configuration: &configCreated,
+			},
 			SubscriptionMessage: commonSubscriptionMessage,
 			Output:              nil,
 			HTTPTestServer:      testServerCreated,
 		},
 		testTablePostSubscriptionToAPIStruct{
-			TestCaseName:        "Success Conflict",
-			Config:              edgexconfigConflictServer,
+			TestCaseName: "Success Conflict",
+			BoardStatus: CheckBoardStatus{
+				Configuration: &configConflict,
+			},
 			SubscriptionMessage: commonSubscriptionMessage,
 			Output:              nil,
 			HTTPTestServer:      testServerConflict,
 		},
 		testTablePostSubscriptionToAPIStruct{
-			TestCaseName:        "Unsuccessful due to HTTP connection closed error",
-			Config:              edgexconfigThrowErrorServer,
+			TestCaseName: "Unsuccessful due to HTTP connection closed error",
+			BoardStatus: CheckBoardStatus{
+				Configuration: &configThrowError,
+			},
 			SubscriptionMessage: commonSubscriptionMessage,
-			Output:              fmt.Errorf("Failed to submit REST request to subscription API endpoint: %v %v: %v", "Post", testServerThrowError.URL, "EOF"),
+			Output:              fmt.Errorf("Failed to submit REST request to subscription API endpoint: %v \"%v\": %v", "Post", testServerThrowError.URL, "EOF"),
 			HTTPTestServer:      testServerThrowError,
 		},
 		testTablePostSubscriptionToAPIStruct{
 			TestCaseName: "Unsuccessful due to unserializable input interface",
-			Config:       edgexconfig,
+			BoardStatus: CheckBoardStatus{
+				Configuration: &configSuccess,
+			},
 			SubscriptionMessage: map[string]interface{}{
 				"test": make(chan bool),
 			},
@@ -133,10 +146,12 @@ func prepPostSubscriptionToAPITest() ([]testTablePostSubscriptionToAPIStruct, []
 			HTTPTestServer: testServerStatusOK,
 		},
 		testTablePostSubscriptionToAPIStruct{
-			TestCaseName:        "Unsuccessful due to always receiving 500",
-			Config:              edgexconfigImpatient,
+			TestCaseName: "Unsuccessful due to always receiving 500",
+			BoardStatus: CheckBoardStatus{
+				Configuration: &configImpatient,
+			},
 			SubscriptionMessage: commonSubscriptionMessage,
-			Output:              fmt.Errorf("REST request to subscribe to the notification service failed after %v attempts. The last API response returned a %v status code, and the response body was: %v", edgexconfigImpatient.NotificationSubscriptionMaxRESTRetries, 500, "test response body"),
+			Output:              fmt.Errorf("REST request to subscribe to the notification service failed after %v attempts. The last API response returned a %v status code, and the response body was: %v", configImpatient.NotificationSubscriptionMaxRESTRetries, 500, "test response body"),
 			HTTPTestServer:      testServer500,
 		},
 	)
@@ -161,15 +176,15 @@ func TestPostSubscriptionToAPI(t *testing.T) {
 	for _, testCase := range testTable {
 		ct := testCase // pinning solves concurrency issues
 		t.Run(ct.TestCaseName, func(t *testing.T) {
-			err := PostSubscriptionToAPI(ct.Config, ct.SubscriptionMessage)
-			assert.Equal(t, err, ct.Output, "Expected output to match")
+			err := ct.BoardStatus.PostSubscriptionToAPI(ct.SubscriptionMessage)
+			assert.Equal(t, ct.Output, err, "Expected output to match")
 		})
 	}
 }
 
 type testTableSubscribeToNotificationServiceStruct struct {
 	TestCaseName   string
-	Config         ControllerBoardStatusAppSettings
+	BoardStatus    CheckBoardStatus
 	Output         error
 	HTTPTestServer *httptest.Server
 }
@@ -184,23 +199,31 @@ func prepSubscribeToNotificationServiceTest() ([]testTableSubscribeToNotificatio
 	testServerCreated := GetHTTPTestServer(http.StatusConflict, "")
 
 	// Assemble a typical set of configs
-	edgexconfigCreatedServer := GetCommonSuccessConfig()
-	edgexconfigThrowErrorServer := GetCommonSuccessConfig()
 
-	edgexconfigCreatedServer.SubscriptionHost = testServerCreated.URL
-	edgexconfigThrowErrorServer.SubscriptionHost = testServerThrowError.URL
+	successConfig := GetCommonSuccessConfig()
+	failureConfig := GetCommonSuccessConfig()
+
+	boardStatusSuccess := CheckBoardStatus{
+		Configuration: &successConfig,
+	}
+	boardStatusFailure := CheckBoardStatus{
+		Configuration: &failureConfig,
+	}
+
+	successConfig.SubscriptionHost = testServerCreated.URL
+	failureConfig.SubscriptionHost = testServerThrowError.URL
 
 	output = append(output,
 		testTableSubscribeToNotificationServiceStruct{
 			TestCaseName:   "Success",
-			Config:         edgexconfigCreatedServer,
+			BoardStatus:    boardStatusSuccess,
 			Output:         nil,
 			HTTPTestServer: testServerCreated,
 		},
 		testTableSubscribeToNotificationServiceStruct{
 			TestCaseName:   "Failure",
-			Config:         edgexconfigThrowErrorServer,
-			Output:         fmt.Errorf("Failed to subscribe to the EdgeX notification service due to an error thrown while performing the HTTP POST subscription to the notification service: Failed to submit REST request to subscription API endpoint: %v %v: %v", "Post", testServerThrowError.URL, "EOF"),
+			BoardStatus:    boardStatusFailure,
+			Output:         fmt.Errorf("Failed to subscribe to the EdgeX notification service due to an error thrown while performing the HTTP POST subscription to the notification service: Failed to submit REST request to subscription API endpoint: %v \"%v\": %v", "Post", testServerThrowError.URL, "EOF"),
 			HTTPTestServer: testServerThrowError,
 		},
 	)
@@ -224,8 +247,8 @@ func TestSubscribeToNotificationService(t *testing.T) {
 	for _, testCase := range testTable {
 		ct := testCase // pinning solves concurrency issues
 		t.Run(ct.TestCaseName, func(t *testing.T) {
-			err := SubscribeToNotificationService(testCase.Config)
-			assert.Equal(t, err, ct.Output, "Expected error to match output")
+			err := testCase.BoardStatus.SubscribeToNotificationService()
+			assert.Equal(t, ct.Output, err, "Expected error to match output")
 		})
 	}
 }
@@ -233,8 +256,12 @@ func TestSubscribeToNotificationService(t *testing.T) {
 // TestSendNotification validates that the edge cases that aren't handled
 // elsewhere are covered
 func TestSendNotification(t *testing.T) {
-	edgexconfig := GetCommonSuccessConfig()
-	err := SendNotification(edgexconfig, make(chan bool))
+	configSuccess := GetCommonSuccessConfig()
+	boardStatus := CheckBoardStatus{
+		Configuration: &configSuccess,
+	}
+
+	err := boardStatus.SendNotification(make(chan bool))
 
 	assert.EqualError(t, err, "Failed to marshal the notification message into a JSON byte array: json: unsupported type: chan bool")
 }

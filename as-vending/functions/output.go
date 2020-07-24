@@ -13,14 +13,12 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/appcontext"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 const (
 	InferenceMQTTDevice = "Inference-MQTT-device"
-	DefaultTimeOuts     = 15
 )
 
 // DeviceHelper is an EdgeX function that is passed into the EdgeX SDK's function pipeline.
@@ -94,11 +92,6 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 
 					if vendingState.CurrentUserData.RoleID == 1 {
 						// POST the deltaLedger json string to the ledger endpoint
-						ledgerCommandURL, ok := edgexcontext.Configuration.ApplicationSettings["LedgerService"]
-						if !ok {
-							return false, fmt.Errorf("LedgerService application API endpoint setting not found")
-						}
-
 						outputBytes, err := json.Marshal(deltaLedger)
 						if err != nil {
 							edgexcontext.LoggingClient.Error("HandleMqttDeviceReading failed to marshal deltaLedger")
@@ -108,7 +101,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 						edgexcontext.LoggingClient.Info("Sending SKU delta to ledger service")
 
 						// send SKU delta to ledger service and get back current ledger information
-						resp, err := sendCommand(edgexcontext, "POST", ledgerCommandURL, outputBytes)
+						resp, err := sendCommand(edgexcontext, "POST", vendingState.Configuration.LedgerService, outputBytes)
 						if err != nil {
 							edgexcontext.LoggingClient.Error("Ledger service failed: %v", err.Error())
 							return false, err
@@ -125,25 +118,20 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 						}
 
 						// Display Ledger Total on LCD
-						if displayErr := displayLedger(edgexcontext, currentLedger); displayErr != nil {
+						if displayErr := vendingState.displayLedger(edgexcontext, currentLedger); displayErr != nil {
 							return false, displayErr
 						}
 
 					}
 
 					// POST the deltaLedger json string to the inventory endpoint
-					inventoryCommandURL, ok := edgexcontext.Configuration.ApplicationSettings["InventoryService"]
-					if !ok {
-						return false, fmt.Errorf("InventoryService application API endpoint setting not found")
-					}
-
 					outputBytes, err := json.Marshal(deltaLedger.DeltaSKUs)
 					if err != nil {
 						return false, fmt.Errorf("HandleMqttDeviceReading failed to marshal deltaLedger.DeltaSKUs")
 					}
 
 					edgexcontext.LoggingClient.Info("Sending SKU delta to inventory service")
-					inventoryResp, err := sendCommand(edgexcontext, "POST", inventoryCommandURL, outputBytes)
+					inventoryResp, err := sendCommand(edgexcontext, "POST", vendingState.Configuration.InventoryService, outputBytes)
 					if err != nil {
 						return false, err
 					}
@@ -158,18 +146,13 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 						CreatedAt:      time.Now().UnixNano(),
 					}
 
-					auditLogCommandURL, ok := edgexcontext.Configuration.ApplicationSettings["InventoryAuditLogService"]
-					if !ok {
-						return false, fmt.Errorf("InventoryAuditLogService application API endpoint setting not found")
-					}
-
 					outputBytes, err = json.Marshal(auditLogEntry)
 					if err != nil {
 						return false, err
 					}
 
 					edgexcontext.LoggingClient.Info("Sending audit log entry to inventory service")
-					auditResp, err := sendCommand(edgexcontext, "POST", auditLogCommandURL, outputBytes)
+					auditResp, err := sendCommand(edgexcontext, "POST", vendingState.Configuration.InventoryAuditLogService, outputBytes)
 					if err != nil {
 						return false, err
 					}
@@ -204,21 +187,12 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 		edgexcontext.LoggingClient.Info("Card Scanned", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
 		// check to see if inference is running and set maintenance mode accordingly
 		if !vendingState.MaintenanceMode {
-			inferenceHeartbeatEndpoint, ok := edgexcontext.Configuration.ApplicationSettings["InferenceHeartbeat"]
-			if !ok {
-				return false, fmt.Errorf("inferenceHeartbeatEndpoint Application setting not found")
-			}
-			vendingState.MaintenanceMode = !checkInferenceStatus(edgexcontext, inferenceHeartbeatEndpoint)
-		}
-
-		// Retrieve & Hit auth endpoint
-		authEndpoint, ok := edgexcontext.Configuration.ApplicationSettings["AuthenticationEndpoint"]
-		if !ok {
-			return false, fmt.Errorf("AuthenticationEndpoint Application setting not found")
+			vendingState.MaintenanceMode = !checkInferenceStatus(edgexcontext, vendingState.Configuration.InferenceHeartbeat)
 		}
 
 		for _, eventReading := range event.Readings {
-			vendingState.getCardAuthInfo(edgexcontext, authEndpoint, eventReading.Value)
+			// Retrieve & Hit auth endpoint
+			vendingState.getCardAuthInfo(edgexcontext, vendingState.Configuration.AuthenticationEndpoint, eventReading.Value)
 
 			switch vendingState.CurrentUserData.RoleID {
 			// Check the role of the card scanned. Role 1 = customer and Role 2 = item stocker
@@ -226,37 +200,22 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 				{
 					if !vendingState.MaintenanceMode {
 						edgexcontext.LoggingClient.Info(eventReading.Name + " readable value from " + event.Device + " is " + eventReading.Value)
-						// Display row 2 command URL
-						commandURL, ok := edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow2"]
-						if !ok {
-							return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-						}
-						// Send lock command
-						resp, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"displayRow2\":\"hello\"}"))
+						// display "hello" on row 2
+						resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"hello\"}"))
 						if err != nil {
 							return false, err
 						}
 						defer resp.Body.Close()
 
-						// Display row 3 command URL
-						commandURL, ok = edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow3"]
-						if !ok {
-							return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-						}
-						// Send lock command
-						respRow3, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
+						// display the card number on row 3
+						respRow3, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
 						if err != nil {
 							return false, err
 						}
 						defer respRow3.Body.Close()
 
-						// Lock command URL
-						commandURL, ok = edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoardLock1"]
-						if !ok {
-							return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-						}
-						// Send lock command
-						respLock, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"lock1\":\"true\"}"))
+						// unlock
+						respLock, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
 						if err != nil {
 							return false, err
 						}
@@ -267,15 +226,13 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 						vendingState.DoorClosedDuringCVWorkflow = false
 						vendingState.DoorOpenedDuringCVWorkflow = false
 						vendingState.InferenceDataReceived = false
-						// Get the latest timeouts from the toml configuration
-						SetDefaultTimeouts(vendingState, edgexcontext.Configuration.ApplicationSettings, edgexcontext.LoggingClient)
 
 						// Wait for the door open event to be received. If we don't receive the door open event within the timeout
 						// then leave the workflow state and remove all user data
 						go func() {
 							for {
 								select {
-								case <-time.After(time.Duration(vendingState.DoorOpenStateTimeout) * time.Second):
+								case <-time.After(vendingState.Configuration.DoorOpenStateTimeout):
 									if !vendingState.DoorOpenedDuringCVWorkflow {
 										edgexcontext.LoggingClient.Info("door wasn't opened so we reset")
 										vendingState.CVWorkflowStarted = false
@@ -295,13 +252,8 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 							}
 						}()
 					} else {
-						// Display row 1 command URL
-						commandURL, ok := edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"]
-						if !ok {
-							return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-						}
-						// Display out of order when door waiting state is set to false
-						resp, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"displayRow1\":\"Out of Order\"}"))
+						// display out of order when door waiting state is set to false
+						resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\"Out of Order\"}"))
 						if err != nil {
 							return false, err
 						}
@@ -316,37 +268,23 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 					vendingState.ThreadStopChannel = make(chan int)
 
 					edgexcontext.LoggingClient.Info(eventReading.Name + " readable value from " + event.Device + " is " + eventReading.Value)
-					// Display row 2 command URL
-					commandURL, ok := edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow2"]
-					if !ok {
-						return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-					}
-					// Send lock command
-					respRow2, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"displayRow2\":\"Maintenance Mode\"}"))
+
+					// display text "Maintenance Mode" in row 2
+					respRow2, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Maintenance Mode\"}"))
 					if err != nil {
 						return false, err
 					}
 					defer respRow2.Body.Close()
 
-					// Display row 3 command URL
-					commandURL, ok = edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow3"]
-					if !ok {
-						return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-					}
-					// Send lock command
-					respRow3, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
+					// display any reading value in row 3
+					respRow3, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
 					if err != nil {
 						return false, err
 					}
 					defer respRow3.Body.Close()
 
-					// Lock command URL
-					commandURL, ok = edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoardLock1"]
-					if !ok {
-						return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-					}
-					// Send lock command
-					respLock, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"lock1\":\"true\"}"))
+					// send lock command
+					respLock, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
 					if err != nil {
 						return false, err
 					}
@@ -360,12 +298,8 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 					edgexcontext.LoggingClient.Info("Maintenance Scan: ", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
 				}
 			default:
-				// Display row 2 command URL
-				commandURL, ok := edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow2"]
-				if !ok {
-					return false, fmt.Errorf("DeviceControllerBoard Application setting not found")
-				}
-				resp, err := sendCommand(edgexcontext, "PUT", commandURL, []byte("{\"displayRow2\":\"Unauthorized\"}"))
+				// display "Unauthorized" on display row 2
+				resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Unauthorized\"}"))
 				defer resp.Body.Close()
 				if err != nil {
 					return false, err
@@ -380,6 +314,7 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 func checkInferenceStatus(edgexcontext *appcontext.Context, heartbeatEndPoint string) bool {
 	resp, err := sendCommand(edgexcontext, "GET", heartbeatEndPoint, []byte(""))
 	if err != nil {
+		edgexcontext.LoggingClient.Error(fmt.Sprintf("error checking inference status: %v", err.Error()))
 		return false
 	}
 	defer resp.Body.Close()
@@ -412,41 +347,22 @@ func (vendingState *VendingState) getCardAuthInfo(edgexcontext *appcontext.Conte
 	edgexcontext.LoggingClient.Info("Successfully found user data for card " + cardID)
 }
 
-func displayLedger(edgexcontext *appcontext.Context, ledger Ledger) error {
-	// string conversion error
-	var strToIntErr error
-	// Get LCDRowLength value
-	LCDRowLength, strToIntErr := strconv.Atoi(edgexcontext.Configuration.ApplicationSettings["LCDRowLength"])
-	if strToIntErr != nil {
-		LCDRowLength = 19
-		edgexcontext.LoggingClient.Error("LCD Row Length not set in configuration. Using default value of %v", LCDRowLength)
-	}
-
-	// Get commandURL to reset LCD
-	displayResetCommandURL, ok := edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayReset"]
-	if !ok {
-		return fmt.Errorf("DeviceControllerBoarddisplayReset setting not found")
-	}
+func (vendingState *VendingState) displayLedger(edgexcontext *appcontext.Context, ledger Ledger) error {
 	// reset LCD
-	resp, err := sendCommand(edgexcontext, "PUT", displayResetCommandURL, []byte("{\"displayReset\":\"\"}"))
+	resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
 	if err != nil {
-		return fmt.Errorf("sendCommand returned error for %v : %v", displayResetCommandURL, err.Error())
+		return fmt.Errorf("sendCommand returned error for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayReset, err.Error())
 	}
 	defer resp.Body.Close()
 
-	// Get command url for LCD Row 1
-	row1CommandURL, ok := edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"]
-	if !ok {
-		return fmt.Errorf("DeviceControllerBoard Application setting not found")
-	}
 	// Loop through lineItems in Ledger and display on LCD
 	for _, lineItem := range ledger.LineItems {
 		// Line Item is item count and product name, and truncated or padded with whitespaces so it is same length as LCD Row
-		displayLineItem := fmt.Sprintf("%-[1]*.[1]*s", LCDRowLength, strconv.Itoa(lineItem.ItemCount)+" "+lineItem.ProductName)
+		displayLineItem := fmt.Sprintf("%-[1]*.[1]*s", vendingState.Configuration.LCDRowLength, strconv.Itoa(lineItem.ItemCount)+" "+lineItem.ProductName)
 		// push line item to LCD and pause three seconds before displaying next line item
-		resp, err := sendCommand(edgexcontext, "PUT", row1CommandURL, []byte("{\"displayRow1\":\""+displayLineItem+"\"}"))
+		resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLineItem+"\"}"))
 		if err != nil {
-			return fmt.Errorf("sendCommand returned nil for %v : %v", row1CommandURL, err.Error())
+			return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayRow1, err.Error())
 		}
 		defer resp.Body.Close()
 
@@ -454,31 +370,30 @@ func displayLedger(edgexcontext *appcontext.Context, ledger Ledger) error {
 	}
 
 	//reset the LCD
-	respDisplayReset, err := sendCommand(edgexcontext, "PUT", displayResetCommandURL, []byte("{\"displayReset\":\"\"}"))
+	respDisplayReset, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
 	if err != nil {
-		return fmt.Errorf("sendCommand returned nil for %v : %v", displayResetCommandURL, err.Error())
+		return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayReset, err.Error())
 	}
 	defer respDisplayReset.Body.Close()
 
 	//display ledger.LineTotal from in currency format
 	displayLedgerTotal := "Total: $" + fmt.Sprintf("%3.2f", ledger.LineTotal)
-	respDisplayRow, err := sendCommand(edgexcontext, "PUT", row1CommandURL, []byte("{\"displayRow1\":\""+displayLedgerTotal+"\"}"))
+	respDisplayRow, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLedgerTotal+"\"}"))
 	if err != nil {
-		return fmt.Errorf("sendCommand returned nil for %v : %v", row1CommandURL, err.Error())
+		return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayRow1, err.Error())
 	}
 	defer respDisplayRow.Body.Close()
 
 	return nil
 }
 
-// sendCommand will make a http request based on the input parameters
+// sendCommand will make an http request to an EdgeX command endpoint
 func sendCommand(edgexcontext *appcontext.Context, method string, commandURL string, inputBytes []byte) (*http.Response, error) {
-	edgexcontext.LoggingClient.Debug("SendCommand")
+	edgexcontext.LoggingClient.Debug(fmt.Sprintf("sending command to edgex endpoint: %v", commandURL))
 
-	connectionTimeout := 15
 	// Create the http request based on the parameters
 	request, _ := http.NewRequest(method, commandURL, bytes.NewBuffer(inputBytes))
-	timeout := time.Duration(connectionTimeout) * time.Second
+	timeout := 60 * time.Second
 	client := &http.Client{
 		Timeout: timeout,
 	}
@@ -486,12 +401,12 @@ func sendCommand(edgexcontext *appcontext.Context, method string, commandURL str
 	// Execute the http request
 	resp, err := client.Do(request)
 	if err != nil {
-		return resp, fmt.Errorf("Error sending DeviceControllerBoard: %v", err.Error())
+		return resp, fmt.Errorf("error sending command: %v", err.Error())
 	}
 
 	// Check the status code and return any errors
 	if resp.StatusCode != http.StatusOK {
-		return resp, fmt.Errorf("Error sending DeviceControllerBoard: Received status code %v", resp.Status)
+		return resp, fmt.Errorf("error sending command: received status code: %v", resp.Status)
 	}
 
 	return resp, nil
@@ -550,10 +465,10 @@ func (vendingState *VendingState) BoardStatus(writer http.ResponseWriter, req *h
 				// Wait for door closed event. If the door isn't closed within the timeout
 				// then leave the workflow, remove the user data, and enter maintenance mode
 				go func() {
-					fmt.Println("Door Opened: wait for ", vendingState.DoorCloseStateTimeout, " seconds")
+					fmt.Println("Door Opened: wait for ", vendingState.Configuration.DoorCloseStateTimeout, " seconds")
 					for {
 						select {
-						case <-time.After(time.Duration(vendingState.DoorCloseStateTimeout) * time.Second):
+						case <-time.After(vendingState.Configuration.DoorCloseStateTimeout):
 							{
 								if !vendingState.DoorClosedDuringCVWorkflow {
 									fmt.Println("Door Opened: Failed")
@@ -586,11 +501,10 @@ func (vendingState *VendingState) BoardStatus(writer http.ResponseWriter, req *h
 				// Wait for the inference data to be received. If we don't receive any inference data with the timeout
 				// then leave the workflow, remove the user data, and enter maintenance mode
 				go func() {
-					fmt.Println("Door Closed: wait for ", vendingState.InferenceTimeout, " seconds")
+					fmt.Println("Door Closed: wait for ", vendingState.Configuration.InferenceTimeout, " seconds")
 					for {
 						select {
-						case <-time.After(time.Duration(vendingState.InferenceTimeout) * time.Second):
-
+						case <-time.After(vendingState.Configuration.InferenceTimeout):
 							{
 								if !vendingState.InferenceDataReceived {
 									fmt.Println("Door Closed: Failed")
@@ -658,36 +572,6 @@ func (vendingState *VendingState) ResetDoorLock(writer http.ResponseWriter, req 
 		fmt.Printf("Failed to write item data back to caller\n")
 	}
 
-}
-
-// SetDefaultTimeouts set the timeout values based on the toml configuration. If the value is not found use a default value
-func SetDefaultTimeouts(vendingState *VendingState, appSettings map[string]string, loggingClient logger.LoggingClient) {
-	// string conversion error
-	var strToIntErr error
-
-	// door open event
-	openTimeout, strToIntErr := strconv.Atoi(appSettings["DoorOpenStateTimeout"])
-	if strToIntErr != nil {
-		openTimeout = DefaultTimeOuts
-		loggingClient.Error(fmt.Sprintf("Door Open event timeout not set in configuration. Using default value of %v", openTimeout))
-	}
-	vendingState.DoorOpenStateTimeout = openTimeout
-
-	// door close event
-	closeTimeout, strToIntErr := strconv.Atoi(appSettings["DoorCloseStateTimeout"])
-	if strToIntErr != nil {
-		closeTimeout = DefaultTimeOuts
-		loggingClient.Error(fmt.Sprintf("Door close event timeout not set in configuration. Using default value of %v", closeTimeout))
-	}
-	vendingState.DoorCloseStateTimeout = closeTimeout
-
-	// inference event
-	inferenceTimeout, strToIntErr := strconv.Atoi(appSettings["InferenceTimeout"])
-	if strToIntErr != nil {
-		inferenceTimeout = DefaultTimeOuts
-		loggingClient.Error(fmt.Sprintf("Door close event timeout not set in configuration. Using default value of %v", inferenceTimeout))
-	}
-	vendingState.InferenceTimeout = inferenceTimeout
 }
 
 // GetMaintenanceMode will return a JSON response containing the boolean state

@@ -22,6 +22,8 @@ Specifically, it handles the following integrations:
 
 We have created a reference design service that will interact with the controller board and EdgeX core services [here](../automated-checkout-services/device_services.md#card-reader).
 
-### Step 2: Integrate your own computer vision inference hardware
+### Step 2: Integrate your own computer vision hardware and software
 
-Next, in order to be able to provide computer vision capabilities to the Automated Checkout it is necessary to bring your own set of cameras and deep learning model. It is expected by the application services to receive an inventory delta using an MQTT broker. For development and testing purposes, we have created a mock inference device service that mimics what a real computer vision inference engine would do. Please see more details in the device services section [here](../automated-checkout-services/device_services.md#inference-mock).
+Next, in order to be able to provide computer vision capabilities in production environment to the Automated Checkout it is necessary to bring your own set of cameras and deep learning model. It is expected by the application services to receive an inventory delta using an MQTT broker. For demonstration and evaluation purposes, we have created a CV inference device service using [Intel openVINO](https://docs.openvinotoolkit.org/) inference engine and [openVINO product detection model](https://docs.openvinotoolkit.org/latest/_models_intel_product_detection_0001_description_product_detection_0001.html) that calculates inventory delta based on preloaded images to simulate stocking and purchasing products.
+
+ Please see more details in the device services section [here](../automated-checkout-services/device_services.md#cv-inference).

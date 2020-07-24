@@ -2,9 +2,9 @@
 
 The following are the different events used in the Automated Checkout reference design.
 
-## Card Reader events
+## Card reader events
 
-The [`ds-card-reader`](./automated-checkout-services/device_services.md#Card-reader) uses the EdgeX events pattern to send the card information into EdgeX Core Data as well as maintain a healthy state.
+[`ds-card-reader`](./automated-checkout-services/device_services.md#card-reader) uses the EdgeX events pattern to send the card information into EdgeX Core Data as well as maintain a healthy state.
 
 `card-reader-event` is an asynchronous event sent when a card is scanned by the card reader device. The event reading value is a string containing a 10-digit number and is placed into EdgeX Core Data as an event reading.
 
@@ -14,9 +14,9 @@ The [`ds-card-reader`](./automated-checkout-services/device_services.md#Card-rea
 
 `card-reader-status` is an auto-event used to check the status of card reader connection. Every x seconds the event will check to see if the card reader is accessible. If the service is unable to verify the connection to the card reader then the service will restart. This event produces no database entry in EdgeX Core Data.
 
-## Controller Board events
+## Controller board events
 
-The [`ds-controller-board`](./automated-checkout-services/device_services.md#Controller-board) uses the EdgeX events pattern to send the card information into EdgeX Core Data.
+[`ds-controller-board`](./automated-checkout-services/device_services.md#controller-board) uses the EdgeX events pattern to send the card information into EdgeX Core Data.
 
 `controller-board-status` is an auto-event used to send the current state of the controller board and all of its periferals to EdgeX Core Data. This data is used by the as-controller-board-status application service to determine the state of the system. The information included in the status are the door lock states, door state, temperature, and humidity. The EdgeX Reading value is a string containing the following JSON:
 
@@ -30,7 +30,7 @@ The [`ds-controller-board`](./automated-checkout-services/device_services.md#Con
 }
 ```
 
-The following commands are also available to the ds-controller-board. More details can be found [`here`](./automated-checkout-services/device_services.md#Controller-board).
+The following commands are also available to the ds-controller-board. More details can be found [`here`](./automated-checkout-services/device_services.md#controller-board).
 
 - `lock1`
 - `lock2`
@@ -44,7 +44,7 @@ The following commands are also available to the ds-controller-board. More detai
 
 ## Computer vision inference events
 
-The [`ds-inference-mock`](./automated-checkout-services/device_services.md#Inference-Mock) uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file `./res/device-mqtt/inference.mqtt.device.profile.yml`, in the root of this GitHub repository.
+The [`ds-cv-inference`](./automated-checkout-services/device_services.md#cv-inference) uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file `./res/device-mqtt/inference.mqtt.device.profile.yml`, in the root of this GitHub repository.
 
 `inferenceHeartbeat` is an asynchronous event that is pushed to EdgeX Core Data when the inference is pinged by another service to verify it is functioning. If the inference is working properly the `inferencePong` response is sent as the event reading.
 
@@ -63,4 +63,4 @@ The [`ds-inference-mock`](./automated-checkout-services/device_services.md#Infer
 ]
 ```
 
-Finally the `inferenceDoorStatus` command is defined by the custom device profile for the EdgeX MQTT Device Service which sends the ping request to the computer vision inference mock. More details can be found [`here`](./automated-checkout-services/device_services.md#Inference-Mock).
+Finally the `inferenceDoorStatus` command is defined by the custom device profile for the EdgeX MQTT Device Service which sends the ping request to the CV inference service. More details can be found [here](./automated-checkout-services/device_services.md#cv-inference).

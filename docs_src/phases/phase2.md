@@ -52,7 +52,7 @@ lsusb
 
 The output may look like this (this is the output from a virtual machine):
 
-```
+```text
 Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 Bus 001 Device 003: ID ffff:0035
 Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet
@@ -93,9 +93,9 @@ ds-card-reader:
 
 We will be adding three environment variables to this service:
 
-* `DeviceSearchPath` - the path to search for `evdev` input devices
-* `VID` - the base-10 value of the vendor ID associated with the input device
-* `PID` - the base-10 value of the product ID associated with the input device
+- `DeviceSearchPath` - the path to search for `evdev` input devices
+- `VID` - the base-10 value of the vendor ID associated with the input device
+- `PID` - the base-10 value of the product ID associated with the input device
 
 First, verify that the default value of `DeviceSearchPath="/dev/input/event*"` corresponds to an actual path on your Linux system - the vast majority of Linux systems should automatically handle everything in this directory, but it helps to check.
 
@@ -110,7 +110,7 @@ ls -al /dev/input/event
 The output of <code>ls -al /dev/input/event</code> may look like this:
 </p>
 
-```
+```text
 crw-rw---- 1 root input 13, 64 Apr  9 09:10 /dev/input/event0
 crw-rw---- 1 root input 13, 65 Apr  9 09:10 /dev/input/event1
 crw-rw---- 1 root input 13, 66 Apr  9 09:10 /dev/input/event2
@@ -172,9 +172,9 @@ In the service, take a look at the file `ds-card-reader/device/physical.go`. Thi
 
 ```go
 func (reader *CardReaderPhysical) Listen() {
-	// ...
-	reader.processDevReadEvents(events)
-	// ...
+    // ...
+    reader.processDevReadEvents(events)
+    // ...
 }
 ```
 
