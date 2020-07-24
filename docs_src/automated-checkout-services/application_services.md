@@ -8,13 +8,13 @@ The **Automated Checkout** reference design utilizes two application services th
 - Controller Board Status – Handles events coming from the controller board device service.
 - Vending – The main business logic for the Automated Checkout application. This service handles events directly from the card reader device service and inference engine as well as coordinates data between each of the microservices.
 
-## Controller Board Status Application Service
+## Controller board status application service
 
-### Description
+### Controller board status application service description
 
 The `as-controller-board-status` application service checks the status of the controller board for changes in the state of the door, lock, temperature, and humidity, and triggers notifications if the average temperature and humidity are outside the desired ranges.
 
-### APIs
+### Controller board status application service APIs
 
 This service exposes a few REST API endpoints that are either intended to be interacted with via EdgeX's core services or directly.
 
@@ -69,9 +69,9 @@ If there is an error marshaling the controller board's state into a JSON respons
 
 ---
 
-## Vending Application Service
+## Vending application service
 
-### Description
+### Vending application service description
 
 The `as-vending` application service is the central microservice that contains the business logic to handle the following:
 
@@ -82,7 +82,7 @@ The `as-vending` application service is the central microservice that contains t
 
 This service also implements **_"maintenance mode"_** to manage error handling and recovery due to faulty hardware, temperatures outside the desired ranges, or any other actions that disrupt the normal workflow of the vending machine. The functions that execute this logic can be found in `as-vending/functions/output.go`
 
-### APIs
+### Vending application service APIs
 
 ---
 

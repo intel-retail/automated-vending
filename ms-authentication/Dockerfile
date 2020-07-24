@@ -20,10 +20,10 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2020: Intel'
 
 RUN apk --no-cache add zeromq
-COPY --from=builder /usr/local/bin/ms-authentication/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /usr/local/bin/ms-authentication/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ms-authentication/main /ms-authentication
 COPY --from=builder /usr/local/bin/ms-authentication/cards.json /cards.json
 COPY --from=builder /usr/local/bin/ms-authentication/accounts.json /accounts.json
 COPY --from=builder /usr/local/bin/ms-authentication/people.json /people.json
 
-CMD [ "/ms-authentication","--profile=docker","--confdir=/res", "-r"]
+CMD [ "/ms-authentication", "--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r"]

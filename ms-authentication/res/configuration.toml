@@ -33,7 +33,7 @@ Type = 'zero'
 
 [Logging]
 EnableRemote = false
-File = './logs/ms-authentication-publish.log'
+File = ''
 
 [Binding]
 Type="http"

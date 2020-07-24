@@ -10,17 +10,15 @@ Notifications work as follows:
 
 To change the message type from email to a different medium, the `as-controller-board-status` service should be updated to use a different notification type.
 
-## Step 1: Set Environment Variables
+## Step 1: Set environment variables
 
-Set environment variable overrides for `Smtp_Host` and `Smtp_Port` in 'config-seed', which will inject these variables into the notification service's registry.
+Set environment variable overrides for `Smtp_Host` and `Smtp_Port` in the `notifications` service in the compose file, which will inject these variables into the notification service's registry.
 
-Additional notification service configuration properties are [here](https://fuji-docs.edgexfoundry.org/Ch-AlertsNotifications.html#configuration-properties "EdgeX Alerts & Notifications").
+Additional notification service configuration properties are [here](https://docs.edgexfoundry.org/1.2/api/supporting/Ch-APISupportingServicesAlerts/ "EdgeX Alerts & Notifications").
 
-## Step 2: Add code to the config-seed Environment Section
+The code snippet below is a docker-compose example that sends an email notification. Add this code to the `notifications` service's environment section in `docker-compose.yml`.
 
-The code snippet below is a docker-compose example that sends an email notification. Add this code to the `config-seed` service's environment section in `docker-compose.yml`.
-
-``` yaml
+```yaml
 environment:
   <<: *common-variables
   Smtp_Host: <host name>
@@ -30,12 +28,12 @@ environment:
   Smtp_Subject: Automated Checkout Notification
 ```
 
-## Step 3: Add SMTP Server to compose file (optional)
+## Step 2: Add SMTP server to compose file (optional)
 
 The snipped below adds a development SMTP server smtp4dev to your `docker-compose.yml`.
 Skip this step if you want to use Gmail or another server.
 
-``` yaml
+```yaml
 smtp-server:
   image: rnwood/smtp4dev:linux-amd64-v3
   ports:

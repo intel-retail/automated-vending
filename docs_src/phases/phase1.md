@@ -12,19 +12,19 @@ The documentation in [phase 2](./phase2.md) and [phase 3](./phase3.md) will disc
 
 This walkthrough completes the following three scenarios:
 
-1. [**Stock the Cooler with inventory**](#1-stock-the-cooler-with-inventory)
+1. [**Stock the cooler with inventory**](#1-stock-the-cooler-with-inventory)
     - The cooler is empty - it has no stock in its inventory
     - A worker swipes their badge
     - The worker adds stock to the cooler
-1. [**Purchase from the Cooler as a customer**](#2-purchase-from-the-cooler-as-a-customer)
+1. [**Purchase from the cooler as a customer**](#2-purchase-from-the-cooler-as-a-customer)
     - Later, a customer swipes their badge to open the cooler
     - The customer takes item(s) from the inventory
     - The customer closes the door and gets billed
-1. [**The Cooler requires maintenance**](#3-the-cooler-requires-maintenance)
+1. [**The cooler requires maintenance**](#3-the-cooler-requires-maintenance)
     - The internal temperature of the cooler has exceeded the maximum temperature threshold
     - A maintenance worker resolves the issue
 
-## Getting Started
+## Getting started
 
 1. Complete steps 1-4 in [Getting Started](../index.md#step-1-clone-the-repository).
 1. Make sure the containers are all up and running (aside from `edgex-config-seed`): `docker-compose ps`
@@ -70,11 +70,11 @@ docker-compose logs -f ds-card-reader ds-controller-board ms-authentication as-v
 
 Continue to the next section to start using `curl` to run through the simulated scenarios.
 
-## Walkthrough of Scenarios
+## Walkthrough of scenarios
 
 Each section below contains specific steps and expected output for each of the scenarios mentioned above.
 
-### 1. Stock the Cooler with Inventory
+### 1. Stock the cooler with inventory
 
 In order to fill up the cooler with inventory, someone acting as a "stocker" must swipe their card and proceed to fill the Automated Checkout with products.
 
@@ -91,6 +91,8 @@ That's it! Each of the above actions has a corresponding REST API call that we w
 <p align="center">
     <img src="../images/stocker.png">
 </p>
+
+For visualization purposes, the CV inference service serves the post-processed images over http. Open <a href="http://127.0.0.1:9005" target=_blank>http://127.0.0.1:9005</a> on your web browser to observe how products are being added or removed to the cooler.
 
 !!! warning
     **This sequence of events is time-sensitive. Once started, you must continue the sequence.**
@@ -161,6 +163,7 @@ curl -X GET http://localhost:48094/status
   "contentType":"json","statusCode":200,"error":false
 }
 ```
+
 </details>
 
 Then open the door, and close it afterwards, while waiting approximately 3-4 seconds between each event using the following 2 commands.
@@ -188,7 +191,7 @@ The following command makes a REST API call to the `ds-controller-board` service
 curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48082/api/v1/device/name/ds-controller-board/command/setDoorClosed
 ```
 
-Wait about 20-30 seconds for the inventory to be discovered by the inference (which is being mocked), and also for background processing of events to occur. **The time-sensitive sequence has been completed.**
+Wait about 20-30 seconds for the inventory to be discovered by the CV inference service, and also for background processing of events to occur. **The time-sensitive sequence has been completed.**
 
 The following diagram represents the flow for opening and closing the door:
 
@@ -211,12 +214,19 @@ The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated
 
 ```json
 {
-  "content": "{\"data\":[{\"sku\":\"4900002470\",\"itemPrice\":1.99,\"productName\":\"Sprite (Lemon-Lime) - 16.9 oz\",\"unitsOnHand\":24,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200010735\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew (Low Calorie) - 16.9 oz\",\"unitsOnHand\":18,\"maxRestockingLevel\":18,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200050408\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew - 16.9 oz\",\"unitsOnHand\":6,\"maxRestockingLevel\":6,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"7800009257\",\"itemPrice\":1.99,\"productName\":\"Water (Dejablue) - 16.9 oz\",\"unitsOnHand\":24,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"4900002762\",\"itemPrice\":1.99,\"productName\":\"Dasani Water - 16.9 oz\",\"unitsOnHand\":32,\"maxRestockingLevel\":32,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200081119\",\"itemPrice\":1.99,\"productName\":\"Pepsi (Wild Cherry) - 16.9 oz\",\"unitsOnHand\":12,\"maxRestockingLevel\":12,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200018402\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew (blue) - 16.9 oz\",\"unitsOnHand\":6,\"maxRestockingLevel\":6,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"4900002469\",\"itemPrice\":1.99,\"productName\":\"Diet Coke - 16.9 oz\",\"unitsOnHand\":24,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"490440\",\"itemPrice\":1.99,\"productName\":\"Coca-Cola - 20 oz\",\"unitsOnHand\":72,\"maxRestockingLevel\":72,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true}]}",
+  "content": "{\"data\":[
+      {\"sku\":\"4900002470\",\"itemPrice\":1.99,\"productName\":\"Sprite (Lemon-Lime) - 16.9 oz\",\"unitsOnHand\":2,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002500\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew - 16.9 oz\",\"unitsOnHand\":0,\"maxRestockingLevel\":6,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002510\",\"itemPrice\":1.99,\"productName\":\"Gatorade - 16.9 oz\",\"unitsOnHand\":2,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002525\",\"itemPrice\":1.99,\"productName\":\"Pringles\",\"unitsOnHand\":2,\"maxRestockingLevel\":32,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002520\",\"itemPrice\":1.99,\"productName\":\"Ruffles\",\"unitsOnHand\":1,\"maxRestockingLevel\":12,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true}
+    ]}",
   "contentType": "json",
   "statusCode": 200,
   "error": false
 }
 ```
+
 </details>
 
 ```bash
@@ -232,14 +242,14 @@ The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated
 
 ```json
 {
-  "content": "{\"data\":[{\"cardId\":\"0003293374\",\"accountId\":1,\"roleId\":2,\"personId\":1,\"inventoryDelta\":[{\"SKU\":\"4900002470\",\"delta\":24},{\"SKU\":\"1200010735\",\"delta\":18},{\"SKU\":\"1200050408\",\"delta\":6},{\"SKU\":\"7800009257\",\"delta\":24},{\"SKU\":\"4900002762\",\"delta\":32},{\"SKU\":\"1200081119\",\"delta\":12},{\"SKU\":\"1200018402\",\"delta\":6},{\"SKU\":\"4900002469\",\"delta\":24},{\"SKU\":\"490440\",\"delta\":72}],\"createdAt\":\"1585088126815981442\",\"auditEntryId\":\"4c1bca23-b097-4750-8a3b-43cc09733425\"}]}",
+  "content": "{\"data\":[{\"cardId\":\"0003293374\",\"accountId\":1,\"roleId\":2,\"personId\":1,\"inventoryDelta\":[{\"SKU\":\"4900002520\",\"delta\":1},{\"SKU\":\"4900002525\",\"delta\":2},{\"SKU\":\"4900002470\",\"delta\":2},{\"SKU\":\"4900002510\",\"delta\":2}],\"createdAt\":\"1585088126815981442\",\"auditEntryId\":\"4c1bca23-b097-4750-8a3b-43cc09733425\"}]}",
   "contentType": "json",
   "statusCode": 200,
   "error": false
 }
 ```
-</details>
 
+</details>
 
 ```bash
 curl -X GET http://localhost:48093/ledger
@@ -276,16 +286,17 @@ The (unaltered) contents of <a href="https://github.com/intel-iot-devkit/automat
   "error": false
 }
 ```
+
 </details>
 
 **That's it!** The cooler has been populated with inventory, and the audit log and inventory both show evidence of this.
 
-### 2. Purchase from the cooler as a Customer
+### 2. Purchase from the cooler as a customer
 
 Now that the cooler's inventory has been stocked, we can simulate a customer swiping their card and removing one or more items from the cooler for purchase. The same time-sensitive disclaimers from the stocking simulation (which was done earlier in this walkthrough) apply here as well, so please review the [Stock the Cooler with Inventory](#Stock-the-cooler-with-Inventory) section if you have not done so yet.
 
 !!! warning
-    If you have not already populated the inventory as described in the [Stock the Cooler with Inventory](#Stock-the-Cooler-with-Inventory) section, do not proceed. The mocked inferencing service follows a specific sequence for changes in inventory. The first transaction in the sequence is always a _gain_ of inventory, corresponding to the stocker adding items to inventory. The following transactions are _removal_ of inventory, corresponding to customers _taking_ items from inventory.
+    If you have not already populated the inventory as described in the [Stock the Cooler with Inventory](#Stock-the-Cooler-with-Inventory) section, do not proceed. The inferencing service follows a specific sequence for changes in inventory. The first transaction in the sequence is always a _gain_ of inventory, corresponding to the stocker adding items to inventory. The following transactions are _removal_ of inventory, corresponding to customers _taking_ items from inventory.
 
     If you mess up, you should start fresh. Run the command `make down && make clean-docker && make run` to scrub the Automated Checkout data and containers, wait approximately one minute after all services have started, and begin again. This scenario relies on the stocking scenario in phase 1 - if the stocking scenario is skipped, it is still OK, but the randomized sequence of transactions will yield inventory/audit log/ledger changes that differ from the expected examples shown throughout this scenario.
 
@@ -338,6 +349,7 @@ curl -X GET http://localhost:48094/status
   "contentType":"json","statusCode":200,"error":false
 }
 ```
+
 </details>
 
 Then open the door, and close it afterwards, while waiting approximately 3-4 seconds between each event using the following 2 commands.
@@ -379,12 +391,19 @@ The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated
 
 ```json
 {
-	"content": "{\"data\":[{\"sku\":\"4900002470\",\"itemPrice\":1.99,\"productName\":\"Sprite (Lemon-Lime) - 16.9 oz\",\"unitsOnHand\":24,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200010735\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew (Low Calorie) - 16.9 oz\",\"unitsOnHand\":18,\"maxRestockingLevel\":18,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200050408\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew - 16.9 oz\",\"unitsOnHand\":3,\"maxRestockingLevel\":6,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"7800009257\",\"itemPrice\":1.99,\"productName\":\"Water (Dejablue) - 16.9 oz\",\"unitsOnHand\":23,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"4900002762\",\"itemPrice\":1.99,\"productName\":\"Dasani Water - 16.9 oz\",\"unitsOnHand\":32,\"maxRestockingLevel\":32,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200081119\",\"itemPrice\":1.99,\"productName\":\"Pepsi (Wild Cherry) - 16.9 oz\",\"unitsOnHand\":12,\"maxRestockingLevel\":12,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"1200018402\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew (blue) - 16.9 oz\",\"unitsOnHand\":6,\"maxRestockingLevel\":6,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"4900002469\",\"itemPrice\":1.99,\"productName\":\"Diet Coke - 16.9 oz\",\"unitsOnHand\":24,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},{\"sku\":\"490440\",\"itemPrice\":1.99,\"productName\":\"Coca-Cola - 20 oz\",\"unitsOnHand\":72,\"maxRestockingLevel\":72,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true}]}",
-	"contentType": "json",
-	"statusCode": 200,
-	"error": false
+  "content": "{\"data\"{\"data\":[
+      {\"sku\":\"4900002470\",\"itemPrice\":1.99,\"productName\":\"Sprite (Lemon-Lime) - 16.9 oz\",\"unitsOnHand\":2,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002500\",\"itemPrice\":1.99,\"productName\":\"Mountain Dew - 16.9 oz\",\"unitsOnHand\":0,\"maxRestockingLevel\":6,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002510\",\"itemPrice\":1.99,\"productName\":\"Gatorade - 16.9 oz\",\"unitsOnHand\":1,\"maxRestockingLevel\":24,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002525\",\"itemPrice\":1.99,\"productName\":\"Pringles\",\"unitsOnHand\":1,\"maxRestockingLevel\":32,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true},
+      {\"sku\":\"4900002520\",\"itemPrice\":1.99,\"productName\":\"Ruffles\",\"unitsOnHand\":1,\"maxRestockingLevel\":12,\"minRestockingLevel\":0,\"createdAt\":\"1567787309\",\"updatedAt\":\"1567787309\",\"isActive\":true}
+    ]}",
+  "contentType": "json",
+  "statusCode": 200,
+  "error": false
 }
 ```
+
 </details>
 
 In this particular example, the customer purchased `1 item of Water (Dejablue) (sku 7800009257)` and `3 items of Mountain Dew (sku 1200050408)`
@@ -407,12 +426,15 @@ The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated
 
 ```json
 {
-	"content": "{\"data\":[{\"cardId\":\"0003293374\",\"accountId\":1,\"roleId\":2,\"personId\":1,\"inventoryDelta\":[{\"SKU\":\"4900002470\",\"delta\":24},{\"SKU\":\"1200010735\",\"delta\":18},{\"SKU\":\"1200050408\",\"delta\":6},{\"SKU\":\"7800009257\",\"delta\":24},{\"SKU\":\"4900002762\",\"delta\":32},{\"SKU\":\"1200081119\",\"delta\":12},{\"SKU\":\"1200018402\",\"delta\":6},{\"SKU\":\"4900002469\",\"delta\":24},{\"SKU\":\"490440\",\"delta\":72}],\"createdAt\":\"1585678869586092314\",\"auditEntryId\":\"7b3c2672-ba66-412c-a262-9816f3414eff\"},{\"cardId\":\"0003278380\",\"accountId\":1,\"roleId\":1,\"personId\":1,\"inventoryDelta\":[{\"SKU\":\"1200050408\",\"delta\":-3},{\"SKU\":\"7800009257\",\"delta\":-1}],\"createdAt\":\"1585679067690432556\",\"auditEntryId\":\"c7fa7e2d-a24c-428f-9c03-08460cd69e29\"}]}",
-	"contentType": "json",
-	"statusCode": 200,
-	"error": false
+  "content": "{\"data\":[
+    {\"cardId\":\"\",\"accountId\":0,\"roleId\":0,\"personId\":0,\"inventoryDelta\":[{\"SKU\":\"4900002520\",\"delta\":1},{\"SKU\":\"4900002525\",\"delta\":2},{\"SKU\":\"4900002470\",\"delta\":2},{\"SKU\":\"4900002510\",\"delta\":2}],\"createdAt\":\"1591664096434624545\",\"auditEntryId\":\"b0c119ef-e933-44d2-8c14-8a720cc95417\"},
+    {\"cardId\":\"0003278380\",\"accountId\":1,\"roleId\":1,\"personId\":1,\"inventoryDelta\":[{\"SKU\":\"4900002525\",\"delta\":-1},{\"SKU\":\"4900002510\",\"delta\":-1}],\"createdAt\":\"1591664285876117173\",\"auditEntryId\":\"6447cc8f-c2ba-46d9-96cb-0e7c5ab72e8b\"}]}}",
+  "contentType": "json",
+  "statusCode": 200,
+  "error": false
 }
 ```
+
 </details>
 
 ```bash
@@ -432,17 +454,17 @@ The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated
 
 ```json
 {
-	"content": "{\"data\":[
-    {\"accountID\":1,\"ledgers\":[{\"transactionID\":\"1585679067654735828\",\"txTimeStamp\":\"1585679067654735975\",\"lineTotal\":7.96,\"createdAt\":\"1585679067654736044\",\"updatedAt\":\"1585679067654736110\",\"isPaid\":false,\"lineItems\":[{\"sku\":\"1200050408\",\"productName\":\"Mountain Dew - 16.9 oz\",\"itemPrice\":1.99,\"itemCount\":3},{\"sku\":\"7800009257\",\"productName\":\"Water (Dejablue) - 16.9 oz\",\"itemPrice\":1.99,\"itemCount\":1}]}]},
+  "content": "{\"data\":[
+    {\"accountID\":1,\"ledgers\":[{\"transactionID\":\"1591664279852530807\",\"txTimeStamp\":\"1591664279852530890\",\"lineTotal\":3.98,\"createdAt\":\"1591664279852530964\",\"updatedAt\":\"1591664279852531037\",\"isPaid\":false,\"lineItems\":[{\"sku\":\"4900002525\",\"productName\":\"Pringles\",\"itemPrice\":1.99,\"itemCount\":1},{\"sku\":\"4900002510\",\"productName\":\"Gatorade - 16.9 oz\",\"itemPrice\":1.99,\"itemCount\":1}]}]},
     {\"accountID\":2,\"ledgers\":[]},
     {\"accountID\":3,\"ledgers\":[]},
     {\"accountID\":4,\"ledgers\":[]},
     {\"accountID\":5,\"ledgers\":[]},
     {\"accountID\":6,\"ledgers\":[]}
   ]}",
-	"contentType": "json",
-	"statusCode": 200,
-	"error": false
+  "contentType": "json",
+  "statusCode": 200,
+  "error": false
 }
 ```
 </details>
@@ -457,23 +479,19 @@ From the ledger data, notice the transaction done by accountID 1.
     \"createdAt\":\"1585679067654736044\",
     \"updatedAt\":\"1585679067654736110\",
     \"isPaid\":false,
-    \"lineItems\":[{\"sku\":\"1200050408\",
-                    \"productName\":\"Mountain Dew - 16.9 oz\",
-                    \"itemPrice\":1.99,
-                    \"itemCount\":3},
-                    {\"sku\":\"7800009257\",
-                    \"productName\":\"Water (Dejablue) - 16.9 oz\",
-                    \"itemPrice\":1.99,
-                    \"itemCount\":1}]
+    \"lineItems\":[
+                   {\"sku\":\"4900002525\",\"productName\":\"Pringles\",\"itemPrice\":1.99,\"itemCount\":1},
+                   {\"sku\":\"4900002510\",\"productName\":\"Gatorade - 16.9 oz\",\"itemPrice\":1.99,\"itemCount\":1}
+                  ]
             }]}"
 ```
 
-### 3. The Cooler Requires Maintenance
+### 3. The cooler requires maintenance
 
 In this scenario, all Automated Checkout services are operating as usual, except the following conditions are present:
 
-* The cooler has exceeded the maximum allowable temperature threshold of 83 degrees Fahrenheit
-* It has stayed at or above this temperature threshold for more than 15 seconds
+- The cooler has exceeded the maximum allowable temperature threshold of 83 degrees Fahrenheit
+- It has stayed at or above this temperature threshold for more than 15 seconds
 
 <p align="center">
     <img src="../images/maintenance.png">
@@ -551,6 +569,7 @@ The value of <code>maintenanceMode</code> will switch to <code>true</code> from 
   "error": false
 }
 ```
+
 </details>
 
 The following diagram represents the flow for setting the temperature and setting maintenance mode to true:

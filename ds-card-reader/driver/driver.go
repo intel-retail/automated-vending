@@ -8,8 +8,8 @@ import (
 
 	common "ds-card-reader/common"
 	device "ds-card-reader/device"
-	sdk "github.com/edgexfoundry/device-sdk-go"
 	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
+	"github.com/edgexfoundry/device-sdk-go/pkg/service"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
@@ -20,19 +20,23 @@ import (
 type CardReaderDriver struct {
 	LoggingClient logger.LoggingClient
 	CardReader    device.CardReader
-	Config        common.CardReaderConfig
+	Config        *common.CardReaderConfig
 }
 
 // Initialize initializes the card reader device within EdgeX. This is the
 // main entrypoint of this application
-func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues) error {
+func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice)  (err error) {
 	// propagate the logging client to the driver so it can use it too
 	drv.LoggingClient = lc
 
-	// parse the device's configuration into a proper struct
-	err := utilities.MarshalSettings(sdk.DriverConfigs(), &drv.Config, false)
-	if err != nil {
-		return fmt.Errorf("failed to process card reader settings, check configuration.toml: %w", err)
+	// Only setting if nil allows for unit testing with VirtualBoard enabled
+	if drv.Config == nil {
+		drv.Config = new(common.CardReaderConfig)
+		// parse the device's configuration into a proper struct
+		err := utilities.MarshalSettings(service.DriverConfigs(), drv.Config, false)
+		if err != nil {
+			return fmt.Errorf("failed to process card reader settings, check configuration.toml: %w", err)
+		}
 	}
 
 	// initialize the card reader device so that it can be controlled by our

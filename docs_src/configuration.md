@@ -3,11 +3,11 @@
 This page lists all of the relevant configuration parameters for each service in the Automated Checkout reference design.
 
 !!!info
-    Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the [EdgeX Foundry GitHub repositories](https://github.com/edgexfoundry).
+    Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the [EdgeX Foundry GitHub repositories](https://github.com/edgexfoundry) or in the [official EdgeX documentation here](https://docs.edgexfoundry.org/1.2/).
 
-## Environment Overrides
+## Environment overrides
 
-The simplest way to change one of the configuration values described below is via the use of environment variable overrides in the docker compose file. The value of each configuration item in a service's configuration can be overridden with an environment variable specific to that item. The name of the environment variable is the path to the item in the configuration tree with underscores separating the nodes. The character case of each node in the environment variable name must match that found in the service's configuration. Here are a few examples for the Driver section:
+The simplest way to change one of the configuration values described below is via the use of environment variable overrides in the docker compose file. The value of each configuration item in a service's configuration can be overridden with an environment variable specific to that item. The name of the environment variable is the path to the item in the configuration tree with underscores separating the nodes. The character case of each node in the environment variable name must match that found in the service's configuration. Here are a few examples for the `Driver` section:
 
 ```toml
 [Driver]
@@ -42,7 +42,7 @@ These overrides are placed in the target service's environment section of the co
     ipc: none
 ```
 
-## Card Reader Device Service
+## Card reader device service
 
 The following items can be configured via the `Driver` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader/res/configuration.toml) file. All values are strings.
 
@@ -52,7 +52,7 @@ The following items can be configured via the `Driver` section of the service's 
 - `PID` - the `uint16` value (as a base-10 string) corresponding to the Product ID of the USB device (run `lsusb` to list VID and PID values of connected USB devices). For example, if the PID is `0035` in the output of `lsusb`, it is `"53"` in the configuration file
 - `SimulateDevice` - the boolean value that tells this device service to expect an input device to dictate inputs (`false`), or if a simulated device will be used (and REST API calls will control it) (`true`) - if `true`
 
-## Controller Board Device Service
+## Controller board device service
 
 The following items can be configured via the `Driver` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-controller-board/res/configuration.toml) file. All values are strings.
 
@@ -62,7 +62,7 @@ The following items can be configured via the `Driver` section of the service's 
 - `PID` - the `string` value corresponding to the Product ID hexadecimal (base-16) of the USB device (run `lsusb` to list VID and PID values of connected USB devices). For example, if the PID is `8037` in the output of `lsusb`, it is `"8037"` in the configuration file
 - `VirtualControllerBoard` - the boolean value that tells this device service to expect an input device to dictate inputs (`false`), or if a simulated device will be used (and REST API calls will control it) (`true`) - if `true`
 
-## EdgeX MQTT Device Service
+## EdgeX MQTT device service
 
 This reference design uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker) and are volume mounted into the device service's running Docker container.
 
@@ -92,7 +92,34 @@ The following items can be configured via the `DeviceList` and `Driver` section 
 - `ResponseClientId` - Client ID for the response MQTT Broker
 - `ResponseTopic` - Subscribe topic for the response MQTT Broker
 
-## Controller Board Status Application Service
+## CV inference device service
+
+If you run the CV inference device service via source code, the following items can be configured via arguments:
+
+```text
+  -confidence float
+        Confidence threshold. (default 0.85)
+  -config string
+        XML model config file path. (default "product-detection-0001/FP32/product-detection-0001.xml")
+  -dir string
+        Images directory. (default "./images")
+  -model string
+        Model file path. (default "product-detection-0001/FP32/product-detection-0001.bin")
+  -mqtt string
+        Mqtt address. (default "localhost:1883")
+  -skuMapping string
+        SKU Mapping JSON file path (default "skumapping.json")
+```
+
+For simplification, if you use the docker version, we have created an entrypoint script that has some defaults for model and config. For the rest of the arguments, they must be passed in the following order:
+
+`command: ["/path/to/images","mqtt URL","confidence value","/path/to/skumapping.json"]`
+
+Example:
+
+`command: ["/go/src/ds-cv-inference/images","mqtt-broker:1883","0.85","/go/src/ds-cv-inference/skumapping.json"]`
+
+## Controller board status application service
 
 The following items can be configured via the `ApplicationSettings` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-controller-board-status/res/configuration.toml) file. All values are strings.
 
@@ -100,7 +127,7 @@ The following items can be configured via the `ApplicationSettings` section of t
 - `DeviceName` - The string name of the upstream EdgeX device that will be pushing events & readings to this application service
 - `MaxTemperatureThreshold` - The float64 value of the maximum temperature threshold, if the average temperature over the sample `AverageTemperatureMeasurementDuration` exceeds this value, a notification is sent
 - `MinTemperatureThreshold` - The float64 value of the minimum temperature threshold, if the average temperature over the sample `AverageTemperatureMeasurementDuration` exceeds this value, a notification is sent
-- `MQTTEndpoint` - A string containing the full EdgeX core command REST API endpoint corresponding to the `inferenceDoorStatus` command, registered by the MQTT device service in the inference mock
+- `MQTTEndpoint` - A string containing the full EdgeX core command REST API endpoint corresponding to the `inferenceDoorStatus` command, registered by the MQTT device service in the cv inference service
 - `NotificationCategory` - The category for notifications as a string
 - `NotificationEmailAddresses` - A comma-separated values (CSV) string of emails to send notifications to
 - `NotificationHost` - The full string URL of the EdgeX notifications service API that allows notifications to be sent by submitting an HTTP Post request
@@ -117,27 +144,28 @@ The following items can be configured via the `ApplicationSettings` section of t
 - `SubscriptionHost` - The URL (as a string) of the EdgeX notification service's subscription API
 - `VendingEndpoint` - The URL (as a string) corresponding to the central vending endpoint's `/boardStatus` API endpoint, which is where events will be Posted when there is a door open/close change event, or a "temperature threshold exceeded" event.
 
-## Vending Application Service
+## Vending application service
 
 The following items can be configured via the `ApplicationSettings` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending/res/configuration.toml) file. All values are strings.
 
-- `DeviceControllerBoardLock1` - EdgeX Command service endpoint for lock 1 events
-- `DeviceControllerBoardLock2` - EdgeX Command service endpoint for lock 2 events
+- `AuthenticationEndpoint` - Endpoint for authentication microservice
+- `DeviceControllerBoarddisplayReset` - EdgeX Command service endpoint for Resetting the LCD text
 - `DeviceControllerBoarddisplayRow0` - EdgeX Command service endpoint for Row 0 on LCD
 - `DeviceControllerBoarddisplayRow1` - EdgeX Command service endpoint for Row 1 on LCD
 - `DeviceControllerBoarddisplayRow2` - EdgeX Command service endpoint for Row 2 on LCD
 - `DeviceControllerBoarddisplayRow3` - EdgeX Command service endpoint for Row 3 on LCD
-- `DeviceControllerBoarddisplayReset` - EdgeX Command service endpoint for Resetting the LCD text
-- `AuthenticationEndpoint` - Endpoint for authentication microservice
-- `InferenceHeartbeat` - EdgeX Command service endpoint for Inference Heartbeat
-- `InferenceDoorStatus` - EdgeX Command service endpoint for Inference Door status
-- `LedgerService` - Endpoint for Ledger Micro Service
-- `InventoryService` - Endpoint for Inventory Micro Service
-- `InventoryAuditLogService` - Endpoint for Inventory Audit Log Micro Service
-- `DoorOpenStateTimeout` - The time-duration string (i.e. `-15s`, `-10m`) used for Door Open lockout time delay, in seconds
+- `DeviceControllerBoardLock1` - EdgeX Command service endpoint for lock 1 events
+- `DeviceControllerBoardLock2` - EdgeX Command service endpoint for lock 2 events
+- `DeviceNames` - String value, containing comma-separated device names, as registered in EdgeX for each service. Incoming events/readings that do not match one of the device names will likely be ignored by this service.
 - `DoorCloseStateTimeout` - The time-duration string (i.e. `-15s`, `-10m`) used for Door Close lockout time delay, in seconds
+- `DoorOpenStateTimeout` - The time-duration string (i.e. `-15s`, `-10m`) used for Door Open lockout time delay, in seconds
+- `InferenceDoorStatus` - EdgeX Command service endpoint for Inference Door status
+- `InferenceHeartbeat` - EdgeX Command service endpoint for Inference Heartbeat
 - `InferenceTimeout` - The time-duration string (i.e. `-15s`, `-10m`) used for Inference message time delay, in seconds
+- `InventoryAuditLogService` - Endpoint for Inventory Audit Log Micro Service
+- `InventoryService` - Endpoint for Inventory Micro Service
 - `LCDRowLength` - Max number of characters for LCD Rows
+- `LedgerService` - Endpoint for Ledger Micro Service
 
 ## Authentication microservice
 
@@ -148,7 +176,6 @@ For this particular microservice, there are no specific configuration options. F
 For this particular microservice, there are no specific configuration options. Future settings would be added under the `[ApplicationSettings]` section.
 
 ## Ledger microservice
-
 
 The following items can be configured via the `ApplicationSettings` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-ledger/res/configuration.toml) file. All values are strings.
 

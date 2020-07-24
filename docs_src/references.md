@@ -1,21 +1,21 @@
 # References
 
-## Application Services
+## Application services
 
 | Service Name            | Service Abbreviated Name     | Link                                                                                                                                                                                           |
 |-------------------------|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Controller Board Status | `as-controller-board-status` | [https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-controller-board-status](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-controller-board-status) |
 | Vending                 | `as-vending`                 | [https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending)                                 |
 
-## Device Service
+## Device services
 
 | Service Name     | Service Abbreviated Name | Link                                                                                                                                                                             |
 |------------------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Card Reader      | `ds-card-reader`         | [https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader)           |
 | Controller Board | `ds-controller-board`    | [https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-controller-board](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-controller-board) |
-| Inference Mock   | `ds-inference-mock`      | [https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-inference-mock](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-inference-mock)     |
+| CV inference   | `ds-cv-inference`      | [https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-cv-inference](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-cv-inference)     |
 
-## Microservices (Business Logic Services)
+## Microservices (business logic services)
 
 | Service Name   | Service Abbreviated Name | Link                                                                                                                                                                         |
 |----------------|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -25,6 +25,7 @@
 
 ## Other
 
-| Component             | Link                                                                 |
-| --------------------- | -------------------------------------------------------------------- |
-| EdgeX GitHub Repos    | [https://github.com/edgexfoundry](https://github.com/edgexfoundry)   |
+| Component             | Link                                                                   |
+| --------------------- | -----------------------------------------------------------------------|
+| EdgeX GitHub Repos    | [https://github.com/edgexfoundry](https://github.com/edgexfoundry)     |
+| Intel openVINO        | [https://docs.openvinotoolkit.org/](https://docs.openvinotoolkit.org/) |

@@ -13,20 +13,10 @@
         "createdAt": "1567787309",
         "isActive": true,
         "itemPrice": 1.99,
-        "maxRestockingLevel": 18,
-        "minRestockingLevel": 0,
-        "productName": "Mountain Dew (Low Calorie) - 16.9 oz",
-        "sku": "1200010735",
-        "unitsOnHand": 0,
-        "updatedAt": "1567787309"
-    }, {
-        "createdAt": "1567787309",
-        "isActive": true,
-        "itemPrice": 1.99,
         "maxRestockingLevel": 6,
         "minRestockingLevel": 0,
         "productName": "Mountain Dew - 16.9 oz",
-        "sku": "1200050408",
+        "sku": "4900002500",
         "unitsOnHand": 0,
         "updatedAt": "1567787309"
     }, {
@@ -35,8 +25,8 @@
         "itemPrice": 1.99,
         "maxRestockingLevel": 24,
         "minRestockingLevel": 0,
-        "productName": "Water (Dejablue) - 16.9 oz",
-        "sku": "7800009257",
+        "productName": "Gatorade - 16.9 oz",
+        "sku": "4900002510",
         "unitsOnHand": 0,
         "updatedAt": "1567787309"
     }, {
@@ -45,8 +35,8 @@
         "itemPrice": 1.99,
         "maxRestockingLevel": 32,
         "minRestockingLevel": 0,
-        "productName": "Dasani Water - 16.9 oz",
-        "sku": "4900002762",
+        "productName": "Pringles",
+        "sku": "4900002525",
         "unitsOnHand": 0,
         "updatedAt": "1567787309"
     }, {
@@ -55,38 +45,8 @@
         "itemPrice": 1.99,
         "maxRestockingLevel": 12,
         "minRestockingLevel": 0,
-        "productName": "Pepsi (Wild Cherry) - 16.9 oz",
-        "sku": "1200081119",
-        "unitsOnHand": 0,
-        "updatedAt": "1567787309"
-    }, {
-        "createdAt": "1567787309",
-        "isActive": true,
-        "itemPrice": 1.99,
-        "maxRestockingLevel": 6,
-        "minRestockingLevel": 0,
-        "productName": "Mountain Dew (blue) - 16.9 oz",
-        "sku": "1200018402",
-        "unitsOnHand": 0,
-        "updatedAt": "1567787309"
-    }, {
-        "createdAt": "1567787309",
-        "isActive": true,
-        "itemPrice": 1.99,
-        "maxRestockingLevel": 24,
-        "minRestockingLevel": 0,
-        "productName": "Diet Coke - 16.9 oz",
-        "sku": "4900002469",
-        "unitsOnHand": 0,
-        "updatedAt": "1567787309"
-    }, {
-        "createdAt": "1567787309",
-        "isActive": true,
-        "itemPrice": 1.99,
-        "maxRestockingLevel": 72,
-        "minRestockingLevel": 0,
-        "productName": "Coca-Cola - 20 oz",
-        "sku": "490440",
+        "productName": "Ruffles",
+        "sku": "4900002520",
         "unitsOnHand": 0,
         "updatedAt": "1567787309"
     }]

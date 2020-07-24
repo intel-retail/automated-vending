@@ -20,7 +20,7 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2020: Intel'
 
 RUN apk --no-cache add zeromq
-COPY --from=builder /usr/local/bin/as-controller-board-status/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /usr/local/bin/as-controller-board-status/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/as-controller-board-status/main /as-controller-board-status
 
-CMD [ "/as-controller-board-status","--profile=docker","--confdir=/res", "-r"]
+CMD [ "/as-controller-board-status","--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r"]

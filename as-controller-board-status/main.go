@@ -10,6 +10,7 @@ import (
 
 	"github.com/edgexfoundry/app-functions-sdk-go/appsdk"
 	"github.com/edgexfoundry/app-functions-sdk-go/pkg/transforms"
+	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 const (
@@ -32,23 +33,25 @@ func main() {
 		os.Exit(-1)
 	}
 
+	boardStatus := functions.CheckBoardStatus{
+		DoorClosed:    true, // Set default door state to closed
+		Configuration: new(functions.ControllerBoardStatusAppSettings),
+	}
+
 	// Retrieve & parse the required application settings into a proper
 	// configuration struct
-	edgexconfig, err := functions.ProcessApplicationSettings(appSettings)
+	err = utilities.MarshalSettings(appSettings, boardStatus.Configuration, false)
 	if err != nil {
 		edgexSdk.LoggingClient.Error(fmt.Sprintf("Application settings could not be processed: %v", err.Error()))
 		os.Exit(-1)
 	}
 
-	boardStatus := functions.CheckBoardStatus{
-		MaxTemperatureThreshold: edgexconfig.MaxTemperatureThreshold,
-		MinTemperatureThreshold: edgexconfig.MinTemperatureThreshold,
-		DoorClosed:              true, // Set default door state to closed
-	}
+	boardStatus.MaxTemperatureThreshold = boardStatus.Configuration.MaxTemperatureThreshold
+	boardStatus.MinTemperatureThreshold = boardStatus.Configuration.MinTemperatureThreshold
 
 	// Create the function pipeline to run when an event is read on the device channels
 	err = edgexSdk.SetFunctionsPipeline(
-		transforms.NewFilter([]string{edgexconfig.DeviceName}).FilterByDeviceName,
+		transforms.NewFilter([]string{boardStatus.Configuration.DeviceName}).FilterByDeviceName,
 		boardStatus.CheckControllerBoardStatus,
 	)
 	if err != nil {
@@ -57,7 +60,7 @@ func main() {
 	}
 
 	// Subscribe to the EdgeX notification service
-	err = functions.SubscribeToNotificationService(edgexconfig)
+	err = boardStatus.SubscribeToNotificationService()
 	if err != nil {
 		edgexSdk.LoggingClient.Info(fmt.Sprintf("Error subscribing to edgex notification service %s", err.Error()))
 		os.Exit(-1)

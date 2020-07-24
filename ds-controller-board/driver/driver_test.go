@@ -11,7 +11,9 @@ import (
 	"testing"
 
 	"ds-controller-board/device"
+
 	"github.com/edgexfoundry/device-sdk-go/pkg/models"
+	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +40,7 @@ func TestDisconnectDevice(t *testing.T) {
 
 func TestInitialize(t *testing.T) {
 	target := CreateControllerBoardDriver(t, true, false, "")
-	err := target.Initialize(lc, make(chan *models.AsyncValues))
+	err := target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
 	assert.NoError(t, err)
 }
 
@@ -146,7 +148,7 @@ func CreateControllerBoardDriver(t *testing.T, virtual bool, initialize bool, ex
 	}
 
 	if initialize {
-		err = target.Initialize(lc, make(chan *models.AsyncValues))
+		err = target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
 		require.NoError(err)
 
 		virtual, ok := target.controllerBoard.(*device.ControllerBoardVirtual)

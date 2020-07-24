@@ -105,31 +105,6 @@ func TestGetMaintenanceMode(t *testing.T) {
 	})
 }
 
-func TestSetDefaultTimeouts(t *testing.T) {
-	testCases := []struct {
-		TestCaseName string
-		Settings     map[string]string
-		Expected     error
-	}{
-		{"Success", map[string]string{"DoorOpenStateTimeout": "20", "DoorCloseStateTimeout": "20", "InferenceTimeout": "20"}, nil},
-
-		{"DoorOpenStateTimeout error", map[string]string{"DoorOpenStateTimeout": "somestring", "DoorCloseStateTimeout": "20", "InferenceTimeout": "20"},
-			fmt.Errorf("Door Open event timeout not set in configuration. Using default value of %v", DefaultTimeOuts)},
-
-		{"DoorCloseStateTimeout error", map[string]string{"DoorOpenStateTimeout": "20", "DoorCloseStateTimeout": "somestring", "InferenceTimeout": "20"},
-			fmt.Errorf("Door close event timeout not set in configuration. Using default value of %v", DefaultTimeOuts)},
-
-		{"InferenceTimeout error", map[string]string{"DoorOpenStateTimeout": "20", "DoorCloseStateTimeout": "20", "InferenceTimeout": "somestring"},
-			fmt.Errorf("Door close event timeout not set in configuration. Using default value of %v", DefaultTimeOuts)},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.TestCaseName, func(t *testing.T) {
-			SetDefaultTimeouts(&VendingState{}, tc.Settings, edgexcontext.LoggingClient)
-		})
-	}
-}
-
 func TestCheckInferenceStatus(t *testing.T) {
 	testCases := []struct {
 		TestCaseName string
@@ -210,8 +185,6 @@ func TestResetDoorLock(t *testing.T) {
 }
 
 func TestDisplayLedger(t *testing.T) {
-	edgexcontext.Configuration.ApplicationSettings = make(map[string]string)
-	edgexcontext.Configuration.ApplicationSettings["LCDRowLength"] = "20"
 	// Http test servers
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -221,13 +194,18 @@ func TestDisplayLedger(t *testing.T) {
 		}
 	}))
 
-	edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayReset"] = testServer.URL
-	edgexcontext.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"] = testServer.URL
+	vendingState := VendingState{
+		Configuration: &ServiceConfiguration{
+			LCDRowLength:                      20,
+			DeviceControllerBoarddisplayReset: testServer.URL,
+			DeviceControllerBoarddisplayRow1:  testServer.URL,
+		},
+	}
 
 	ledger := Ledger{
 		LineItems: []LineItem{{ProductName: "itemX", ItemCount: 2, ItemPrice: 1.50, SKU: "1234"}},
 	}
-	err := displayLedger(&edgexcontext, ledger)
+	err := vendingState.displayLedger(&edgexcontext, ledger)
 	assert.NoError(t, err)
 }
 
@@ -241,6 +219,7 @@ func TestBoardStatus(t *testing.T) {
 		CVWorkflowStarted:              true,
 		DoorOpenWaitThreadStopChannel:  doorOpenStopChannel,
 		DoorCloseWaitThreadStopChannel: doorCloseStopChannel,
+		Configuration:                  new(ServiceConfiguration),
 	}
 	boardStatus := ControllerBoardStatus{
 		MaxTemperatureStatus: true,
@@ -263,8 +242,8 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 		Expected     error
 	}{
 		{"Successful case", http.StatusOK, nil},
-		{"Internal error case", http.StatusInternalServerError, fmt.Errorf("Error sending DeviceControllerBoard: Received status code 500 Internal Server Error")},
-		{"Bad request case", http.StatusBadRequest, fmt.Errorf("Error sending DeviceControllerBoard: Received status code 400 Bad Request")},
+		{"Internal error case", http.StatusInternalServerError, fmt.Errorf("error sending command: received status code: 500 Internal Server Error")},
+		{"Bad request case", http.StatusBadRequest, fmt.Errorf("error sending command: received status code: 400 Bad Request")},
 	}
 
 	// edgexContext initialization
@@ -272,17 +251,6 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 		CorrelationID: "correlationId",
 		EventClient:   eventClient,
 		LoggingClient: logger.NewClient("output_test", false, "", "DEBUG"),
-	}
-	edgexctx.Configuration.ApplicationSettings = make(map[string]string)
-
-	// VendingState initialization
-	inferenceStopChannel := make(chan int)
-	stopChannel := make(chan int)
-
-	vendingState := VendingState{
-		InferenceWaitThreadStopChannel: inferenceStopChannel,
-		ThreadStopChannel:              stopChannel,
-		CurrentUserData:                OutputData{RoleID: 1},
 	}
 
 	event := models.Event{
@@ -321,11 +289,22 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 				httpResponse.WriteHTTPResponse(w, r)
 			}))
 
-			edgexctx.Configuration.ApplicationSettings["InventoryService"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["InventoryAuditLogService"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayReset"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["LedgerService"] = testServer.URL
+			// VendingState initialization
+			inferenceStopChannel := make(chan int)
+			stopChannel := make(chan int)
+
+			vendingState := VendingState{
+				InferenceWaitThreadStopChannel: inferenceStopChannel,
+				ThreadStopChannel:              stopChannel,
+				CurrentUserData:                OutputData{RoleID: 1},
+				Configuration: &ServiceConfiguration{
+					InventoryService:                  testServer.URL,
+					InventoryAuditLogService:          testServer.URL,
+					DeviceControllerBoarddisplayReset: testServer.URL,
+					DeviceControllerBoarddisplayRow1:  testServer.URL,
+					LedgerService:                     testServer.URL,
+				},
+			}
 
 			_, err := vendingState.HandleMqttDeviceReading(&edgexctx, event)
 
@@ -356,7 +335,6 @@ func TestVerifyDoorAccess(t *testing.T) {
 		EventClient:   eventClient,
 		LoggingClient: logger.NewClient("output_test", false, "", "DEBUG"),
 	}
-	edgexctx.Configuration.ApplicationSettings = make(map[string]string)
 
 	// VendingState initialization
 	inferenceStopChannel := make(chan int)
@@ -386,20 +364,20 @@ func TestVerifyDoorAccess(t *testing.T) {
 				utilities.WriteJSONHTTPResponse(w, r, http.StatusOK, authDataJSON, false)
 			}))
 
-			edgexctx.Configuration.ApplicationSettings["InferenceHeartbeat"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow1"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow2"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoarddisplayRow3"] = testServer.URL
-			edgexctx.Configuration.ApplicationSettings["DeviceControllerBoardLock1"] = testServer.URL
-
-			edgexctx.Configuration.ApplicationSettings["AuthenticationEndpoint"] = authServer.URL
-
 			vendingState := VendingState{
 				InferenceWaitThreadStopChannel: inferenceStopChannel,
 				ThreadStopChannel:              stopChannel,
 				CurrentUserData:                OutputData{RoleID: 1},
 				CVWorkflowStarted:              false,
 				MaintenanceMode:                tc.MaintenanceMode,
+				Configuration: &ServiceConfiguration{
+					InferenceHeartbeat:               testServer.URL,
+					DeviceControllerBoarddisplayRow1: testServer.URL,
+					DeviceControllerBoarddisplayRow2: testServer.URL,
+					DeviceControllerBoarddisplayRow3: testServer.URL,
+					DeviceControllerBoardLock1:       testServer.URL,
+					AuthenticationEndpoint:           authServer.URL,
+				},
 			}
 
 			_, err := vendingState.VerifyDoorAccess(&edgexctx, event)

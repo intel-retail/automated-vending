@@ -4,28 +4,28 @@ The Automated Checkout reference design utilizes three services that expose REST
 
 ## List of microservices
 
-- [Authentication](#authentication) - Service that takes a card ID number and returns authentication/authorization status for the card number.
-- [Inventory](#inventory) - Service that manages changes to the Automated Checkout's inventory, including storing transactions in an audit log.
-- [Ledger](#ledger) - Service that stores customer financial transactions.
+- [Authentication](#authentication-service) - Service that takes a card ID number and returns authentication/authorization status for the card number.
+- [Inventory](#inventory-service) - Service that manages changes to the Automated Checkout's inventory, including storing transactions in an audit log.
+- [Ledger](#ledger-service) - Service that stores customer financial transactions.
 
-## Authentication
+## Authentication service
 
-### Description
+### Authentication service description
 
 The `ms-authentication` microservice is a service that works with EdgeX to expose a REST API that takes a simple 10-digit string of digits (presumably corresponding to an RFID card) and responds with a valid or invalid authentication response, as well as the corresponding role for authenticated cards.
 
 This repository contains logic for working within the following schemas:
 
-* _Card/Cards_ - swiping a card is what allows the Automated Checkout automation to proceed with its workflow. A card can be associated with one of 3 roles:
-    * Consumer - a typical customer; is expected to open the vending machine door, remove an item, close the door and be charged accordingly
-    * Stocker - a person that is authorized to re-stock the vending machine with new products
-    * Maintainer - a person that is authorized to fix the software/hardware
-* _Account/Accounts_ - represents a bank account to charge. Multiple people can be associated with an account, such as a married couple
-* _Person/People_ - a person can carry multiple cards but is only associated with one account
+- _Card/Cards_ - swiping a card is what allows the Automated Checkout automation to proceed with its workflow. A card can be associated with one of 3 roles:
+  - Consumer - a typical customer; is expected to open the vending machine door, remove an item, close the door and be charged accordingly
+  - Stocker - a person that is authorized to re-stock the vending machine with new products
+  - Maintainer - a person that is authorized to fix the software/hardware
+- _Account/Accounts_ - represents a bank account to charge. Multiple people can be associated with an account, such as a married couple
+- _Person/People_ - a person can carry multiple cards but is only associated with one account
 
 The [`ds-card-reader`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader) service is responsible for pushing card "swipe" events to the EdgeX framework, which will then feed into the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) microservice that then performs a REST HTTP API call to this microservice. The response is processed by the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) microservice and the workflow continues there.
 
-### APIs
+### Authentication service APIs
 
 ---
 
@@ -61,36 +61,36 @@ Unauthorized card sample response:
   }
 ```
 
-## Inventory
+## Inventory service
 
-### Description
+### Inventory service description
 
 The `ms-inventory` microservice is a service that works with EdgeX to expose a REST API that manages the inventory for the vending machine, and keeps an audit log of all transactions (authorized or not).
 
 This repository contains logic for working within the following schemas:
 
-* _Inventory_ - an inventory item has the following attributes:
-    * `sku` - the SKU number of the inventory item
-    * `itemPrice` - the price of the inventory item
-    * `productName` - the name of the inventory item, will be displayed to users
-    * `unitsOnHand` - the number of units stored in the vending machine
-    * `maxRestockingLevel` - the maximum allowable number of units of this type to be stored in the vending machine
-    * `minRestockingLevel` - the minimum allowable number of units of this type to be stored in the vending machine
-    * `createdAt` - the date the inventory item was created and catalogued
-    * `updatedAt` - the date the inventory item was last updated (either via a transaction or something else)
-    * `isActive` - whether or not the inventory item is "active", which is not currently actively used by the Automated Checkout reference design for any specific purposes
-* _Audit Log_ - an audit log entry contains the following attributes:
-    * `cardId` - card number
-    * `accountId` - account number
-    * `roleId` - the role
-    * `personId` - the ID of the person who is associated with the card
-    * `inventoryDelta` - what was changed in inventory
-    * `createdAt` - the transaction date
-    * `auditEntryId` - and a UUID representing the transaction itself uniquely
+- _Inventory_ - an inventory item has the following attributes:
+  - `sku` - the SKU number of the inventory item
+  - `itemPrice` - the price of the inventory item
+  - `productName` - the name of the inventory item, will be displayed to users
+  - `unitsOnHand` - the number of units stored in the vending machine
+  - `maxRestockingLevel` - the maximum allowable number of units of this type to be stored in the vending machine
+  - `minRestockingLevel` - the minimum allowable number of units of this type to be stored in the vending machine
+  - `createdAt` - the date the inventory item was created and catalogued
+  - `updatedAt` - the date the inventory item was last updated (either via a transaction or something else)
+  - `isActive` - whether or not the inventory item is "active", which is not currently actively used by the Automated Checkout reference design for any specific purposes
+- _Audit Log_ - an audit log entry contains the following attributes:
+  - `cardId` - card number
+  - `accountId` - account number
+  - `roleId` - the role
+  - `personId` - the ID of the person who is associated with the card
+  - `inventoryDelta` - what was changed in inventory
+  - `createdAt` - the transaction date
+  - `auditEntryId` - and a UUID representing the transaction itself uniquely
 
 The `ms-inventory` microservice receives REST API calls from the upstream [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) application service during a typical vending workflow. Typically, an individual will swipe a card, the workflow will start, and the inventory will be manipulated after an individual has removed or added items to the vending machine and an inference has completed. REST API calls to this service are not locked behind any authentication mechanism.
 
-### APIs
+### Inventory service APIs
 
 ---
 
@@ -152,7 +152,7 @@ curl -X OPTIONS http://localhost:48095/inventory
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
@@ -193,7 +193,7 @@ curl -X OPTIONS http://localhost:48095/inventory/delta
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
@@ -279,7 +279,7 @@ curl -X OPTIONS http://localhost:48095/inventory/4900002470
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
@@ -343,7 +343,7 @@ curl -X OPTIONS http://localhost:48095/auditlog
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
@@ -429,22 +429,21 @@ curl -X OPTIONS http://localhost:48095/auditlog/f944b60b-e389-4054-9643-2a33e4a0
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
 ---
 
-## Ledger
+## Ledger service
 
-
-### Description
+### Ledger service description
 
 The `ms-ledger` microservice updates a ledger with the current transaction information (products purchased, quantity, total price, transaction timestamp). Transactions are added to the consumer's account. Transactions also have an `isPaid` attribute to designate which transactions have been paid/unpaid.
 
 This microservice returns the current transaction to the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) microservice, which then calls the [`ds-controller-board`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-controller-board) microservice to display the items purchased and the total price of the transaction on the LCD.
 
-### APIs
+### Ledger service APIs
 
 #### `GET`: `/ledger`
 
@@ -504,7 +503,7 @@ curl -X OPTIONS http://localhost:48093/ledger
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
@@ -556,7 +555,7 @@ curl -X OPTIONS http://localhost:48093/ledger/1
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
@@ -608,7 +607,7 @@ curl -X OPTIONS http://localhost:48093/ledgerPaymentUpdate
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 
@@ -645,6 +644,7 @@ If the provided `transactionID` does not correspond to an existing transaction i
   "error": true
 }
 ```
+
 ---
 
 #### `OPTIONS`: `/ledger/{accountid}/{transactionid}`
@@ -659,7 +659,7 @@ curl -X OPTIONS http://localhost:48093/ledger/1/1588006579251812793
 
 Sample response:
 
-```
+```text
 200 OK
 ```
 

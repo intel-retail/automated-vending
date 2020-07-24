@@ -1,0 +1,96 @@
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+[Service]
+Host = 'edgex-device-mqtt'
+Port = 48100
+BootTimeout = 30000
+Protocol = 'http'
+CheckInterval = '10s'
+ConnectRetries = 100
+ClientMonitor = 15000
+Labels = []
+StartupMsg = 'device simple started'
+Timeout = 5000
+EnableAsyncReadings = true
+AsyncBufferSize = 16
+
+[Registry]
+Host = 'edgex-core-consul'
+Port = 8500
+Type = 'consul'
+
+[Clients]
+  [Clients.Data]
+  Name = 'edgex-core-data'
+  Protocol = 'http'
+  Host = 'edgex-core-data'
+  Port = 48080
+  Timeout = 50000
+
+  [Clients.Metadata]
+  Name = 'edgex-core-metadata'
+  Protocol = 'http'
+  Host = 'edgex-core-metadata'
+  Port = 48081
+  Timeout = 50000
+
+[Device]
+  DataTransform = true
+  InitCmd = ''
+  InitCmdArgs = ''
+  MaxCmdOps = 128
+  MaxCmdValueLen = 256
+  RemoveCmd = ''
+  RemoveCmdArgs = ''
+  ProfilesDir = '/res'
+  UpdateLastConnected = false
+
+[Logging]
+EnableRemote = false
+File = ''
+
+[Writable]
+LogLevel = 'DEBUG'
+
+# Pre-define Devices
+[[DeviceList]]
+  Name = 'Inference-MQTT-device'
+  Profile = 'Inference.MQTT.Device.Profile'
+  Description = 'Inference CV Module over MQTT'
+  Labels = [ 'MQTT', 'Inference' ]
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.mqtt]
+       Schema = 'tcp'
+       Host = 'mqtt-broker'
+       Port = '1883'
+       ClientId = 'InferenceCommandPublisher'
+       User = ''
+       Password = ''
+       Topic = 'Inference/CommandTopic'
+  # [[DeviceList.AutoEvents]]
+  #   Frequency = '20s'
+  #   OnChange = false
+  #   Resource = 'inferenceHeartbeat'
+
+# Driver configs
+[Driver]
+IncomingSchema = 'tcp'
+IncomingHost = 'mqtt-broker'
+IncomingPort = '1883'
+IncomingUser = 'admin'
+IncomingPassword = 'public'
+IncomingQos = '0'
+IncomingKeepAlive = '3600'
+IncomingClientId = 'InferenceIncomingDataSubscriber'
+IncomingTopic = 'Inference/DataTopic'
+
+ResponseSchema = 'tcp'
+ResponseHost = 'mqtt-broker'
+ResponsePort = '1883'
+ResponseUser = 'admin'
+ResponsePassword = 'public'
+ResponseQos = '0'
+ResponseKeepAlive = '3600'
+ResponseClientId = 'InferenceCommandResponseSubscriber'
+ResponseTopic = 'Inference/ResponseTopic'

@@ -20,12 +20,12 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2020: Intel'
 
 RUN apk --no-cache add zeromq
-COPY --from=builder /usr/local/bin/ms-inventory/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /usr/local/bin/ms-inventory/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ms-inventory/main /ms-inventory
 COPY --from=builder /usr/local/bin/ms-inventory/inventory.json /inventory.json
 COPY --from=builder /usr/local/bin/ms-inventory/auditlog.json /auditlog.json
 
 RUN chmod 640 /inventory.json /auditlog.json && \
-    chown 2000 /inventory.json /auditlog.json
+  chown 2000 /inventory.json /auditlog.json
 
-CMD [ "/ms-inventory","--profile=docker","--confdir=/res", "-r"]
+CMD [ "/ms-inventory", "--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r"]

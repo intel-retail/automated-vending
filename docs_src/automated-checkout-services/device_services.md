@@ -6,11 +6,11 @@ The **Automated Checkout** reference design utilizes three device services that 
 
 - Card reader – Handles the interface between an RFID card reader and EdgeX.
 - Controller board – Handles the interface between Arduino firmware and EdgeX.
-- Inference mock –  Mock that mimics an actual computer vision inference.
+- CV Inference –  computer vision inference service using openVINO.
 
 ## Card reader
 
-### Description
+### Card reader description
 
 The `ds-card-reader` device service is an EdgeX device service that allows a USB-based RFID card reader to grant access to the Automated Checkout. At a high level, this device service is responsible for discovering a specific card reader device, watching for input from that device, parsing that input, and then forwarding the input into the EdgeX framework.
 
@@ -21,11 +21,11 @@ There are two different modes available to this device service:
 
 The EdgeX Core services are required for the `ds-card-reader` to publish the card ID into the EdgeX bus (zeroMQ). Without the EdgeX core services, this device service will not function.
 
-### Physical Device Functionality
+### Card reader physical device functionality
 
 The `ds-card-reader` service is much simpler than the `ds-controller-board` service, because it only requires mounting `/dev/input:/dev/input` at runtime. However, it still requires root privileges in the container at runtime so that it can interact directly with event/USB drivers.
 
-### APIs
+### Card reader APIs
 
 ---
 
@@ -60,7 +60,7 @@ Sample response:
 
 ## Controller board
 
-### Description
+### Controller board description
 
 The `ds-controller-board` device service is responsible for handling communication with a custom-built Arduino micro-controller board (or virtual board if you don't have physical hardware). It provides functionality for reading the lock status, door status, temperature, and humidity readings, while also sending commands to the controller board to unlock the mag-lock, and display output to the LCD.
 
@@ -69,7 +69,7 @@ There are two different modes available for this device service:
 1. **Physical Mode:** for use with a physical controller board device
 2. **Virtual Mode:** used when simulating a physical controller board by using a RESTful endpoint
 
-### Physical Device Functionality
+### Controller board physical device functionality
 
 When not running in simulated mode (i.e. a physical controller board device is plugged into your system), the `ds-controller-board` Docker container service requires `/dev/ttyACM0`, which is the typically the default serial port for an Arduino microcontroller.
 
@@ -77,12 +77,12 @@ This may change if you have multiple serial devices plugged in. Please ensure th
 
 It is important to note that the `ds-controller-board` service _is_ capable of automatically finding a TTY port _aside_ from `/dev/ttyACM0`. It actually looks for the vendor and product ID (VID/PID) values specified in the service's configuration. The problems arise when we have to mount the TTY port via Docker:
 
-* mounting `/dev:/dev` to the container at runtime solves the problem, but creates security risks and requires `--privileged=true` on the container, which is bad practice and can lead to security issues
-* mounting `/dev/ttyACM0:/dev/ttyACM0` solves the problem, assuming there is only one serial device
+- mounting `/dev:/dev` to the container at runtime solves the problem, but creates security risks and requires `--privileged=true` on the container, which is bad practice and can lead to security issues
+- mounting `/dev/ttyACM0:/dev/ttyACM0` solves the problem, assuming there is only one serial device
 
 Therefore, if you have multiple serial devices plugged into your system, please manually edit the `docker-compose.yml` file to mount your `/dev/ttyACM_X_` appropriately. You may want to explore creating udev rules to enforce TTY consistency.
 
-### APIs
+### Controller board APIs
 
 ---
 
@@ -239,30 +239,38 @@ curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http:
 
 ---
 
-## Inference mock
+## CV inference
 
-### Description
+### CV inference description
 
-The `ds-inference-mock` device service contains two components:
+The `ds-cv-inference` contains the following components:
 
-- A Python implementation of the Automated Checkout inference mock that mimics an actual computer vision inference mechanism by returning a random set of inventory "deltas" after a brief waiting period
+- A golang implementation using openVINO inference engine and openVINO product detection model. This application uses preloaded images as an input to calculate inventory deltas. The images contain some products supported by the model and are used to simulate a purchase or stocking the cooler.
+The openVINO product detection model is intended for demo purposes. For production environment, please replace it with your own model.
+- The preloaded images are used in sequence to simulate a purchase using a circular queue to loop through them.
 - An [EdgeX MQTT device service](https://github.com/edgexfoundry/device-mqtt-go) that converts MQTT messages into EdgeX event readings
+
+The following picture illustrates the flow to calculate the inventory deltas between two preloaded images:
+
+<p align="center">
+    <img src="../images/delta.png">
+</p>
 
 The Automated Checkout architecture uses three MQTT topics:
 
 | Topic                       | Description                                                                                             |
 | ----------------------------- | ------------------------------------------------------------------------------------------------ |
 | Inference/CommandTopic                  | All events pushed from EdgeX's command API are fed into this topic. The [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) and [`as-controller-board-status`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-controller-board-status) are two services that make requests to this API, typically for making door close/open and heartbeat events. |
-| Inference/ResponseTopic  | The Automated Checkout inference mock will respond to published messages on the `Inference/CommandTopic` topic on the `Inference/ResponseTopic` topic. |
-| Inference/DataTopic                | The inference mock publishes delta SKUs on this topic, then the MQTT device service converts them into EdgeX event readings, and finally the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service processes the event readings and pushes them to downstream services. |
+| Inference/ResponseTopic  | The Automated Checkout cv inference service will respond to published messages on the `Inference/CommandTopic` topic on the `Inference/ResponseTopic` topic. |
+| Inference/DataTopic                | The cv inference service publishes delta SKUs on this topic, then the MQTT device service converts them into EdgeX event readings, and finally the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service processes the event readings and pushes them to downstream services. |
 
-### APIs
+### CV inference APIs
 
 ---
 
 #### `GET`: `http://localhost:48098/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat`
 
-The `GET` call to the EdgeX MQTT device service's `inferenceHearbeat` command will act as a health-check for the Automated Checkout inferencing service. It must return `200 OK` upon swiping an RFID card in order for the vending workflow to begin. If it does not, the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service will enter maintenance mode.
+The `GET` call to the EdgeX MQTT device service's `inferenceHearbeat` command will act as a health-check for the Automated Checkout cv inference service. It must return `200 OK` upon swiping an RFID card in order for the vending workflow to begin. If it does not, the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service will enter maintenance mode.
 
 Simple usage example:
 
@@ -299,7 +307,7 @@ Sample response, `200 OK`:
 
 #### `PUT`: `http://localhost:48100/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus`
 
-The `PUT` call to the EdgeX MQTT device service's `inferenceDoorStatus` command will cause the inference mock to consume the message, and if the JSON `PUT` key `inferenceDoorStatus` has the string value `"true"`, an inference attempt will begin. The mock will subsequently respond with a message containing the inventory delta (aka SKU delta).
+The `PUT` call to the EdgeX MQTT device service's `inferenceDoorStatus` command will cause the cv inference service to consume the message, and if the JSON `PUT` key `inferenceDoorStatus` has the string value `"true"`, an inference attempt will begin. The service will subsequently respond with a message containing the inventory delta (aka SKU delta).
 
 Simple usage example:
 

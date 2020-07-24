@@ -24,7 +24,6 @@ import (
 	"sync"
 	"testing"
 
-	sdk "github.com/edgexfoundry/device-sdk-go"
 	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -79,8 +78,8 @@ func doesLogFileContainString(input string) (bool, error) {
 //
 // WARNING: If changing the default values in configuration.toml, please
 // update this function
-func getDefaultCardReaderConfig() common.CardReaderConfig {
-	return common.CardReaderConfig{
+func getDefaultCardReaderConfig() *common.CardReaderConfig {
+	return &common.CardReaderConfig{
 		DeviceName:       cardReaderDeviceServiceName,
 		DeviceSearchPath: "/dev/input/event*",
 		VID:              0xffff,
@@ -105,18 +104,12 @@ func TestInitialize(t *testing.T) {
 	var emptyLogger logger.LoggingClient
 	var emptyCardReaderDevice device.CardReader
 
-	// create a new service in the device services SDK
-	// this can only be called once or else it will throw errors
-	once.Do(
-		func() {
-			_, err := sdk.NewService("TestService", "0.1", "", `../res`, "", &driver)
-			require.NoError(t, err)
-		},
-	)
+	driver.Config = getDefaultCardReaderConfig()
 
 	err := driver.Initialize(
 		lc,
 		make(chan *dsModels.AsyncValues, 16),
+		make(chan []dsModels.DiscoveredDevice, 16),
 	)
 
 	require.NoError(t, err)
@@ -129,7 +122,7 @@ func TestInitialize(t *testing.T) {
 // throwing any errors
 func TestStop(t *testing.T) {
 	driver := CardReaderDriver{
-		Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+		Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 	}
 
 	err := driver.Stop(false)
@@ -140,7 +133,7 @@ func TestStop(t *testing.T) {
 // implemented without throwing any errors
 func TestDisconnectDevice(t *testing.T) {
 	driver := CardReaderDriver{
-		Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+		Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 	}
 
 	err := driver.DisconnectDevice(
@@ -182,7 +175,7 @@ func TestHandleReadCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 			},
 		},
 		{
@@ -199,7 +192,7 @@ func TestHandleReadCommands(t *testing.T) {
 					LoggingClient:       lc,
 					MockFailStatusCheck: true,
 				},
-				Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 			},
 		},
 		{
@@ -212,7 +205,7 @@ func TestHandleReadCommands(t *testing.T) {
 				CardReader: &device.CardReaderVirtual{
 					LoggingClient: lc,
 				},
-				Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 			},
 		},
 	}
@@ -263,10 +256,10 @@ func TestHandleWriteCommands(t *testing.T) {
 	protocolProperties := map[string]models.ProtocolProperties{}
 	lc := logger.NewClient(cardReaderDeviceServiceName, false, logFile, "DEBUG")
 
-	successfulCommandVal, err := dsModels.NewCommandValue(common.CommandCardReaderEvent, 0, expectedCardNumber, 1)
+	successfulCommandVal, err := dsModels.NewCommandValue(common.CommandCardReaderEvent, 0, expectedCardNumber, dsModels.String)
 	require.NoError(err)
 
-	invalidCommandVal, err := dsModels.NewCommandValue(invalid, 0, expectedCardNumber, 1)
+	invalidCommandVal, err := dsModels.NewCommandValue(invalid, 0, expectedCardNumber, dsModels.String)
 	require.NoError(err)
 
 	nonStringCommandVal, err := dsModels.NewCommandValue(common.CommandCardReaderEvent, 0, 0.01, dsModels.ParseValueType("float64"))
@@ -292,7 +285,7 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 			},
 		},
 		{
@@ -307,7 +300,7 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 			},
 		},
 		{
@@ -322,7 +315,7 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 			},
 		},
 		{
@@ -337,7 +330,7 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
 			},
 		},
 	}
