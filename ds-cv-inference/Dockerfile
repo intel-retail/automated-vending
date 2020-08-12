@@ -3,9 +3,9 @@
 
 FROM hybridgroup/gocv:latest as builder
 
-# Install openVINO 2020.3.194
-ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/16670/l_openvino_toolkit_p_2020.3.194.tgz
-ARG INSTALL_DIR=/opt/intel/openvino_2020.3.194
+# Install openVINO 2020.4.287
+ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/IRC_NAS/16803/l_openvino_toolkit_p_2020.4.287.tgz
+ARG INSTALL_DIR=/opt/intel/openvino_2020.4.287
 ARG TEMP_DIR=/tmp/openvino_installer
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
@@ -27,10 +27,12 @@ RUN $INSTALL_DIR/install_dependencies/install_openvino_dependencies.sh
 
 WORKDIR /go/src/ds-cv-inference
 
-ADD go.* /go/src/ds-cv-inference/
+COPY go.* /go/src/ds-cv-inference/
 RUN go mod download
 
-ADD . /go/src/ds-cv-inference
+COPY . /go/src/ds-cv-inference
 RUN go build -o ds-cv-inference
+
+RUN chmod +x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]

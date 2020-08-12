@@ -1,6 +1,6 @@
 # Automated Checkout Events
 
-The following are the different events used in the Automated Checkout reference design.
+The following are the different events used in the Automated Checkout reference implementation.
 
 ## Card reader events
 

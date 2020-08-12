@@ -11,7 +11,7 @@
       
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.0">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.1.6">
     
     
       
@@ -19,7 +19,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.b5d04df8.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.4b9ffd7b.min.css">
       
       
     
@@ -46,7 +46,6 @@
   
     <body dir="ltr">
   
-    
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
@@ -125,8 +124,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../index.html" title="Automated Checkout Reference Design" class="md-nav__link">
-      Automated Checkout Reference Design
+    <a href="../index.html" title="Automated Checkout Reference Implementation" class="md-nav__link">
+      Automated Checkout Reference Implementation
     </a>
   </li>
 
@@ -232,8 +231,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-automated-checkout-reference-design" class="md-nav__link">
-    Run the Automated Checkout reference design
+  <a href="#run-the-automated-checkout-reference-implementation" class="md-nav__link">
+    Run the Automated Checkout reference implementation
   </a>
   
 </li>
@@ -518,8 +517,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-automated-checkout-reference-design" class="md-nav__link">
-    Run the Automated Checkout reference design
+  <a href="#run-the-automated-checkout-reference-implementation" class="md-nav__link">
+    Run the Automated Checkout reference implementation
   </a>
   
 </li>
@@ -582,7 +581,7 @@
                 
                 
                 <h1 id="phase-2-add-card-reader-device">Phase 2 - Add Card Reader Device</h1>
-<p>In <a href="phase1.html">phase 1</a>, the scenarios presented a breakdown of the various modes, events, and services that are working together within the Automated Checkout reference design. Everything in phase 1 was simulated and all interactions were done via REST API calls.</p>
+<p>In <a href="phase1.html">phase 1</a>, the scenarios presented a breakdown of the various modes, events, and services that are working together within the Automated Checkout reference implementation. Everything in phase 1 was simulated and all interactions were done via REST API calls.</p>
 <p>Phase 2 will be mostly the same, except there will now be a physical card reader device. This device is actually just a keyboard that types 10 digits and then presses enter, which is what a common RFID card reader also might do.</p>
 <h2 id="setup">Setup</h2>
 <p>If the Automated Checkout services are still running from phase 1, the services can stay running. The only service that will be terminated and re-created is <code>ds-card-reader</code> (which will be done as part of this guide).</p>
@@ -627,7 +626,7 @@ Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 <p>The particular <em>vendor ID</em> and <em>product ID</em> are spelled out clearly for each USB device. The card reader input device itself has been plugged in and has the vendor ID <code>ffff</code> and the product ID <code>0035</code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The VID and PID values are hexadecimal, base 16. A value of <code>ffff</code> is equal to <code>65535</code> in decimal, base 10, and <code>0035</code> in base 16 is equal to <code>53</code> in base 10. The configuration files in the Automated Checkout reference design device services may require some conversion between the two. If needed, consider searching online for a hexadecimal to decimal conversion calculator to make the process easier.</p>
+<p>The VID and PID values are hexadecimal, base 16. A value of <code>ffff</code> is equal to <code>65535</code> in decimal, base 10, and <code>0035</code> in base 16 is equal to <code>53</code> in base 10. The configuration files in the Automated Checkout reference implementation device services may require some conversion between the two. If needed, consider searching online for a hexadecimal to decimal conversion calculator to make the process easier.</p>
 </div>
 <p>Once the VID and PID have been identified, the next step is to configure the <code>ds-card-reader</code> device service to grab that device and listen for input events.</p>
 <h2 id="configure-the-ds-card-reader-service-to-use-the-card-reader-device">Configure the <code>ds-card-reader</code> service to use the card reader device</h2>
@@ -701,8 +700,8 @@ If you do not see input devices under this path, your Linux kernel or operating 
 </code></pre></div>
 
 
-<h2 id="run-the-automated-checkout-reference-design">Run the Automated Checkout reference design</h2>
-<p>Run the Automated Checkout reference design with the physical card reader component included:</p>
+<h2 id="run-the-automated-checkout-reference-implementation">Run the Automated Checkout reference implementation</h2>
+<p>Run the Automated Checkout reference implementation with the physical card reader component included:</p>
 <div class="codehilite"><pre><span></span><code>make run-physical-card-reader-dev
 </code></pre></div>
 
@@ -718,7 +717,7 @@ If you do not see input devices under this path, your Linux kernel or operating 
 </div>
 <p>For example, in <a href="phase1.html#walkthrough-of-scenarios">phase 1</a>, the card number for the stocker role is <code>0003293374</code>. This card number can be simulated by typing the digits and pressing the enter key, if you're using a keyboard as your input device.</p>
 <h2 id="dive-deeper">Dive deeper</h2>
-<p>Now that the card reader is working with a physical device, it may be time to make some changes to the underlying authentication data to allow your own cards to authenticate. The following sections illustrate the steps needed in order to extend the Automated Checkout reference design to work with your cards.</p>
+<p>Now that the card reader is working with a physical device, it may be time to make some changes to the underlying authentication data to allow your own cards to authenticate. The following sections illustrate the steps needed in order to extend the Automated Checkout reference implementation to work with your cards.</p>
 <h3 id="extending-the-card-reader">Extending the card reader</h3>
 <p>If the behavior of your particular card reader device's cards does not match the behavior that's been incorporated into this service, you'll need to get your hands dirty with the source code of the <code>ds-card-reader</code> device service.</p>
 <p>In the service, take a look at the file <code>ds-card-reader/device/physical.go</code>. This file contains this function:</p>
@@ -888,15 +887,15 @@ If you do not see input devices under this path, your Linux kernel or operating 
       
     </div>
     
-      <script src="../assets/javascripts/vendor.92ffa368.min.js"></script>
-      <script src="../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../assets/javascripts/vendor.a0c4167b.min.js"></script>
+      <script src="../assets/javascripts/bundle.fb26dd1d.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "..",
           features: [],
           search: Object.assign({
-            worker: "../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../assets/javascripts/worker/search.37585f48.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

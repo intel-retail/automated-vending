@@ -2,7 +2,7 @@
 
 ## Overview
 
-After [phase 2](../phases/phase2.md) has been completed, the next step is to integrate physical hardware. This guide will assist you in understanding the pieces of hardware that are needed in the Automated Checkout reference design.
+After [phase 2](../phases/phase2.md) has been completed, the next step is to integrate physical hardware. This guide will assist you in understanding the pieces of hardware that are needed in the Automated Checkout reference implementation.
 
 ## Getting Started
 
@@ -20,7 +20,7 @@ Specifically, it handles the following integrations:
 | LED Panel                    | Instrumentation is used to provide feedback to the developer as to the state of the board lock and door status.           |
 | Temperature/Humidity Sensor  | Instrumentation is used to understand the physical environment inside the automated checkout and take appropriate action. |
 
-We have created a reference design service that will interact with the controller board and EdgeX core services [here](../automated-checkout-services/device_services.md#card-reader).
+We have created a reference implementation service that will interact with the controller board and EdgeX core services [here](../automated-checkout-services/device_services.md#card-reader).
 
 ### Step 2: Integrate your own computer vision hardware and software
 

@@ -1,7 +1,7 @@
 
 # Application Services
 
-The **Automated Checkout** reference design utilizes two application services that are used to consume event data from the EdgeX framework.
+The **Automated Checkout** reference implementation utilizes two application services that are used to consume event data from the EdgeX framework.
 
 ## List of application services
 

@@ -11,7 +11,7 @@
       
       
       <link rel="shortcut icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.0">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.1.6">
     
     
       
@@ -19,7 +19,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.b5d04df8.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.4b9ffd7b.min.css">
       
       
     
@@ -46,7 +46,6 @@
   
     <body dir="ltr">
   
-    
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
@@ -125,8 +124,8 @@
 
 
   <li class="md-nav__item">
-    <a href="index.html" title="Automated Checkout Reference Design" class="md-nav__link">
-      Automated Checkout Reference Design
+    <a href="index.html" title="Automated Checkout Reference Implementation" class="md-nav__link">
+      Automated Checkout Reference Implementation
     </a>
   </li>
 
@@ -486,7 +485,7 @@
                 
                 
                 <h1 id="modifying-source-code">Modifying source code</h1>
-<p>When modifying source code in the Automated Checkout reference design, Docker images need to be rebuilt and services need to be updated to run newly built images. This document contains the steps for accomplishing this.</p>
+<p>When modifying source code in the Automated Checkout reference implementation, Docker images need to be rebuilt and services need to be updated to run newly built images. This document contains the steps for accomplishing this.</p>
 <h2 id="assumptions">Assumptions</h2>
 <p>This document assumes the Automated Checkout services are already running. Additionally, it assumes you've already made a code change and saved the changes.</p>
 <h2 id="building-the-services-new-image">Building the service's new image</h2>
@@ -503,7 +502,7 @@
 
 <p>After Docker builds the image (by executing the steps in <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader/Dockerfile"><code>ds-card-reader/Dockerfile</code></a>), proceed to the next section.</p>
 <h2 id="remove-and-update-the-running-service">Remove and update the running service</h2>
-<p>One of the most effective methods of updating a Docker compose service is to remove the running container, and then re-run the <code>make</code> commands to bring up the entire Automated Checkout reference design stack.</p>
+<p>One of the most effective methods of updating a Docker compose service is to remove the running container, and then re-run the <code>make</code> commands to bring up the entire Automated Checkout reference implementation stack.</p>
 <p>First, identify the running container for the service (again, <code>ds-card-reader</code> in this example):</p>
 <div class="codehilite"><pre><span></span><code>docker ps <span class="p">|</span> grep -i ds-card-reader
 </code></pre></div>
@@ -602,15 +601,15 @@
       
     </div>
     
-      <script src="assets/javascripts/vendor.92ffa368.min.js"></script>
-      <script src="assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="assets/javascripts/vendor.a0c4167b.min.js"></script>
+      <script src="assets/javascripts/bundle.fb26dd1d.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: ".",
           features: [],
           search: Object.assign({
-            worker: "assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "assets/javascripts/worker/search.37585f48.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

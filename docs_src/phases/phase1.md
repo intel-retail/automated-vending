@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document aims to help provide a simple introduction to how we interact with the various microservices in the Automated Checkout reference design, as well as demonstrating how EdgeX command API's are leveraged.
+This document aims to help provide a simple introduction to how we interact with the various microservices in the Automated Checkout reference implementation, as well as demonstrating how EdgeX command API's are leveraged.
 
 The steps in this guide show how to simulate the automated checkout workflow using [`curl`](https://github.com/curl/curl) REST API calls. It is a step-by-step walkthrough with specific commands to run on the command line.
 
@@ -629,8 +629,8 @@ The value of <code>maintenanceMode</code> will switch to <code>true</code> from 
 
 </details>
 
-This is the end of the scenario, and should provide an essential understanding of maintenance mode as well as temperature reactions in the Automated Checkout reference design.
+This is the end of the scenario, and should provide an essential understanding of maintenance mode as well as temperature reactions in the Automated Checkout reference implementation.
 
 ## Summary
 
-You have successfully run through a typical Automated Checkout workflow using simulated interactions and devices. In the other phases of this reference design, we ramp up to using physical devices and provide guidance on writing new services for your custom devices and needs.
+You have successfully run through a typical Automated Checkout workflow using simulated interactions and devices. In the other phases of this reference implementation, we ramp up to using physical devices and provide guidance on writing new services for your custom devices and needs.

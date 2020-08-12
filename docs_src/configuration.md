@@ -1,6 +1,6 @@
 # Configuration
 
-This page lists all of the relevant configuration parameters for each service in the Automated Checkout reference design.
+This page lists all of the relevant configuration parameters for each service in the Automated Checkout reference implementation.
 
 !!!info
     Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the [EdgeX Foundry GitHub repositories](https://github.com/edgexfoundry) or in the [official EdgeX documentation here](https://docs.edgexfoundry.org/1.2/).
@@ -64,7 +64,7 @@ The following items can be configured via the `Driver` section of the service's 
 
 ## EdgeX MQTT device service
 
-This reference design uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker) and are volume mounted into the device service's running Docker container.
+This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker) and are volume mounted into the device service's running Docker container.
 
 The following items can be configured via the `DeviceList` and `Driver` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker/configuration.toml) file. All values are strings.
 

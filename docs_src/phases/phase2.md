@@ -1,6 +1,6 @@
 # Phase 2 - Add Card Reader Device
 
-In [phase 1](./phase1.md), the scenarios presented a breakdown of the various modes, events, and services that are working together within the Automated Checkout reference design. Everything in phase 1 was simulated and all interactions were done via REST API calls.
+In [phase 1](./phase1.md), the scenarios presented a breakdown of the various modes, events, and services that are working together within the Automated Checkout reference implementation. Everything in phase 1 was simulated and all interactions were done via REST API calls.
 
 Phase 2 will be mostly the same, except there will now be a physical card reader device. This device is actually just a keyboard that types 10 digits and then presses enter, which is what a common RFID card reader also might do.
 
@@ -62,7 +62,7 @@ Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 The particular _vendor ID_ and _product ID_ are spelled out clearly for each USB device. The card reader input device itself has been plugged in and has the vendor ID `ffff` and the product ID `0035`.
 
 !!! note
-    The VID and PID values are hexadecimal, base 16. A value of `ffff` is equal to `65535` in decimal, base 10, and `0035` in base 16 is equal to `53` in base 10. The configuration files in the Automated Checkout reference design device services may require some conversion between the two. If needed, consider searching online for a hexadecimal to decimal conversion calculator to make the process easier.
+    The VID and PID values are hexadecimal, base 16. A value of `ffff` is equal to `65535` in decimal, base 10, and `0035` in base 16 is equal to `53` in base 10. The configuration files in the Automated Checkout reference implementation device services may require some conversion between the two. If needed, consider searching online for a hexadecimal to decimal conversion calculator to make the process easier.
 
 Once the VID and PID have been identified, the next step is to configure the `ds-card-reader` device service to grab that device and listen for input events.
 
@@ -141,9 +141,9 @@ ds-card-reader:
     Driver_PID: "53"
 ```
 
-## Run the Automated Checkout reference design
+## Run the Automated Checkout reference implementation
 
-Run the Automated Checkout reference design with the physical card reader component included:
+Run the Automated Checkout reference implementation with the physical card reader component included:
 
 ```bash
 make run-physical-card-reader-dev
@@ -162,7 +162,7 @@ For example, in [phase 1](./phase1.md#walkthrough-of-scenarios), the card number
 
 ## Dive deeper
 
-Now that the card reader is working with a physical device, it may be time to make some changes to the underlying authentication data to allow your own cards to authenticate. The following sections illustrate the steps needed in order to extend the Automated Checkout reference design to work with your cards.
+Now that the card reader is working with a physical device, it may be time to make some changes to the underlying authentication data to allow your own cards to authenticate. The following sections illustrate the steps needed in order to extend the Automated Checkout reference implementation to work with your cards.
 
 ### Extending the card reader
 

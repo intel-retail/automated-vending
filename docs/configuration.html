@@ -11,7 +11,7 @@
       
       
       <link rel="shortcut icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.0">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.1.6">
     
     
       
@@ -19,7 +19,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.b5d04df8.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.4b9ffd7b.min.css">
       
       
     
@@ -46,7 +46,6 @@
   
     <body dir="ltr">
   
-    
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
@@ -125,8 +124,8 @@
 
 
   <li class="md-nav__item">
-    <a href="index.html" title="Automated Checkout Reference Design" class="md-nav__link">
-      Automated Checkout Reference Design
+    <a href="index.html" title="Automated Checkout Reference Implementation" class="md-nav__link">
+      Automated Checkout Reference Implementation
     </a>
   </li>
 
@@ -584,7 +583,7 @@
                 
                 
                 <h1 id="configuration">Configuration</h1>
-<p>This page lists all of the relevant configuration parameters for each service in the Automated Checkout reference design.</p>
+<p>This page lists all of the relevant configuration parameters for each service in the Automated Checkout reference implementation.</p>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the <a href="https://github.com/edgexfoundry">EdgeX Foundry GitHub repositories</a> or in the <a href="https://docs.edgexfoundry.org/1.2/">official EdgeX documentation here</a>.</p>
@@ -642,7 +641,7 @@
 <li><code>VirtualControllerBoard</code> - the boolean value that tells this device service to expect an input device to dictate inputs (<code>false</code>), or if a simulated device will be used (and REST API calls will control it) (<code>true</code>) - if <code>true</code></li>
 </ul>
 <h2 id="edgex-mqtt-device-service">EdgeX MQTT device service</h2>
-<p>This reference design uses the <a href="https://github.com/edgexfoundry/device-mqtt-go">MQTT Device Service</a> from EdgeX with custom device profiles. These device profiles YAML files are located <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker">here</a> and are volume mounted into the device service's running Docker container.</p>
+<p>This reference implementation uses the <a href="https://github.com/edgexfoundry/device-mqtt-go">MQTT Device Service</a> from EdgeX with custom device profiles. These device profiles YAML files are located <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker">here</a> and are volume mounted into the device service's running Docker container.</p>
 <p>The following items can be configured via the <code>DeviceList</code> and <code>Driver</code> section of the service's <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker/configuration.toml">configuration.toml</a> file. All values are strings.</p>
 <p><code>DeviceList</code></p>
 <ul>
@@ -810,15 +809,15 @@
       
     </div>
     
-      <script src="assets/javascripts/vendor.92ffa368.min.js"></script>
-      <script src="assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="assets/javascripts/vendor.a0c4167b.min.js"></script>
+      <script src="assets/javascripts/bundle.fb26dd1d.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: ".",
           features: [],
           search: Object.assign({
-            worker: "assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "assets/javascripts/worker/search.37585f48.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

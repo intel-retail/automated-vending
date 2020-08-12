@@ -1,6 +1,6 @@
 # Device Services
 
-The **Automated Checkout** reference design utilizes three device services that are used to communicate hardware event data to underlying EdgeX framework.
+The **Automated Checkout** reference implementation utilizes three device services that are used to communicate hardware event data to underlying EdgeX framework.
 
 ## List of device services
 

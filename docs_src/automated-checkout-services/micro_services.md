@@ -1,6 +1,6 @@
 # Other Microservices
 
-The Automated Checkout reference design utilizes three services that expose REST API endpoints. These three services handle business logic for the Automated Checkout reference design, and are somewhat generic in their design patterns, so for the purposes of the reference design, we simply refer to them  "microservices".
+The Automated Checkout reference implementation utilizes three services that expose REST API endpoints. These three services handle business logic for the Automated Checkout reference implementation, and are somewhat generic in their design patterns, so for the purposes of the reference implementation, we simply refer to them  "microservices".
 
 ## List of microservices
 
@@ -78,7 +78,7 @@ This repository contains logic for working within the following schemas:
   - `minRestockingLevel` - the minimum allowable number of units of this type to be stored in the vending machine
   - `createdAt` - the date the inventory item was created and catalogued
   - `updatedAt` - the date the inventory item was last updated (either via a transaction or something else)
-  - `isActive` - whether or not the inventory item is "active", which is not currently actively used by the Automated Checkout reference design for any specific purposes
+  - `isActive` - whether or not the inventory item is "active", which is not currently actively used by the Automated Checkout reference implementation for any specific purposes
 - _Audit Log_ - an audit log entry contains the following attributes:
   - `cardId` - card number
   - `accountId` - account number

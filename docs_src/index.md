@@ -1,8 +1,8 @@
-# Automated Checkout Reference Design
+# Automated Checkout Reference Implementation
 
 ## Introduction
 
-This guide helps you build and run the Automated Checkout Reference Design.
+This guide helps you build and run the Automated Checkout Reference Implementation.
 
 Upon completing the steps in this guide, you will be ready to integrate sensors and services to build your own complete solution.
 
@@ -17,13 +17,13 @@ Upon completing the steps in this guide, you will be ready to integrate sensors 
 
 ### Block diagram
 
-The high-level diagram below shows the sensors and services used with the Automated Checkout Reference Design. The diagram shows the sensors and services, and how they communicate through EdgeX. Intel provides the services outlined in blue, the purple services are provided by EdgeX, and the black services are either simulated or can interface with real hardware.
+The high-level diagram below shows the sensors and services used with the Automated Checkout Reference Implementation. The diagram shows the sensors and services, and how they communicate through EdgeX. Intel provides the services outlined in blue, the purple services are provided by EdgeX, and the black services are either simulated or can interface with real hardware.
 
-![Automated Checkout Reference Design Diagram](./images/automated-checkout-reference-design.png)
+![Automated Checkout Reference Implementation Diagram](./images/automated-checkout-reference-implementation.png)
 
 ### Prerequisites
 
-The following items are required to build the Automated Checkout Reference Design. You will need additional hardware and software when you are ready to build your own solution.
+The following items are required to build the Automated Checkout Reference Implementation. You will need additional hardware and software when you are ready to build your own solution.
 
 - **A deep learning model for CV inferencing.** Intel provides a reference inference service using openVINO that produces inventory changes based on preloaded images. See [cv inference service](./automated-checkout-services/device_services.md#cv-inference) for information on this process.
 - **A device that allows badging-in to the Automated Checkout.** Intel provides a card reader service that can be simulated or integrated with a physical USB device. See the [Card Reader](./automated-checkout-services/device_services.md#card-reader) device service page for information on this service.
@@ -52,14 +52,14 @@ Additionally, frequently throughout this documentation, we will refer to a "cool
 
 ### Recommended domain knowledge
 
-- <a href="https://www.edgexfoundry.org/" rel="noopener noreferrer" target="_blank">EdgeX</a> - the Automated Checkout reference design utilizes the EdgeX framework
+- <a href="https://www.edgexfoundry.org/" rel="noopener noreferrer" target="_blank">EdgeX</a> - the Automated Checkout reference implementation utilizes the EdgeX framework
 - <a href="https://mqtt.org" rel="noopener noreferrer" target="_blank">MQTT</a>
 - <a href="https://en.wikipedia.org/wiki/Representational_state_transfer" rel="noopener noreferrer" target="_blank">REST</a>
 - <a href="https://en.wikipedia.org/wiki/Evdev" rel="noopener noreferrer" target="_blank">evdev</a>, if reading input events from a USB input device, such as a card reader that inputs key strokes upon scanning a card
 - Communication over serial on Linux, if using serial devices such as Arduino
 - Computer Vision concepts, if using CV inferencing components
 - Basic RFID concepts, if using RFID components (i.e. for badge-in card reader)
-- <a href="https://www.portainer.io/" rel="noopener noreferrer" target="_blank">Portainer</a> - included with the Automated Checkout reference design. Usage is optional, but this is a highly recommended utility for managing Docker containers, and we provide easy ways to run it.
+- <a href="https://www.portainer.io/" rel="noopener noreferrer" target="_blank">Portainer</a> - included with the Automated Checkout reference implementation. Usage is optional, but this is a highly recommended utility for managing Docker containers, and we provide easy ways to run it.
 
 ## Getting started
 
@@ -69,7 +69,7 @@ Additionally, frequently throughout this documentation, we will refer to a "cool
 git clone https://github.com/intel-iot-devkit/automated-checkout.git && cd ./automated-checkout
 ```
 
-### Step 2: Build the reference design
+### Step 2: Build the reference implementation
 
 You must build the provided component services and create local docker images. To do so, run:
 
@@ -104,15 +104,15 @@ docker images | grep automated-checkout
 !!! failure
     If you do not see all of the above docker images, look through the console output for errors. Sometimes dependencies fail to resolve and must be run again. Address obvious issues. To try again, repeat step 2.
 
-### Step 3: Start the reference design suite
+### Step 3: Start the reference implementation suite
 
-Use Docker Compose to start the reference design suite. To do so, run:
+Use Docker Compose to start the reference implementation suite. To do so, run:
 
 ```bash
 make run
 ```
 
-This command starts the EdgeX Device Services and then starts all the Automated Checkout Reference Design Services.
+This command starts the EdgeX Device Services and then starts all the Automated Checkout Reference Implementation Services.
 
 #### Check for success
 
@@ -172,7 +172,7 @@ All of the core components of Automated Checkout are up and running, and you are
 
 ## General Guidance
 
-After completing the steps in the Getting Started section, it may be helpful to read through the remainder of this document for some further guidance on the Automated Checkout reference design.
+After completing the steps in the Getting Started section, it may be helpful to read through the remainder of this document for some further guidance on the Automated Checkout reference implementation.
 
 ### How to use the Compose Files
 
@@ -186,12 +186,12 @@ The `docker-compose.yml` files are segmented to allow for fine control of physic
 | Physical Card Reader      | Allows just the card reader to be physical      | `make run-physical-card-reader`      |
 | Physical Controller Board | Allows just the controller board to be physical | `make run-physical-controller-board` |
 
-### Expanding the Reference Design
+### Expanding the Reference Implementation
 
-The reference design you created is not a complete solution. It provides the base components for creating a framework to run a CV-powered Automated Checkout. It is your choice on how many and which sensors and devices to include. This section provides information about components you might want to include or replace.
+The reference implementation you created is not a complete solution. It provides the base components for creating a framework to run a CV-powered Automated Checkout. It is your choice on how many and which sensors and devices to include. This section provides information about components you might want to include or replace.
 
 | Component                        | Description                                                                                                                                                                                                                                                                                                                                                         |
 |----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | RFID card reader                 | A card reader device service is provided for a USB based RFID card reader. As an alternative, you can also use a regular USB keyboard to enter 10-digit number. See *[Phase 2 - Add Card Reader Device](./phases/phase2.md)* for more information.                                                                                                                  |
 | Micro-controller board           | A controller board device service is provided for an Arduino based micro-controller. This micro-controller is in charge of controlling the locks of the automated checkout door and the LED display. Also, it uses modules such as temperature and humidity. See *[Phase 3 - Bring Your Own Hardware and Software](./phases/phase3.md)* for more information.       |
-| Deep learning model | The Automated Checkout reference design provides a computer vision inference service using openVINO inference engine and openVINO product detection model for demonstration purposes. See more information [here](./automated-checkout-services/device_services.md#cv-inference). You can create your own service and send events to EdgeX using the [EdgeX MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go). |
+| Deep learning model | The Automated Checkout reference implementation provides a computer vision inference service using openVINO inference engine and openVINO product detection model for demonstration purposes. See more information [here](./automated-checkout-services/device_services.md#cv-inference). You can create your own service and send events to EdgeX using the [EdgeX MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go). |

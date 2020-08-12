@@ -1,6 +1,6 @@
 # Modifying source code
 
-When modifying source code in the Automated Checkout reference design, Docker images need to be rebuilt and services need to be updated to run newly built images. This document contains the steps for accomplishing this.
+When modifying source code in the Automated Checkout reference implementation, Docker images need to be rebuilt and services need to be updated to run newly built images. This document contains the steps for accomplishing this.
 
 ## Assumptions
 
@@ -26,7 +26,7 @@ After Docker builds the image (by executing the steps in [`ds-card-reader/Docker
 
 ## Remove and update the running service
 
-One of the most effective methods of updating a Docker compose service is to remove the running container, and then re-run the `make` commands to bring up the entire Automated Checkout reference design stack.
+One of the most effective methods of updating a Docker compose service is to remove the running container, and then re-run the `make` commands to bring up the entire Automated Checkout reference implementation stack.
 
 First, identify the running container for the service (again, `ds-card-reader` in this example):
 
