@@ -7,6 +7,7 @@ FROM hybridgroup/gocv:latest as builder
 ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/IRC_NAS/16803/l_openvino_toolkit_p_2020.4.287.tgz
 ARG INSTALL_DIR=/opt/intel/openvino_2020.4.287
 ARG TEMP_DIR=/tmp/openvino_installer
+COPY lsb-release /etc/lsb-release
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     git \
@@ -31,8 +32,8 @@ COPY go.* /go/src/ds-cv-inference/
 RUN go mod download
 
 COPY . /go/src/ds-cv-inference
-RUN go build -o ds-cv-inference
 
+RUN /bin/bash -c "source /opt/intel/openvino/bin/setupvars.sh && source ${GOPATH}/src/gocv.io/x/gocv/openvino/env.sh && go build -tags openvino -o ds-cv-inference"
 RUN chmod +x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
