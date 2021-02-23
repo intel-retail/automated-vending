@@ -4,7 +4,7 @@
 FROM hybridgroup/gocv:latest as builder
 
 # Install openVINO 2020.4.287
-ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/IRC_NAS/16803/l_openvino_toolkit_p_2020.4.287.tgz
+ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/16803/l_openvino_toolkit_p_2020.4.287.tgz
 ARG INSTALL_DIR=/opt/intel/openvino_2020.4.287
 ARG TEMP_DIR=/tmp/openvino_installer
 COPY lsb-release /etc/lsb-release
