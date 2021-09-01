@@ -1,7 +1,10 @@
 # Copyright © 2021 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM hybridgroup/gocv:latest as builder
+FROM gocv/opencv:4.5.2
+
+ENV GOPATH /go
+RUN go get -u -d gocv.io/x/gocv
 
 WORKDIR /tmp
 RUN wget https://apt.repos.intel.com/openvino/2021/GPG-PUB-KEY-INTEL-OPENVINO-2021
