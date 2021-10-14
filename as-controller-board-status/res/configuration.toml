@@ -21,14 +21,14 @@ Port = 8500
 Type = 'consul'
 
 [MessageBus]
-Type = 'zero'
+Type = 'mqtt'
     [MessageBus.PublishHost]
-        Host = '*'
-        Port = 5564
+        Host = 'localhost'
+        Port = 1883
         Protocol = 'tcp'
     [MessageBus.SubscribeHost]
         Host = 'localhost'
-        Port = 5563
+        Port = 1883
         Protocol = 'tcp'
 
 [Logging]
