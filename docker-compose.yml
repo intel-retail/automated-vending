@@ -97,6 +97,9 @@ services:
     environment:
       <<: *common-variables
       Service_Host: edgex-core-data
+      MessageQueue_Host: mqtt-broker
+      MessageQueue_Port: 1883
+      MessageQueue_Type: mqtt
     depends_on:
       - consul
       - redis
@@ -195,7 +198,9 @@ services:
     environment:
       <<: *common-variables
       Service_Host: as-controller-board-status
-      MessageBus_SubscribeHost_Host: edgex-core-data
+      MessageBus_SubscribeHost_Host: mqtt-broker
+      MessageBus_PublishHost_Host: mqtt-broker
+      Binding_SubscribeTopic: events
       ApplicationSettings_MQTTEndpoint: "http://edgex-core-command:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus"
       ApplicationSettings_NotificationHost: "http://edgex-support-notifications:48060/api/v1/notification"
       ApplicationSettings_SubscriptionHost: "http://edgex-support-notifications:48060/api/v1/subscription"
@@ -216,7 +221,9 @@ services:
     environment:
       <<: *common-variables
       Service_Host: as-vending
-      MessageBus_SubscribeHost_Host: edgex-core-data
+      MessageBus_SubscribeHost_Host: mqtt-broker
+      MessageBus_PublishHost_Host: mqtt-broker
+      Binding_SubscribeTopic: events
       ApplicationSettings_AuthenticationEndpoint: http://ms-authentication:48096/authentication
       ApplicationSettings_DeviceControllerBoarddisplayReset: http://edgex-core-command:48082/api/v1/device/name/ds-controller-board/command/displayReset
       ApplicationSettings_DeviceControllerBoarddisplayRow0: http://edgex-core-command:48082/api/v1/device/name/ds-controller-board/command/displayRow0
@@ -242,6 +249,7 @@ services:
   mqtt-broker:
     image: eclipse-mosquitto:1.6.3
     container_name: mqtt-broker
+    hostname: mqtt-broker
     volumes:
       - ./res/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     <<: *logging
