@@ -1,0 +1,194 @@
+networks:
+  edgex-network:
+    driver: bridge
+services:
+  consul:
+    command: agent -ui -bootstrap -server -client 0.0.0.0
+    container_name: edgex-core-consul
+    hostname: edgex-core-consul
+    image: consul:1.10.10
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:8500:8500/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: root:root
+    volumes:
+    - consul-config:/consul/config:z
+    - consul-data:/consul/data:z
+  database:
+    container_name: edgex-redis
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
+      CLIENTS_SUPPORT_SCHEDULER_HOST: edgex-support-scheduler
+      DATABASES_PRIMARY_HOST: edgex-redis
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+    hostname: edgex-redis
+    image: redis:6.2.6-alpine
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:6379:6379/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: root:root
+    volumes:
+    - db-data:/data:z
+  notifications:
+    container_name: edgex-support-notifications
+    depends_on:
+      consul:
+        condition: service_started
+      database:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
+      CLIENTS_SUPPORT_SCHEDULER_HOST: edgex-support-scheduler
+      DATABASES_PRIMARY_HOST: edgex-redis
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: edgex-support-notifications
+    hostname: edgex-support-notifications
+    image: edgexfoundry/support-notifications:2.2.0
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:59860:59860/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: 2002:2001
+  metadata:
+    container_name: edgex-core-metadata
+    depends_on:
+      consul:
+        condition: service_started
+      database:
+        condition: service_started
+      notifications:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
+      CLIENTS_SUPPORT_SCHEDULER_HOST: edgex-support-scheduler
+      DATABASES_PRIMARY_HOST: edgex-redis
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      NOTIFICATIONS_SENDER: edgex-core-metadata
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: edgex-core-metadata
+    hostname: edgex-core-metadata
+    image: edgexfoundry/core-metadata:2.2.0
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:59881:59881/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: 2002:2001
+  data:
+    container_name: edgex-core-data
+    depends_on:
+      consul:
+        condition: service_started
+      database:
+        condition: service_started
+      metadata:
+        condition: service_started
+      mqtt-broker:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
+      CLIENTS_SUPPORT_SCHEDULER_HOST: edgex-support-scheduler
+      DATABASES_PRIMARY_HOST: edgex-redis
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      MESSAGEQUEUE_AUTHMODE: none
+      MESSAGEQUEUE_HOST: edgex-mqtt-broker
+      MESSAGEQUEUE_OPTIONAL_CLIENTID: core-data
+      MESSAGEQUEUE_PORT: 1883
+      MESSAGEQUEUE_PROTOCOL: tcp
+      MESSAGEQUEUE_TYPE: mqtt
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: edgex-core-data
+    hostname: edgex-core-data
+    image: edgexfoundry/core-data:2.2.0
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:5563:5563/tcp
+    - 127.0.0.1:59880:59880/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: 2002:2001
+  command:
+    container_name: edgex-core-command
+    depends_on:
+      consul:
+        condition: service_started
+      database:
+        condition: service_started
+      metadata:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
+      CLIENTS_SUPPORT_SCHEDULER_HOST: edgex-support-scheduler
+      DATABASES_PRIMARY_HOST: edgex-redis
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: edgex-core-command
+    hostname: edgex-core-command
+    image: edgexfoundry/core-command:2.2.0
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:59882:59882/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: 2002:2001
+  mqtt-broker:
+    command: /usr/sbin/mosquitto -c /mosquitto-no-auth.conf
+    container_name: edgex-mqtt-broker
+    hostname: edgex-mqtt-broker
+    image: eclipse-mosquitto:2.0.14
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:1883:1883/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: 2002:2001
+
+version: '3.7'
+volumes:
+  consul-config: {}
+  consul-data: {}
+  db-data: {}
+  kuiper-data: {}
