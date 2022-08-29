@@ -1,43 +1,25 @@
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
 [Writable]
 LogLevel = 'INFO'
 
 [Service]
-BootTimeout = '30s'
 ClientMonitor = '15s'
-CheckInterval = '10s'
+HealthCheckInterval = '10s'
 Host = 'localhost'
 Port = 48096
-Protocol = 'http'
 ReadMaxLimit = 100
 StartupMsg = 'This microservice checks if ID numbers from REST requests are authenticated'
-Timeout = '30s'
+RequestTimeout = '30s'
+MaxRequestSize = 0
 
 [Registry]
 Host = "localhost"
 Port = 8500
 Type = 'consul'
 
-[MessageBus]
-Type = 'zero'
-    [MessageBus.PublishHost]
-        Host = '*'
-        Port = 5564
-        Protocol = 'tcp'
-    [MessageBus.SubscribeHost]
-        Host = 'localhost'
-        Port = 5563
-        Protocol = 'tcp'
-
-[Logging]
-EnableRemote = false
-File = ''
-
-[Binding]
+[Trigger]
 Type="http"
-SubscribeTopic=""
-PublishTopic=""
 
 [ApplicationSettings]
