@@ -30,5 +30,30 @@ services:
     logging:
       options: { max-file: "5", max-size: 100m }
     user: 2002:2001
+  ms-inventory:
+    image: "automated-checkout/ms-inventory:dev"
+    container_name: automated-checkout_ms-inventory
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: ms-inventory
+    hostname: ms-inventory
+    networks:
+      edgex-network: {}
+    ports:
+    - 48095:48095/tcp
+    restart: always
+    ipc: none
+    read_only: true
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
 
 version: '3.7'
