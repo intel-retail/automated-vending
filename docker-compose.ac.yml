@@ -49,7 +49,6 @@ services:
     - 48095:48095/tcp
     restart: always
     ipc: none
-    read_only: true
     security_opt:
     - no-new-privileges:true
     logging:
