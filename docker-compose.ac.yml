@@ -13,12 +13,10 @@ services:
       command:
         condition: service_started
     environment:
-      # Comment out and/or update the setting of http_proxy if needed (e.g. not using proxy)
       CLIENTS_CORE_DATA_HOST: edgex-core-data
       CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
       CLIENTS_SUPPORT_SCHEDULER_HOST: edgex-support-scheduler
       DATABASES_PRIMARY_HOST: edgex-redis
-      # MESSAGEQUEUE_HOST: edgex-redis
       EDGEX_SECURITY_SECRET_STORE: "false"
       REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: ms-authentication
