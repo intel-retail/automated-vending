@@ -26,4 +26,4 @@ COPY --from=builder /usr/local/bin/ms-authentication/cards.json /cards.json
 COPY --from=builder /usr/local/bin/ms-authentication/accounts.json /accounts.json
 COPY --from=builder /usr/local/bin/ms-authentication/people.json /people.json
 
-CMD [ "/ms-authentication", "--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s"]
+CMD [ "/ms-authentication", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s"]
