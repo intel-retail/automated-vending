@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -6,14 +6,16 @@ package routes
 import (
 	"bytes"
 	"io/ioutil"
+	"ms-ledger/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/gorilla/mux"
+	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 func TestLedgerDelete(t *testing.T) {
@@ -48,7 +50,15 @@ func TestLedgerDelete(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteAllLedgers()
+			r := Route{
+				lc: logger.NewMockClient(),
+				serviceConfig: &config.ServiceConfig{
+					AppCustom: config.AppCustomConfig{
+						InventoryEndpoint: "test.com",
+					},
+				},
+			}
+			err := r.DeleteAllLedgers()
 			require.NoError(err)
 
 			if currentTest.InvalidLedger {
@@ -68,7 +78,7 @@ func TestLedgerDelete(t *testing.T) {
 
 			req = mux.SetURLVars(req, URLVars)
 			req.Header.Set("Content-Type", "application/json")
-			LedgerDelete(w, req)
+			r.LedgerDelete(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -76,7 +86,7 @@ func TestLedgerDelete(t *testing.T) {
 
 			if !currentTest.InvalidLedger {
 				// run GetAllLedgers and get the result as JSON
-				accountsFromFile, err := GetAllLedgers()
+				accountsFromFile, err := r.GetAllLedgers()
 				require.NoError(err)
 
 				if currentTest.TransactionDeleted {

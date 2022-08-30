@@ -1,19 +1,21 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
 	"io/ioutil"
+	"ms-ledger/config"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/gorilla/mux"
+	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 func TestAllAccountsGet(t *testing.T) {
@@ -35,7 +37,15 @@ func TestAllAccountsGet(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteAllLedgers()
+			r := Route{
+				lc: logger.NewMockClient(),
+				serviceConfig: &config.ServiceConfig{
+					AppCustom: config.AppCustomConfig{
+						InventoryEndpoint: "test.com",
+					},
+				},
+			}
+			err := r.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
 				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
@@ -46,7 +56,7 @@ func TestAllAccountsGet(t *testing.T) {
 
 			req := httptest.NewRequest("GET", "http://localhost:48093/ledger", nil)
 			w := httptest.NewRecorder()
-			AllAccountsGet(w, req)
+			r.AllAccountsGet(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -78,7 +88,15 @@ func TestLedgerAccountGet(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteAllLedgers()
+			r := Route{
+				lc: logger.NewMockClient(),
+				serviceConfig: &config.ServiceConfig{
+					AppCustom: config.AppCustomConfig{
+						InventoryEndpoint: "test.com",
+					},
+				},
+			}
+			err := r.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
 				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
@@ -90,7 +108,7 @@ func TestLedgerAccountGet(t *testing.T) {
 			req := httptest.NewRequest("GET", "http://localhost:48093/ledger/"+test.AccountID, nil)
 			w := httptest.NewRecorder()
 			req = mux.SetURLVars(req, map[string]string{"accountid": currentTest.AccountID})
-			LedgerAccountGet(w, req)
+			r.LedgerAccountGet(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 

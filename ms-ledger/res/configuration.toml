@@ -1,4 +1,4 @@
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
 
@@ -21,25 +21,8 @@ Host = "localhost"
 Port = 8500
 Type = 'consul'
 
-[MessageBus]
-Type = 'zero'
-    [MessageBus.PublishHost]
-        Host = '*'
-        Port = 5564
-        Protocol = 'tcp'
-    [MessageBus.SubscribeHost]
-        Host = 'localhost'
-        Port = 5563
-        Protocol = 'tcp'
-
-[Logging]
-EnableRemote = false
-File = ''
-
-[Binding]
+[Trigger]
 Type="http"
-SubscribeTopic=""
-PublishTopic=""
 
-[ApplicationSettings]
+[AppCustom]
 InventoryEndpoint = "http://localhost:48095/inventory"

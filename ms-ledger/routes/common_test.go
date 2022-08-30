@@ -1,13 +1,15 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
+	"ms-ledger/config"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/stretchr/testify/require"
 )
 
 func getDefaultAccountLedgers() Accounts {
@@ -50,6 +52,14 @@ func getDefaultAccountLedgers() Accounts {
 func TestGetAllLedgers(t *testing.T) {
 	// Use community-recommended shorthand (known name clash)
 
+	r := Route{
+		lc: logger.NewMockClient(),
+		serviceConfig: &config.ServiceConfig{
+			AppCustom: config.AppCustomConfig{
+				InventoryEndpoint: "test.com",
+			},
+		},
+	}
 	require := require.New(t)
 	// Accounts slice
 	accountLedgers := getDefaultAccountLedgers()
@@ -59,7 +69,7 @@ func TestGetAllLedgers(t *testing.T) {
 	require.NoError(err)
 
 	// run GetAllLedgers and get the result as JSON
-	actualAccountLedgers, err := GetAllLedgers()
+	actualAccountLedgers, err := r.GetAllLedgers()
 	require.NoError(err)
 
 	// Check to make sure items match
@@ -68,6 +78,15 @@ func TestGetAllLedgers(t *testing.T) {
 
 func TestDeleteAllLedgers(t *testing.T) {
 	// Use community-recommended shorthand (known name clash)
+
+	r := Route{
+		lc: logger.NewMockClient(),
+		serviceConfig: &config.ServiceConfig{
+			AppCustom: config.AppCustomConfig{
+				InventoryEndpoint: "test.com",
+			},
+		},
+	}
 
 	require := require.New(t)
 	// Accounts slice
@@ -80,9 +99,9 @@ func TestDeleteAllLedgers(t *testing.T) {
 	require.NoError(err)
 
 	// Delete Ledger
-	err = DeleteAllLedgers()
+	err = r.DeleteAllLedgers()
 	require.NoError(err)
-	updatedLedger, err := GetAllLedgers()
+	updatedLedger, err := r.GetAllLedgers()
 	require.NoError(err)
 
 	// Check that deleted Ledger has no ledger data
