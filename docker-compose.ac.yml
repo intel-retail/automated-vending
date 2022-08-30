@@ -71,7 +71,7 @@ services:
     networks:
       edgex-network: {}
     ports:
-    - 48093:48093/tcp
+    - 127.0.0.1:48093:48093/tcp
     restart: always
     ipc: none
     security_opt:
