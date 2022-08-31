@@ -56,6 +56,8 @@ func TestController_AddAllRoutes(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
+			require.NoError(t, err)
 		})
 	}
 }

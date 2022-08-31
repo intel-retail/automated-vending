@@ -37,7 +37,7 @@ func main() {
 	}
 
 	if _, err := url.Parse(inventoryEndpoint); err != nil {
-		lc.Errorf("InventoryEndpoint is from ApplicationSettings is not a valid URL: %s", err.Error())
+		lc.Errorf("InventoryEndpoint from ApplicationSettings is not a valid URL: %s", err.Error())
 		os.Exit(1)
 	}
 
