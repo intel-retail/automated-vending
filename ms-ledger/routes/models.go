@@ -1,14 +1,7 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
-
-type key string
-
-const (
-	// AppSettingsKey is used to store the appSetting in the handler's request context
-	AppSettingsKey key = "appSetting"
-)
 
 type Accounts struct {
 	Data []Account `json:"data"`

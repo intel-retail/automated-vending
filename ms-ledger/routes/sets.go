@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -17,7 +17,7 @@ import (
 )
 
 // SetPaymentStatus sets the `isPaid` field for a transaction to true/false
-func SetPaymentStatus(writer http.ResponseWriter, req *http.Request) {
+func (c *Controller) SetPaymentStatus(writer http.ResponseWriter, req *http.Request) {
 	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
 
 		// Read request body
@@ -36,7 +36,7 @@ func SetPaymentStatus(writer http.ResponseWriter, req *http.Request) {
 		}
 
 		//Get all ledgers for all accounts
-		accountLedgers, err := GetAllLedgers()
+		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
 			return
@@ -67,16 +67,10 @@ func SetPaymentStatus(writer http.ResponseWriter, req *http.Request) {
 }
 
 // LedgerAddTransaction adds a new transaction to the Account Ledger
-func LedgerAddTransaction(writer http.ResponseWriter, req *http.Request) {
+func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.Request) {
 	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
 
 		response := utilities.GetHTTPResponseTemplate()
-
-		appSettings, ok := req.Context().Value(AppSettingsKey).(map[string]string)
-		if !ok {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to read appSettings value", true)
-			return
-		}
 
 		// Read request body (this is the inference data)
 		body := make([]byte, req.ContentLength)
@@ -95,7 +89,7 @@ func LedgerAddTransaction(writer http.ResponseWriter, req *http.Request) {
 		}
 
 		//Get all ledgers for all accounts
-		accountLedgers, err := GetAllLedgers()
+		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
 			return
@@ -117,7 +111,7 @@ func LedgerAddTransaction(writer http.ResponseWriter, req *http.Request) {
 				}
 
 				for _, deltaSKU := range updateLedger.DeltaSKUs {
-					itemInfo, err := getInventoryItemInfo(appSettings, deltaSKU.SKU)
+					itemInfo, err := c.getInventoryItemInfo(c.inventoryEndpoint, deltaSKU.SKU)
 					if err != nil {
 						utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find product Info for "+deltaSKU.SKU+" "+err.Error(), true)
 						return
@@ -163,14 +157,9 @@ func LedgerAddTransaction(writer http.ResponseWriter, req *http.Request) {
 
 // getInventoryItemInfo is a helper function that will take the inference data (SKU)
 // and return product details for a transaction to be recorded in the ledger
-func getInventoryItemInfo(appSettings map[string]string, SKU string) (Product, error) {
+func (c *Controller) getInventoryItemInfo(inventoryEndpoint string, SKU string) (Product, error) {
 
-	inventoryEndpoint, ok := appSettings["InventoryEndpoint"]
-	if !ok {
-		return Product{}, fmt.Errorf("InventoryEndpoint App Setting not found")
-	}
-
-	resp, err := sendCommand("GET", inventoryEndpoint+"/"+SKU, []byte(""))
+	resp, err := c.sendCommand("GET", inventoryEndpoint+"/"+SKU, []byte(""))
 	if err != nil {
 		return Product{}, fmt.Errorf("Could not hit inventoryEndpoint, SKU may not exist")
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -18,7 +18,7 @@ var LedgerFileName = "ledger.json"
 var connectionTimeout = 15
 
 // GetAllLedgers is a common function to get all ledgers for all accounts
-func GetAllLedgers() (Accounts, error) {
+func (c *Controller) GetAllLedgers() (Accounts, error) {
 	var accountLedgers Accounts
 
 	err := utilities.LoadFromJSONFile(LedgerFileName, &accountLedgers)
@@ -31,12 +31,12 @@ func GetAllLedgers() (Accounts, error) {
 }
 
 // DeleteAllLedgers will reset the content of the inventory JSON file
-func DeleteAllLedgers() error {
+func (c *Controller) DeleteAllLedgers() error {
 	return utilities.WriteToJSONFile(LedgerFileName, Accounts{Data: []Account{}}, 0644)
 }
 
 // TODO: refactor this into the utilities package
-func sendCommand(method string, commandURL string, inputBytes []byte) (*http.Response, error) {
+func (c *Controller) sendCommand(method string, commandURL string, inputBytes []byte) (*http.Response, error) {
 	// Create the http request based on the parameters
 	request, _ := http.NewRequest(method, commandURL, bytes.NewBuffer(inputBytes))
 	timeout := time.Duration(connectionTimeout) * time.Second

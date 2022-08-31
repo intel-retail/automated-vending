@@ -1,20 +1,23 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 func getDefaultProduct() Product {
@@ -74,11 +77,7 @@ func TestLedgerAddTransaction(t *testing.T) {
 	// Accounts slice
 	accountLedgers := getDefaultAccountLedgers()
 
-	appSettings := make(map[string]string)
-
 	inventoryServer := newInventoryTestServer(t)
-
-	appSettings["InventoryEndpoint"] = inventoryServer.URL
 
 	tests := []struct {
 		Name               string
@@ -97,7 +96,15 @@ func TestLedgerAddTransaction(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteAllLedgers()
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(nil)
+			c := Controller{
+				lc:                logger.NewMockClient(),
+				service:           mockAppService,
+				inventoryEndpoint: inventoryServer.URL,
+			}
+			err := c.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
 				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
@@ -109,11 +116,7 @@ func TestLedgerAddTransaction(t *testing.T) {
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger", bytes.NewBuffer([]byte(currentTest.UpdateLedger)))
 			w := httptest.NewRecorder()
 			req.Header.Set("Content-Type", "application/json")
-			ctx := req.Context()
-			ctx = context.WithValue(ctx, AppSettingsKey, appSettings)
-			req = req.WithContext(ctx)
-			req.Context()
-			LedgerAddTransaction(w, req)
+			c.LedgerAddTransaction(w, req)
 
 			resp := w.Result()
 			defer resp.Body.Close()
@@ -125,7 +128,6 @@ func TestLedgerAddTransaction(t *testing.T) {
 
 func TestGetInventoryItemInfo(t *testing.T) {
 
-	appSettings := make(map[string]string)
 	// Default variables
 	defaultProduct := getDefaultProduct()
 	defaultSKU := "4900002470"
@@ -149,15 +151,22 @@ func TestGetInventoryItemInfo(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(nil)
+			c := Controller{
+				lc:                logger.NewMockClient(),
+				service:           mockAppService,
+				inventoryEndpoint: currentTest.InventoryEndpoint,
+			}
 			if currentTest.MissingAppSetting {
-				badAppSettings := make(map[string]string)
-				_, err := getInventoryItemInfo(badAppSettings, currentTest.SKU)
+				badInventoryEndpoint := ""
+				_, err := c.getInventoryItemInfo(badInventoryEndpoint, currentTest.SKU)
 				require.Error(t, err)
 				return
 			}
 
-			appSettings["InventoryEndpoint"] = currentTest.InventoryEndpoint
-			inventoryItem, err := getInventoryItemInfo(appSettings, currentTest.SKU)
+			inventoryItem, err := c.getInventoryItemInfo(c.inventoryEndpoint, currentTest.SKU)
 			if currentTest.Error {
 				require.Error(t, err)
 				return
@@ -193,7 +202,15 @@ func TestSetPaymentStatus(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteAllLedgers()
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(nil)
+			c := Controller{
+				lc:                logger.NewMockClient(),
+				service:           mockAppService,
+				inventoryEndpoint: "test.com",
+			}
+			err := c.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
 				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
@@ -204,7 +221,7 @@ func TestSetPaymentStatus(t *testing.T) {
 
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger/ledgerPaymentUpdate", bytes.NewBuffer([]byte(currentTest.PaymentInfo)))
 			w := httptest.NewRecorder()
-			SetPaymentStatus(w, req)
+			c.SetPaymentStatus(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
