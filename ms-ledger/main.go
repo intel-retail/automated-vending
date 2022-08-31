@@ -24,17 +24,6 @@ func main() {
 
 	lc := service.LoggingClient()
 
-	// serviceConfig := &config.ServiceConfig{}
-	// if err := service.LoadCustomConfig(serviceConfig, "AppCustom"); err != nil {
-	// 	lc.Errorf("failed load custom configuration: %s", err.Error())
-	// 	os.Exit(1)
-	// }
-
-	// if err := serviceConfig.AppCustom.Validate(); err != nil {
-	// 	lc.Errorf("custom configuration failed validation: %s", err.Error())
-	// 	os.Exit(1)
-	// }
-
 	inventoryEndpoint, err := service.GetAppSetting("InventoryEndpoint")
 	if err != nil {
 		lc.Errorf("failed load ApplicationSettings: %s", err.Error())
