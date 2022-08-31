@@ -6,11 +6,12 @@ package routes
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -135,7 +136,7 @@ func TestGetInventoryItemInfo(t *testing.T) {
 
 	tests := []struct {
 		Name              string
-		MissingAppCustom  bool
+		MissingAppSetting bool
 		InventoryEndpoint string
 		SKU               string
 		ProductMatch      bool
@@ -143,7 +144,7 @@ func TestGetInventoryItemInfo(t *testing.T) {
 	}{
 		{"Valid SKU", false, inventoryServer.URL, defaultSKU, true, false},
 		{"Nonexistent SKU", false, inventoryServer.URL, "123", false, true},
-		{"Missing AppCustom", true, inventoryServer.URL, defaultSKU, false, true},
+		{"Missing AppSetting", true, inventoryServer.URL, defaultSKU, false, true},
 		{"Invalid InventoryEndpoint", false, "badURL", defaultSKU, false, true},
 	}
 
@@ -158,7 +159,7 @@ func TestGetInventoryItemInfo(t *testing.T) {
 				service:           mockAppService,
 				inventoryEndpoint: currentTest.InventoryEndpoint,
 			}
-			if currentTest.MissingAppCustom {
+			if currentTest.MissingAppSetting {
 				badInventoryEndpoint := ""
 				_, err := c.getInventoryItemInfo(badInventoryEndpoint, currentTest.SKU)
 				require.Error(t, err)
