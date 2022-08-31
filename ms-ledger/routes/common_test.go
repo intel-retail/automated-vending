@@ -4,9 +4,10 @@
 package routes
 
 import (
-	"ms-ledger/config"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/require"
@@ -52,13 +53,14 @@ func getDefaultAccountLedgers() Accounts {
 func TestGetAllLedgers(t *testing.T) {
 	// Use community-recommended shorthand (known name clash)
 
-	r := Route{
-		lc: logger.NewMockClient(),
-		serviceConfig: &config.ServiceConfig{
-			AppCustom: config.AppCustomConfig{
-				InventoryEndpoint: "test.com",
-			},
-		},
+	mockAppService := &mocks.ApplicationService{}
+	mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
+	c := Controller{
+		lc:                logger.NewMockClient(),
+		service:           mockAppService,
+		inventoryEndpoint: "test.com",
 	}
 	require := require.New(t)
 	// Accounts slice
@@ -69,7 +71,7 @@ func TestGetAllLedgers(t *testing.T) {
 	require.NoError(err)
 
 	// run GetAllLedgers and get the result as JSON
-	actualAccountLedgers, err := r.GetAllLedgers()
+	actualAccountLedgers, err := c.GetAllLedgers()
 	require.NoError(err)
 
 	// Check to make sure items match
@@ -79,13 +81,14 @@ func TestGetAllLedgers(t *testing.T) {
 func TestDeleteAllLedgers(t *testing.T) {
 	// Use community-recommended shorthand (known name clash)
 
-	r := Route{
-		lc: logger.NewMockClient(),
-		serviceConfig: &config.ServiceConfig{
-			AppCustom: config.AppCustomConfig{
-				InventoryEndpoint: "test.com",
-			},
-		},
+	mockAppService := &mocks.ApplicationService{}
+	mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
+	c := Controller{
+		lc:                logger.NewMockClient(),
+		service:           mockAppService,
+		inventoryEndpoint: "test.com",
 	}
 
 	require := require.New(t)
@@ -99,9 +102,9 @@ func TestDeleteAllLedgers(t *testing.T) {
 	require.NoError(err)
 
 	// Delete Ledger
-	err = r.DeleteAllLedgers()
+	err = c.DeleteAllLedgers()
 	require.NoError(err)
-	updatedLedger, err := r.GetAllLedgers()
+	updatedLedger, err := c.GetAllLedgers()
 	require.NoError(err)
 
 	// Check that deleted Ledger has no ledger data

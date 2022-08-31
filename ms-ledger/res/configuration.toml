@@ -6,15 +6,14 @@
 LogLevel = 'INFO'
 
 [Service]
-BootTimeout = '30s'
 ClientMonitor = '15s'
-CheckInterval = '10s'
+HealthCheckInterval = '10s'
 Host = 'localhost'
 Port = 48093
-Protocol = 'http'
 ReadMaxLimit = 100
 StartupMsg = 'This microservice exposes a CRUD interface for financial transactions in a ledger'
-Timeout = '30s'
+RequestTimeout = '30s'
+MaxRequestSize = 0
 
 [Registry]
 Host = "localhost"
@@ -24,5 +23,5 @@ Type = 'consul'
 [Trigger]
 Type="http"
 
-[AppCustom]
+[ApplicationSettings]
 InventoryEndpoint = "http://localhost:48095/inventory"

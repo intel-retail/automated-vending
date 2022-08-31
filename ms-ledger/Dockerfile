@@ -27,4 +27,4 @@ COPY --from=builder /usr/local/bin/ms-ledger/ledger.json /ledger.json
 RUN chmod 640 /ledger.json && \
   chown 2000 /ledger.json
 
-CMD [ "/ms-ledger","--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s" ]
+CMD [ "/ms-ledger", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s" ]

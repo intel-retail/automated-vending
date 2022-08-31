@@ -5,12 +5,13 @@ package routes
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/mock"
 	"io/ioutil"
-	"ms-ledger/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/gorilla/mux"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
@@ -50,15 +51,15 @@ func TestLedgerDelete(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			r := Route{
-				lc: logger.NewMockClient(),
-				serviceConfig: &config.ServiceConfig{
-					AppCustom: config.AppCustomConfig{
-						InventoryEndpoint: "test.com",
-					},
-				},
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(nil)
+			c := Controller{
+				lc:                logger.NewMockClient(),
+				service:           mockAppService,
+				inventoryEndpoint: "test.com",
 			}
-			err := r.DeleteAllLedgers()
+			err := c.DeleteAllLedgers()
 			require.NoError(err)
 
 			if currentTest.InvalidLedger {
@@ -78,7 +79,7 @@ func TestLedgerDelete(t *testing.T) {
 
 			req = mux.SetURLVars(req, URLVars)
 			req.Header.Set("Content-Type", "application/json")
-			r.LedgerDelete(w, req)
+			c.LedgerDelete(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -86,7 +87,7 @@ func TestLedgerDelete(t *testing.T) {
 
 			if !currentTest.InvalidLedger {
 				// run GetAllLedgers and get the result as JSON
-				accountsFromFile, err := r.GetAllLedgers()
+				accountsFromFile, err := c.GetAllLedgers()
 				require.NoError(err)
 
 				if currentTest.TransactionDeleted {

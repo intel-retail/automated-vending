@@ -4,12 +4,10 @@
 package main
 
 import (
-	"ms-ledger/config"
 	"ms-ledger/routes"
 	"os"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 const (
@@ -17,7 +15,7 @@ const (
 )
 
 func main() {
-	// TODO: See https://docs.edgexfoundry.org/2.2/microservices/application/ApplicationServices/
+	// See https://docs.edgexfoundry.org/2.2/microservices/application/ApplicationServices/
 	//       for documentation on application services.
 	service, ok := pkg.NewAppService(serviceKey)
 	if !ok {
@@ -26,35 +24,32 @@ func main() {
 
 	lc := service.LoggingClient()
 
-	serviceConfig := &config.ServiceConfig{}
-	if err := service.LoadCustomConfig(serviceConfig, "AppCustom"); err != nil {
-		lc.Errorf("failed load custom configuration: %s", err.Error())
+	// serviceConfig := &config.ServiceConfig{}
+	// if err := service.LoadCustomConfig(serviceConfig, "AppCustom"); err != nil {
+	// 	lc.Errorf("failed load custom configuration: %s", err.Error())
+	// 	os.Exit(1)
+	// }
+
+	// if err := serviceConfig.AppCustom.Validate(); err != nil {
+	// 	lc.Errorf("custom configuration failed validation: %s", err.Error())
+	// 	os.Exit(1)
+	// }
+
+	inventoryEndpoint, err := service.GetAppSetting("InventoryEndpoint")
+	if err != nil {
+		lc.Errorf("failed load ApplicationSettings: %s", err.Error())
 		os.Exit(1)
 	}
 
-	if err := serviceConfig.AppCustom.Validate(); err != nil {
-		lc.Errorf("custom configuration failed validation: %s", err.Error())
+	if len(inventoryEndpoint) == 0 {
+		lc.Errorf("InventoryEndpoint is not set in ApplicationSettings")
 		os.Exit(1)
 	}
 
-	route := routes.NewRoute(lc, serviceConfig)
-
-	var err error
-
-	err = service.AddRoute("/ledger", route.AllAccountsGet, "OPTIONS", "GET")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/ledger/{accountid}", route.LedgerAccountGet, "OPTIONS", "GET")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/ledger", route.LedgerAddTransaction, "OPTIONS", "POST")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/ledgerPaymentUpdate", route.SetPaymentStatus, "OPTIONS", "POST")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/ledger/{accountid}/{tid}", route.LedgerDelete, "DELETE", "OPTIONS")
-	errorAddRouteHandler(lc, err)
+	controller := routes.NewController(lc, service, inventoryEndpoint)
+	if controller.AddAllRoutes() == 1 {
+		os.Exit(1)
+	}
 
 	if err := service.MakeItRun(); err != nil {
 		lc.Errorf("MakeItRun returned error: %s", err.Error())
@@ -62,11 +57,5 @@ func main() {
 	}
 
 	os.Exit(0)
-}
 
-func errorAddRouteHandler(lc logger.LoggingClient, err error) {
-	if err != nil {
-		lc.Error("Error adding route: %s", err.Error())
-		os.Exit(1)
-	}
 }

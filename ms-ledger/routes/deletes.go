@@ -12,11 +12,11 @@ import (
 )
 
 // LedgerDelete will delete a specific ledger for an account
-func (r *Route) LedgerDelete(writer http.ResponseWriter, req *http.Request) {
+func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request) {
 	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
 
 		//Get all ledgers for all accounts
-		accountLedgers, err := r.GetAllLedgers()
+		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
 			return

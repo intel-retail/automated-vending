@@ -6,12 +6,13 @@ package routes
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/stretchr/testify/mock"
 	"io/ioutil"
-	"ms-ledger/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
@@ -94,15 +95,15 @@ func TestLedgerAddTransaction(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			r := Route{
-				lc: logger.NewMockClient(),
-				serviceConfig: &config.ServiceConfig{
-					AppCustom: config.AppCustomConfig{
-						InventoryEndpoint: inventoryServer.URL,
-					},
-				},
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(nil)
+			c := Controller{
+				lc:                logger.NewMockClient(),
+				service:           mockAppService,
+				inventoryEndpoint: inventoryServer.URL,
 			}
-			err := r.DeleteAllLedgers()
+			err := c.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
 				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
@@ -114,7 +115,7 @@ func TestLedgerAddTransaction(t *testing.T) {
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger", bytes.NewBuffer([]byte(currentTest.UpdateLedger)))
 			w := httptest.NewRecorder()
 			req.Header.Set("Content-Type", "application/json")
-			r.LedgerAddTransaction(w, req)
+			c.LedgerAddTransaction(w, req)
 
 			resp := w.Result()
 			defer resp.Body.Close()
@@ -149,22 +150,22 @@ func TestGetInventoryItemInfo(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			r := Route{
-				lc: logger.NewMockClient(),
-				serviceConfig: &config.ServiceConfig{
-					AppCustom: config.AppCustomConfig{
-						InventoryEndpoint: currentTest.InventoryEndpoint,
-					},
-				},
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(nil)
+			c := Controller{
+				lc:                logger.NewMockClient(),
+				service:           mockAppService,
+				inventoryEndpoint: currentTest.InventoryEndpoint,
 			}
 			if currentTest.MissingAppCustom {
 				badInventoryEndpoint := ""
-				_, err := r.getInventoryItemInfo(badInventoryEndpoint, currentTest.SKU)
+				_, err := c.getInventoryItemInfo(badInventoryEndpoint, currentTest.SKU)
 				require.Error(t, err)
 				return
 			}
 
-			inventoryItem, err := r.getInventoryItemInfo(r.serviceConfig.AppCustom.InventoryEndpoint, currentTest.SKU)
+			inventoryItem, err := c.getInventoryItemInfo(c.inventoryEndpoint, currentTest.SKU)
 			if currentTest.Error {
 				require.Error(t, err)
 				return
@@ -200,15 +201,15 @@ func TestSetPaymentStatus(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			r := Route{
-				lc: logger.NewMockClient(),
-				serviceConfig: &config.ServiceConfig{
-					AppCustom: config.AppCustomConfig{
-						InventoryEndpoint: "test.com",
-					},
-				},
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(nil)
+			c := Controller{
+				lc:                logger.NewMockClient(),
+				service:           mockAppService,
+				inventoryEndpoint: "test.com",
 			}
-			err := r.DeleteAllLedgers()
+			err := c.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
 				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
@@ -219,7 +220,7 @@ func TestSetPaymentStatus(t *testing.T) {
 
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger/ledgerPaymentUpdate", bytes.NewBuffer([]byte(currentTest.PaymentInfo)))
 			w := httptest.NewRecorder()
-			r.SetPaymentStatus(w, req)
+			c.SetPaymentStatus(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 

@@ -17,7 +17,7 @@ import (
 )
 
 // SetPaymentStatus sets the `isPaid` field for a transaction to true/false
-func (r *Route) SetPaymentStatus(writer http.ResponseWriter, req *http.Request) {
+func (c *Controller) SetPaymentStatus(writer http.ResponseWriter, req *http.Request) {
 	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
 
 		// Read request body
@@ -36,7 +36,7 @@ func (r *Route) SetPaymentStatus(writer http.ResponseWriter, req *http.Request) 
 		}
 
 		//Get all ledgers for all accounts
-		accountLedgers, err := r.GetAllLedgers()
+		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
 			return
@@ -67,7 +67,7 @@ func (r *Route) SetPaymentStatus(writer http.ResponseWriter, req *http.Request) 
 }
 
 // LedgerAddTransaction adds a new transaction to the Account Ledger
-func (r *Route) LedgerAddTransaction(writer http.ResponseWriter, req *http.Request) {
+func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.Request) {
 	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
 
 		response := utilities.GetHTTPResponseTemplate()
@@ -89,7 +89,7 @@ func (r *Route) LedgerAddTransaction(writer http.ResponseWriter, req *http.Reque
 		}
 
 		//Get all ledgers for all accounts
-		accountLedgers, err := r.GetAllLedgers()
+		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
 			return
@@ -111,7 +111,7 @@ func (r *Route) LedgerAddTransaction(writer http.ResponseWriter, req *http.Reque
 				}
 
 				for _, deltaSKU := range updateLedger.DeltaSKUs {
-					itemInfo, err := r.getInventoryItemInfo(r.serviceConfig.AppCustom.InventoryEndpoint, deltaSKU.SKU)
+					itemInfo, err := c.getInventoryItemInfo(c.inventoryEndpoint, deltaSKU.SKU)
 					if err != nil {
 						utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find product Info for "+deltaSKU.SKU+" "+err.Error(), true)
 						return
@@ -157,9 +157,9 @@ func (r *Route) LedgerAddTransaction(writer http.ResponseWriter, req *http.Reque
 
 // getInventoryItemInfo is a helper function that will take the inference data (SKU)
 // and return product details for a transaction to be recorded in the ledger
-func (r *Route) getInventoryItemInfo(inventoryEndpoint string, SKU string) (Product, error) {
+func (c *Controller) getInventoryItemInfo(inventoryEndpoint string, SKU string) (Product, error) {
 
-	resp, err := r.sendCommand("GET", inventoryEndpoint+"/"+SKU, []byte(""))
+	resp, err := c.sendCommand("GET", inventoryEndpoint+"/"+SKU, []byte(""))
 	if err != nil {
 		return Product{}, fmt.Errorf("Could not hit inventoryEndpoint, SKU may not exist")
 	}
