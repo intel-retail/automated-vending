@@ -4,8 +4,9 @@
 package routes
 
 import (
-	"github.com/stretchr/testify/mock"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -52,14 +53,9 @@ func getDefaultAccountLedgers() Accounts {
 
 func TestGetAllLedgers(t *testing.T) {
 	// Use community-recommended shorthand (known name clash)
-
-	mockAppService := &mocks.ApplicationService{}
-	mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil)
-
 	c := Controller{
 		lc:                logger.NewMockClient(),
-		service:           mockAppService,
+		service:           nil,
 		inventoryEndpoint: "test.com",
 	}
 	require := require.New(t)

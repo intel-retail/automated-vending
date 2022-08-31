@@ -5,6 +5,7 @@ package main
 
 import (
 	"ms-ledger/routes"
+	"net/url"
 	"os"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
@@ -31,12 +32,19 @@ func main() {
 	}
 
 	if len(inventoryEndpoint) == 0 {
-		lc.Errorf("InventoryEndpoint is not set in ApplicationSettings")
+		lc.Error("InventoryEndpoint is not set in ApplicationSettings")
+		os.Exit(1)
+	}
+
+	if _, err := url.Parse(inventoryEndpoint); err != nil {
+		lc.Errorf("InventoryEndpoint is from ApplicationSettings is not a valid URL: %s", err.Error())
 		os.Exit(1)
 	}
 
 	controller := routes.NewController(lc, service, inventoryEndpoint)
-	if controller.AddAllRoutes() == 1 {
+	err = controller.AddAllRoutes()
+	if err != nil {
+		lc.Errorf("failed to add all Routes: %s", err.Error())
 		os.Exit(1)
 	}
 
