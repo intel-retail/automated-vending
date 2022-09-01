@@ -141,7 +141,7 @@ func (reader *CardReaderPhysical) processDevReadEvents(events []evdev.InputEvent
 			continue
 		}
 
-		reader.Write(common.CommandCardData, reader.CardNumber)
+		reader.Write(common.CommandCardNumber, reader.CardNumber)
 	}
 }
 

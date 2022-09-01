@@ -206,13 +206,13 @@ func TestHandleWriteCommands(t *testing.T) {
 	protocolProperties := map[string]models.ProtocolProperties{}
 	lc := logger.NewMockClient()
 
-	successfulCommandVal, err := dsModels.NewCommandValueWithOrigin(common.CommandCardData, edgexcommon.ValueTypeString, expectedCardNumber, 0)
+	successfulCommandVal, err := dsModels.NewCommandValueWithOrigin(common.CommandCardNumber, edgexcommon.ValueTypeString, expectedCardNumber, 0)
 	require.NoError(err)
 
 	invalidCommandVal, err := dsModels.NewCommandValueWithOrigin(invalid, edgexcommon.ValueTypeString, expectedCardNumber, 0)
 	require.NoError(err)
 
-	nonStringCommandVal, err := dsModels.NewCommandValueWithOrigin(common.CommandCardData, edgexcommon.ValueTypeFloat64, 0.01, 0)
+	nonStringCommandVal, err := dsModels.NewCommandValueWithOrigin(common.CommandCardNumber, edgexcommon.ValueTypeFloat64, 0.01, 0)
 	require.NoError(err)
 
 	tests := []struct {
@@ -242,8 +242,8 @@ func TestHandleWriteCommands(t *testing.T) {
 			"HandleWriteCommands input param with non-string type",
 			[]*dsModels.CommandValue{nonStringCommandVal},
 			[]dsModels.CommandRequest{{}},
-			[]string{fmt.Sprintf("write command \\\"%v\\\" received non-string value: %v", common.CommandCardData, "cannot convert CommandValue of Float64 to String")},
-			fmt.Errorf("write command \"%v\" received non-string value: %v", common.CommandCardData, "cannot convert CommandValue of Float64 to String"),
+			[]string{fmt.Sprintf("write command \\\"%v\\\" received non-string value: %v", common.CommandCardNumber, "cannot convert CommandValue of Float64 to String")},
+			fmt.Errorf("write command \"%v\" received non-string value: %v", common.CommandCardNumber, "cannot convert CommandValue of Float64 to String"),
 			&CardReaderDriver{
 				LoggingClient: lc,
 				CardReader: &device.CardReaderVirtual{

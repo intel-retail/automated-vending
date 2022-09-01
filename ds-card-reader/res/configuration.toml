@@ -70,37 +70,3 @@ UseMessageBus = true
   [Device.Discovery]
   Enabled = false
   Interval = "30s"
-
-[MQTTBrokerInfo]
-Schema = "tcp"
-Host = "0.0.0.0"
-Port = 1883
-Qos = 0
-KeepAlive = 3600
-ClientId = "device-mqtt"
-
-CredentialsRetryTime = 120 # Seconds
-CredentialsRetryWait = 1 # Seconds
-ConnEstablishingRetry = 10
-ConnRetryWaitTime = 5
-
-# AuthMode is the MQTT broker authentication mechanism. 
-# Currently, "none" and "usernamepassword" is the only AuthMode
-# supported by this service, and the secret keys are "username" and "password".
-AuthMode = "none"
-CredentialsPath = "credentials"
-
-IncomingTopic = "DataTopic"
-responseTopic = "ResponseTopic"
-
-    [MQTTBrokerInfo.Writable]
-    # ResponseFetchInterval specifies the retry 
-    # interval(milliseconds) to fetch the command response from the MQTT broker
-    ResponseFetchInterval = 500
-
-
-  DeviceName = 'ds-card-reader'
-  DeviceSearchPath = '/dev/input/event*'
-  VID = '65535' # 0xFFFF
-  PID = '53'    # 0x0035
-  SimulateDevice = 'true'

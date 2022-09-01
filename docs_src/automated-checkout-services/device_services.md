@@ -29,12 +29,12 @@ The `ds-card-reader` service is much simpler than the `ds-controller-board` serv
 
 ---
 
-#### `PUT`: `http://localhost:48098/api/v2/device/name/card-reader/card-data`
+#### `PUT`: `http://localhost:48098/api/v2/device/name/card-reader/card-number`
 
 The `PUT` API endpoint will push the badge ID (which is sent as part of the API request body) into the card reader device service. Once the card reader device service receives the badge ID, the badge ID will be pushed into the EdgeX bus for other application services to utilize.
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-data":"0003278200"}' http://localhost:48098/api/v2/device/name/card-reader/card-data
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278200"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 Sample response:

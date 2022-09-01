@@ -8,8 +8,8 @@ manufacturer: "Intel"
 description: "For reading a USB rfid card reader"
 
 deviceResources:
-- name: "card-data"
-  description: "Data received from card reader"
+- name: "card-number"
+  description: "Card number received from card reader"
   properties:
     valueType: "string"
     readWrite: "RW"

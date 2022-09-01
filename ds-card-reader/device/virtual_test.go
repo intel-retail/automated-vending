@@ -121,7 +121,7 @@ func TestWrite(t *testing.T) {
 		LoggingClient: loggingClient,
 	}
 
-	reader.Write(common.CommandCardData, expectedCardNumberVirtual)
+	reader.Write(common.CommandCardNumber, expectedCardNumberVirtual)
 
 	actual := <-asyncCh
 	require.NotNil(actual.DeviceName) // "actual" is a pointer, must not be nil

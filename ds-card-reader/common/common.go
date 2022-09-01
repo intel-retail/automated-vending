@@ -18,5 +18,5 @@ type CardReaderConfig struct {
 // device
 const (
 	CommandCardReaderStatus = "status"
-	CommandCardData         = "card-data"
+	CommandCardNumber       = "card-number"
 )

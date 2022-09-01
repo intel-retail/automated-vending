@@ -97,7 +97,7 @@ func (drv *CardReaderDriver) HandleWriteCommands(deviceName string, protocols ma
 	commandName := params[0].DeviceResourceName
 
 	switch commandName {
-	case common.CommandCardData:
+	case common.CommandCardNumber:
 		{
 			// parse the card number from the event
 			cardNumber, err := params[0].StringValue()
@@ -107,7 +107,7 @@ func (drv *CardReaderDriver) HandleWriteCommands(deviceName string, protocols ma
 				return fmt.Errorf(errMsg)
 			}
 
-			drv.CardReader.Write(common.CommandCardData, cardNumber)
+			drv.CardReader.Write(common.CommandCardNumber, cardNumber)
 
 			return nil
 		}
