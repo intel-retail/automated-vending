@@ -1,6 +1,7 @@
+//go:build all || physical
 // +build all physical
 
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -13,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	evdev "github.com/gvalkov/golang-evdev"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"

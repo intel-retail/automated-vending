@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package driver
@@ -8,10 +8,11 @@ import (
 
 	common "ds-card-reader/common"
 	device "ds-card-reader/device"
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	"github.com/edgexfoundry/device-sdk-go/pkg/service"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -25,7 +26,7 @@ type CardReaderDriver struct {
 
 // Initialize initializes the card reader device within EdgeX. This is the
 // main entrypoint of this application
-func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice)  (err error) {
+func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice) (err error) {
 	// propagate the logging client to the driver so it can use it too
 	drv.LoggingClient = lc
 
@@ -96,7 +97,7 @@ func (drv *CardReaderDriver) HandleWriteCommands(deviceName string, protocols ma
 	commandName := params[0].DeviceResourceName
 
 	switch commandName {
-	case common.CommandCardReaderEvent:
+	case common.CommandCardData:
 		{
 			// parse the card number from the event
 			cardNumber, err := params[0].StringValue()
@@ -106,7 +107,7 @@ func (drv *CardReaderDriver) HandleWriteCommands(deviceName string, protocols ma
 				return fmt.Errorf(errMsg)
 			}
 
-			drv.CardReader.Write(common.CommandCardReaderEvent, cardNumber)
+			drv.CardReader.Write(common.CommandCardData, cardNumber)
 
 			return nil
 		}

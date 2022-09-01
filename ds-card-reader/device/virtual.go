@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	logger "github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	logger "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 // CardReaderVirtual allows for the emulation of a physical card reader device
@@ -25,12 +26,19 @@ type CardReaderVirtual struct {
 func (reader *CardReaderVirtual) Write(commandName string, cardNumber string) {
 	// assemble the values that will be propagated throughout the
 	// device service
+	commandvalue, err := dsModels.NewCommandValueWithOrigin(
+		commandName,
+		common.ValueTypeString,
+		cardNumber,
+		time.Now().UnixNano()/int64(time.Millisecond),
+	)
+	if err != nil {
+		fmt.Errorf("error on NewCommandValueWithOrigin for %v", commandName)
+		return
+	}
+
 	result := []*dsModels.CommandValue{
-		dsModels.NewStringValue(
-			commandName,
-			time.Now().UnixNano()/int64(time.Millisecond),
-			cardNumber,
-		),
+		commandvalue,
 	}
 
 	asyncValues := &dsModels.AsyncValues{

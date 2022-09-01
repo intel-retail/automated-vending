@@ -1,6 +1,7 @@
+//go:build all || physical || !physical
 // +build all physical !physical
 
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 // notes on why physical and !physical build tags are present:
@@ -14,19 +15,16 @@
 package driver
 
 import (
-	"bufio"
 	"ds-card-reader/common"
 	"ds-card-reader/device"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
 	"sync"
 	"testing"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
@@ -35,43 +33,9 @@ var once sync.Once
 
 const (
 	invalid                     = "invalid"
-	logFile                     = "driver_test.log"
 	cardReaderDeviceServiceName = "ds-card-reader"
 	expectedCardNumber          = "0003292356"
 )
-
-func clearLogs() error {
-	return ioutil.WriteFile(logFile, []byte{}, 0644)
-}
-
-func doesLogFileContainString(input string) (bool, error) {
-	// attempt to open the log file
-	file, err := os.Open(logFile)
-	if err != nil {
-		return false, err
-	}
-
-	// defer closing the file open buffer
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	// iterate over every line in the log file
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, input) {
-			return true, nil
-		}
-	}
-
-	// check for residual errors in the scanner
-	err = scanner.Err()
-	if err != nil {
-		return false, err
-	}
-
-	return false, nil
-}
 
 // getDefaultCardReaderConfig returns a CardReaderConfig that contains the
 // same values as the current default values in configuration.toml
@@ -98,7 +62,7 @@ func TestInitialize(t *testing.T) {
 	assert := assert.New(t)
 
 	driver := CardReaderDriver{}
-	lc := logger.NewClient(cardReaderDeviceServiceName, false, logFile, "DEBUG")
+	lc := logger.NewMockClient()
 
 	// create an empty logging client/card reader device to compare against
 	var emptyLogger logger.LoggingClient
@@ -151,7 +115,7 @@ func TestHandleReadCommands(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	lc := logger.NewClient(cardReaderDeviceServiceName, false, logFile, "DEBUG")
+	lc := logger.NewMockClient()
 
 	tests := []struct {
 		Name               string
@@ -213,9 +177,6 @@ func TestHandleReadCommands(t *testing.T) {
 	// run the tests to handle read commands
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			// clear the log file
-			err := clearLogs()
-			require.NoError(err)
 
 			result, err := test.driver.HandleReadCommands(
 				test.driver.Config.DeviceName,
@@ -231,38 +192,27 @@ func TestHandleReadCommands(t *testing.T) {
 			require.Equal(test.ExpectedError, err)
 			assert.Equal(test.ExpectedResult, result)
 
-			// check if the expected log output is in the log file
-			for _, str := range test.ExpectedLogLines {
-				result, err := doesLogFileContainString(str)
-				require.NoError(err)
-				assert.True(result)
-			}
 		})
 	}
-
-	// clear the logs as a last step
-	err := clearLogs()
-	require.NoError(err)
 }
 
 // TestHandleWriteCommands validates that the HandleWriteCommands behaves
 // as expected
 func TestHandleWriteCommands(t *testing.T) {
 	// use community-recommended shorthand (known name clash)
-	assert := assert.New(t)
 	require := require.New(t)
 
 	// prepare some variables for usage in the below tests
 	protocolProperties := map[string]models.ProtocolProperties{}
-	lc := logger.NewClient(cardReaderDeviceServiceName, false, logFile, "DEBUG")
+	lc := logger.NewMockClient()
 
-	successfulCommandVal, err := dsModels.NewCommandValue(common.CommandCardReaderEvent, 0, expectedCardNumber, dsModels.String)
+	successfulCommandVal, err := dsModels.NewCommandValueWithOrigin(common.CommandCardData, edgexcommon.ValueTypeString, expectedCardNumber, 0)
 	require.NoError(err)
 
-	invalidCommandVal, err := dsModels.NewCommandValue(invalid, 0, expectedCardNumber, dsModels.String)
+	invalidCommandVal, err := dsModels.NewCommandValueWithOrigin(invalid, edgexcommon.ValueTypeString, expectedCardNumber, 0)
 	require.NoError(err)
 
-	nonStringCommandVal, err := dsModels.NewCommandValue(common.CommandCardReaderEvent, 0, 0.01, dsModels.ParseValueType("float64"))
+	nonStringCommandVal, err := dsModels.NewCommandValueWithOrigin(common.CommandCardData, edgexcommon.ValueTypeFloat64, 0.01, 0)
 	require.NoError(err)
 
 	tests := []struct {
@@ -292,8 +242,8 @@ func TestHandleWriteCommands(t *testing.T) {
 			"HandleWriteCommands input param with non-string type",
 			[]*dsModels.CommandValue{nonStringCommandVal},
 			[]dsModels.CommandRequest{{}},
-			[]string{fmt.Sprintf("write command \\\"%v\\\" received non-string value: %v", common.CommandCardReaderEvent, "the data type is not string")},
-			fmt.Errorf("write command \"%v\" received non-string value: %v", common.CommandCardReaderEvent, "the data type is not string"),
+			[]string{fmt.Sprintf("write command \\\"%v\\\" received non-string value: %v", common.CommandCardData, "cannot convert CommandValue of Float64 to String")},
+			fmt.Errorf("write command \"%v\" received non-string value: %v", common.CommandCardData, "cannot convert CommandValue of Float64 to String"),
 			&CardReaderDriver{
 				LoggingClient: lc,
 				CardReader: &device.CardReaderVirtual{
@@ -338,9 +288,6 @@ func TestHandleWriteCommands(t *testing.T) {
 	// run the tests to handle read commands
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// clear the log file
-			err := clearLogs()
-			require.NoError(err)
 
 			// run the handle write commands function
 			err = test.driver.HandleWriteCommands(
@@ -352,19 +299,6 @@ func TestHandleWriteCommands(t *testing.T) {
 
 			// perform assertions
 			require.Equal(test.expectedError, err)
-
-			// check if the expected log output is in the log file
-			for _, str := range test.expectedLogLines {
-				result, err := doesLogFileContainString(str)
-				require.NoError(err)
-				// this log output is confusing when it errors out, so
-				// a message describing the assertion clearly has been added
-				assert.True(result, fmt.Sprintf("test named \"%v\" expects log file to contain log string \"%v\"", test.name, str))
-			}
 		})
 	}
-
-	// clear the log file
-	err = clearLogs()
-	require.NoError(err)
 }

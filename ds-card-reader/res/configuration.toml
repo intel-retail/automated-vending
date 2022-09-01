@@ -1,78 +1,106 @@
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
+MaxEventSize = 0 # value 0 unlimit the maximum event size that can be sent to message bus or core-data
+
 [Writable]
-LogLevel = 'INFO'
+LogLevel = "INFO"
+  # InsecureSecrets are required for when Redis is used for message bus
+  [Writable.InsecureSecrets]
+    [Writable.InsecureSecrets.DB]
+    path = "redisdb"
+      [Writable.InsecureSecrets.DB.Secrets]
+      username = ""
+      password = ""
+  [Writable.Reading]
+  ReadingUnits = true
 
 [Service]
-Host = 'localhost'
+HealthCheckInterval = "10s"
+Host = "localhost"
+ServerBindAddr = ""  # blank value defaults to Service.Host value
 Port = 48098
-Protocol = 'http'
-BootTimeout = 30000
-CheckInterval = '10s'
-ConnectRetries = 100
-Labels = []
-StartupMsg = 'Card Reader device service started'
-ReadMaxLimit = 256
-Timeout = 5000
-EnableAsyncReadings = true
-AsyncBufferSize = 16
+StartupMsg = "Card Reader device service started"
+# MaxRequestSize limit the request body size in byte of put command
+MaxRequestSize = 0 # value 0 unlimit the request size.
+RequestTimeout = "5s"
+  [Service.CORSConfiguration]
+  EnableCORS = false
+  CORSAllowCredentials = false
+  CORSAllowedOrigin = "https://localhost"
+  CORSAllowedMethods = "GET, POST, PUT, PATCH, DELETE"
+  CORSAllowedHeaders = "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
+  CORSExposeHeaders = "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
+  CORSMaxAge = 3600
 
 [Registry]
-Host = 'localhost'
+Host = "localhost"
 Port = 8500
-Type = 'consul'
-
-[Logging]
-EnableRemote = false
-File = ''
+Type = "consul"
 
 [Clients]
-  [Clients.Data]
-  Name = 'edgex-core-data'
-  Protocol = 'http'
-  Host = 'localhost'
-  Port = 48080
-  Timeout = 5000
+  [Clients.core-data]
+  Protocol = "http"
+  Host = "localhost"
+  Port = 59880
 
-  [Clients.Metadata]
-  Name = 'edgex-core-metadata'
-  Protocol = 'http'
-  Host = 'localhost'
-  Port = 48081
-  Timeout = 5000
-
-[Device]
-  DataTransform = true
-  InitCmd = ''
-  InitCmdArgs = ''
-  MaxCmdOps = 128
-  MaxCmdValueLen = 256
-  RemoveCmd = ''
-  RemoveCmdArgs = ''
-  ProfilesDir = './res'
-  [Device.Discovery]
-    Enabled = false
-    Interval = '30s'
+  [Clients.core-metadata]
+  Protocol = "http"
+  Host = "localhost"
+  Port = 59881
 
 [Driver]
-  DeviceName = 'ds-card-reader'
+  DeviceName = 'card-reader'
   DeviceSearchPath = '/dev/input/event*'
   VID = '65535' # 0xFFFF
   PID = '53'    # 0x0035
   SimulateDevice = 'true'
 
-# Pre-define Devices
-[[DeviceList]]
-  Name = 'ds-card-reader'
-  Profile = 'ds-card-reader'
-  Description = 'ds-card-reader-description'
-  Labels = [ 'ds-card-reader-label' ]
-  [DeviceList.Protocols]
-    [DeviceList.Protocols.other]
-      Address = 'device-ds-card-reader01'
-      Port = '300'
-    [[DeviceList.AutoEvents]]
-      Frequency = '3s'
-      OnChange = true
-      Resource = 'card-reader-status'
+[Device]
+DataTransform = true
+MaxCmdOps = 128
+MaxCmdValueLen = 256
+ProfilesDir = "./res/profiles"
+DevicesDir = "./res/devices"
+UpdateLastConnected = false
+EnableAsyncReadings = true
+AsyncBufferSize = 16
+Labels = []
+UseMessageBus = true
+  [Device.Discovery]
+  Enabled = false
+  Interval = "30s"
+
+[MQTTBrokerInfo]
+Schema = "tcp"
+Host = "0.0.0.0"
+Port = 1883
+Qos = 0
+KeepAlive = 3600
+ClientId = "device-mqtt"
+
+CredentialsRetryTime = 120 # Seconds
+CredentialsRetryWait = 1 # Seconds
+ConnEstablishingRetry = 10
+ConnRetryWaitTime = 5
+
+# AuthMode is the MQTT broker authentication mechanism. 
+# Currently, "none" and "usernamepassword" is the only AuthMode
+# supported by this service, and the secret keys are "username" and "password".
+AuthMode = "none"
+CredentialsPath = "credentials"
+
+IncomingTopic = "DataTopic"
+responseTopic = "ResponseTopic"
+
+    [MQTTBrokerInfo.Writable]
+    # ResponseFetchInterval specifies the retry 
+    # interval(milliseconds) to fetch the command response from the MQTT broker
+    ResponseFetchInterval = 500
+
+
+  DeviceName = 'ds-card-reader'
+  DeviceSearchPath = '/dev/input/event*'
+  VID = '65535' # 0xFFFF
+  PID = '53'    # 0x0035
+  SimulateDevice = 'true'

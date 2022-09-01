@@ -1,15 +1,16 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
 
 import (
+	"ds-card-reader/common"
 	"fmt"
 	"time"
 
-	common "ds-card-reader/common"
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	logger "github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	logger "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	evdev "github.com/gvalkov/golang-evdev"
 )
 
@@ -90,12 +91,18 @@ func (reader *CardReaderPhysical) Status() error {
 func (reader *CardReaderPhysical) Write(commandName string, cardNumber string) {
 	// assemble the values that will be propagated throughout the
 	// device service
+	commandvalue, err := dsModels.NewCommandValueWithOrigin(
+		commandName,
+		edgexcommon.ValueTypeString,
+		cardNumber,
+		time.Now().UnixNano()/int64(time.Millisecond),
+	)
+	if err != nil {
+		fmt.Errorf("error on NewCommandValueWithOrigin for %v", commandName)
+	}
+
 	result := []*dsModels.CommandValue{
-		dsModels.NewStringValue(
-			commandName,
-			time.Now().UnixNano()/int64(time.Millisecond),
-			cardNumber,
-		),
+		commandvalue,
 	}
 
 	asyncValues := &dsModels.AsyncValues{
@@ -134,7 +141,7 @@ func (reader *CardReaderPhysical) processDevReadEvents(events []evdev.InputEvent
 			continue
 		}
 
-		reader.Write(common.CommandCardReaderEvent, reader.CardNumber)
+		reader.Write(common.CommandCardData, reader.CardNumber)
 	}
 }
 

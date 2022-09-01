@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package common
@@ -17,6 +17,6 @@ type CardReaderConfig struct {
 // sent to the card reader driver that performs a health check of the underlying
 // device
 const (
-	CommandCardReaderStatus = "card-reader-status"
-	CommandCardReaderEvent  = "card-reader-event"
+	CommandCardReaderStatus = "status"
+	CommandCardData         = "card-data"
 )
