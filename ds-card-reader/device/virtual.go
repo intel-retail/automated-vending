@@ -33,7 +33,7 @@ func (reader *CardReaderVirtual) Write(commandName string, cardNumber string) {
 		time.Now().UnixNano()/int64(time.Millisecond),
 	)
 	if err != nil {
-		reader.LoggingClient.Error(fmt.Sprintf("error on NewCommandValueWithOrigin for %v", commandName))
+		reader.LoggingClient.Errorf("error on NewCommandValueWithOrigin for %v: %v", commandName, err)
 		return
 	}
 
