@@ -98,7 +98,8 @@ func (reader *CardReaderPhysical) Write(commandName string, cardNumber string) {
 		time.Now().UnixNano()/int64(time.Millisecond),
 	)
 	if err != nil {
-		fmt.Errorf("error on NewCommandValueWithOrigin for %v", commandName)
+		reader.LoggingClient.Error(fmt.Sprintf("error on NewCommandValueWithOrigin for %v", commandName))
+		return
 	}
 
 	result := []*dsModels.CommandValue{
