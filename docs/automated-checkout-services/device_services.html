@@ -329,14 +329,14 @@
         
           <li class="md-nav__item">
   <a href="#put-httplocalhost48098apiv1devicenameds-card-readercard-reader-event" class="md-nav__link">
-    PUT: http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+    PUT: http://localhost:48098/api/v2/device/name/card-reader/card-number
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#get-httplocalhost48098apiv1devicenameds-card-readercard-reader-status" class="md-nav__link">
-    GET: http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-status
+    GET: http://localhost:48098/api/v2/device/name/card-reader/status
   </a>
   
 </li>
@@ -657,14 +657,14 @@
         
           <li class="md-nav__item">
   <a href="#put-httplocalhost48098apiv1devicenameds-card-readercard-reader-event" class="md-nav__link">
-    PUT: http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+    PUT: http://localhost:48098/api/v2/device/name/card-reader/card-number
   </a>
   
 </li>
         
           <li class="md-nav__item">
   <a href="#get-httplocalhost48098apiv1devicenameds-card-readercard-reader-status" class="md-nav__link">
-    GET: http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-status
+    GET: http://localhost:48098/api/v2/device/name/card-reader/status
   </a>
   
 </li>
@@ -845,9 +845,9 @@
 <p>The <code>ds-card-reader</code> service is much simpler than the <code>ds-controller-board</code> service, because it only requires mounting <code>/dev/input:/dev/input</code> at runtime. However, it still requires root privileges in the container at runtime so that it can interact directly with event/USB drivers.</p>
 <h3 id="card-reader-apis">Card reader APIs</h3>
 <hr />
-<h4 id="put-httplocalhost48098apiv1devicenameds-card-readercard-reader-event"><code>PUT</code>: <code>http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event</code></h4>
+<h4 id="put-httplocalhost48098apiv1devicenameds-card-readercard-reader-event"><code>PUT</code>: <code>http://localhost:48098/api/v2/device/name/card-reader/card-number</code></h4>
 <p>The <code>PUT</code> API endpoint will push the badge ID (which is sent as part of the API request body) into the card reader device service. Once the card reader device service receives the badge ID, the badge ID will be pushed into the EdgeX bus for other application services to utilize.</p>
-<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-reader-event&quot;:&quot;0003278200&quot;}&#39;</span> http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-number&quot;:&quot;0003278200&quot;}&#39;</span> http://localhost:48098/api/v2/device/name/card-reader/card-number
 </code></pre></div>
 
 
@@ -856,9 +856,9 @@
 <p>Response Status Code 200 OK.</p>
 </div>
 <hr />
-<h4 id="get-httplocalhost48098apiv1devicenameds-card-readercard-reader-status"><code>GET</code>: <code>http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-status</code></h4>
+<h4 id="get-httplocalhost48098apiv1devicenameds-card-readercard-reader-status"><code>GET</code>: <code>http://localhost:48098/api/v2/device/name/card-reader/status</code></h4>
 <p>The <code>GET</code> API endpoint returns data that is not meant to be consumed for any particular purpose. When triggering this endpoint, it will execute a function (in the Go source code) called <code>CardReaderStatus</code> that is used as an auto-remediation mechanism to attempt to "grab" the physical card reader HID device (via <a href="https://en.wikipedia.org/wiki/Evdev"><code>evdev</code></a>). If it succeeds in grabbing the underlying device, that means that the <code>ds-card-reader</code> device service has lost its hold on the card reader, and we need to restart the service. This endpoint is meant to be hit frequently.</p>
-<div class="codehilite"><pre><span></span><code>curl -X GET http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-status
+<div class="codehilite"><pre><span></span><code>curl -X GET http://localhost:48098/api/v2/device/name/card-reader/status
 </code></pre></div>
 
 
