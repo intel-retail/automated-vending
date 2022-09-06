@@ -29,31 +29,40 @@ The `ds-card-reader` service is much simpler than the `ds-controller-board` serv
 
 ---
 
-#### `PUT`: `http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event`
+#### `PUT`: `http://localhost:48098/api/v2/device/name/card-reader/card-number`
 
 The `PUT` API endpoint will push the badge ID (which is sent as part of the API request body) into the card reader device service. Once the card reader device service receives the badge ID, the badge ID will be pushed into the EdgeX bus for other application services to utilize.
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-reader-event":"0003278200"}' http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
-```
-
-!!! success
-    Response Status Code 200 OK.
-
----
-
-#### `GET`: `http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-status`
-
-The `GET` API endpoint returns data that is not meant to be consumed for any particular purpose. When triggering this endpoint, it will execute a function (in the Go source code) called `CardReaderStatus` that is used as an auto-remediation mechanism to attempt to "grab" the physical card reader HID device (via [`evdev`](https://en.wikipedia.org/wiki/Evdev)). If it succeeds in grabbing the underlying device, that means that the `ds-card-reader` device service has lost its hold on the card reader, and we need to restart the service. This endpoint is meant to be hit frequently.
-
-```bash
-curl -X GET http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-status
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278200"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 Sample response:
 
 ```json
-{"device":"ds-card-reader","origin":1579130994896}
+{
+    "apiVersion": "v2",
+    "statusCode": 200
+}
+```
+
+---
+
+#### `GET`: `http://localhost:48098/api/v2/device/name/card-reader/status`
+
+The `GET` API endpoint returns data that is not meant to be consumed for any particular purpose. When triggering this endpoint, it will execute a function (in the Go source code) called `CardReaderStatus` that is used as an auto-remediation mechanism to attempt to "grab" the physical card reader HID device (via [`evdev`](https://en.wikipedia.org/wiki/Evdev)). If it succeeds in grabbing the underlying device, that means that the `ds-card-reader` device service has lost its hold on the card reader, and we need to restart the service. This endpoint is meant to be hit frequently.
+
+```bash
+curl -X GET http://localhost:48098/api/v2/device/name/card-reader/status
+```
+
+Sample response:
+
+```json
+{
+    "apiVersion": "v2",
+    "statusCode": 200
+}
 ```
 
 ---

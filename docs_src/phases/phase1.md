@@ -112,7 +112,7 @@ The following diagram represents the flow for swiping your badge and unlocking t
 To simulate this, perform this REST API call to the `ds-card-reader` service ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-reader-event":"0003293374"}' http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003293374"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 !!! note
@@ -318,7 +318,7 @@ That's it! Each of the above actions has a corresponding REST API call that we w
 To begin, start by performing the following REST command to simulate a customer swiping their badge to open the cooler ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-reader-event":"0003278380"}' http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278380"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 !!! note
@@ -596,7 +596,7 @@ Now that a new, proper average temperature value has been set, the maintenance w
 To do this, follow a familiar step, only this time use a card that has been assigned to a maintenance worker role ***(not time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-reader-event":"0003278385"}' http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278385"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 !!! note

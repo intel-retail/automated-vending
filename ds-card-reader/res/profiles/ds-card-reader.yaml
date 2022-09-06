@@ -1,0 +1,21 @@
+---
+
+# Copyright © 2022 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+name: "rfid-card-reader"
+manufacturer: "Intel"
+description: "For reading a USB rfid card reader"
+
+deviceResources:
+- name: "card-number"
+  description: "Card number received from card reader"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "status"
+  description: "Read card reader status"
+  properties:
+    valueType: "string"
+    readWrite: "RW"

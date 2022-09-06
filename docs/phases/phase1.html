@@ -675,7 +675,7 @@
 </p>
 
 <p>To simulate this, perform this REST API call to the <code>ds-card-reader</code> service <strong><em>(time sensitive)</em></strong>:</p>
-<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-reader-event&quot;:&quot;0003293374&quot;}&#39;</span> http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-number&quot;:&quot;0003293374&quot;}&#39;</span> http://localhost:48098/api/v2/device/name/card-reader/card-number
 </code></pre></div>
 
 
@@ -878,7 +878,7 @@ The (unaltered) contents of <a href="https://github.com/intel-iot-devkit/automat
 </p>
 
 <p>To begin, start by performing the following REST command to simulate a customer swiping their badge to open the cooler <strong><em>(time sensitive)</em></strong>:</p>
-<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-reader-event&quot;:&quot;0003278380&quot;}&#39;</span> http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-number&quot;:&quot;0003278380&quot;}&#39;</span> http://localhost:48098/api/v2/device/name/card-reader/card-number
 </code></pre></div>
 
 
@@ -1149,7 +1149,7 @@ The value of <code>maintenanceMode</code> will switch to <code>true</code> from 
 </div>
 <p>Now that a new, proper average temperature value has been set, the maintenance worker can proceed to swipe their card, fix the cooler, and set the maintenance mode back to false.</p>
 <p>To do this, follow a familiar step, only this time use a card that has been assigned to a maintenance worker role <strong><em>(not time sensitive)</em></strong>:</p>
-<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-reader-event&quot;:&quot;0003278385&quot;}&#39;</span> http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+<div class="codehilite"><pre><span></span><code>curl -X PUT -H <span class="s2">&quot;Content-Type: application/json&quot;</span> -d <span class="s1">&#39;{&quot;card-number&quot;:&quot;0003278385&quot;}&#39;</span> http://localhost:48098/api/v2/device/name/card-reader/card-number
 </code></pre></div>
 
 
