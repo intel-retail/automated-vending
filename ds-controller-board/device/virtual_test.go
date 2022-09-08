@@ -1,14 +1,17 @@
+//go:build all || !physical
 // +build all !physical
-// Copyright © 2020 Intel Corporation. All rights reserved.
+
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
 
 import (
-	"github.com/edgexfoundry/device-sdk-go/pkg/models"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +28,7 @@ func TestVirtualRead(t *testing.T) {
 	asyncChan := make(chan *models.AsyncValues, 16)
 
 	target := ControllerBoardVirtual{
-		LoggingClient: logger.NewClient("UnitTest", false, "./unit-test.log", "DEBUG"),
+		LoggingClient: logger.NewMockClient(),
 		AsyncCh:       asyncChan,
 	}
 
@@ -48,7 +51,7 @@ func TestVirtualWrite(t *testing.T) {
 	expected := "STATUS,L1,1,L2,1,D,0,T,0.00,H,0"
 
 	target := ControllerBoardVirtual{
-		LoggingClient: logger.NewClient("UnitTest", false, "./unit-test.log", "DEBUG"),
+		LoggingClient: logger.NewMockClient(),
 	}
 
 	err := target.Write(Command.Lock1)

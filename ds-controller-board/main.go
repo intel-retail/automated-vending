@@ -6,7 +6,7 @@ package main
 import (
 	"ds-controller-board/driver"
 
-	"github.com/edgexfoundry/device-sdk-go/pkg/startup"
+	"github.com/edgexfoundry/device-sdk-go/v2/pkg/startup"
 )
 
 const (

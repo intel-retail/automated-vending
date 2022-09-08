@@ -3,5 +3,4 @@ docker-compose*
 .dockerignore
 .git
 .gitignore
-go.sum
 .vscode

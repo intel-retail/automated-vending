@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package driver
@@ -10,10 +10,11 @@ import (
 
 	"ds-controller-board/device"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	service "github.com/edgexfoundry/device-sdk-go/pkg/service"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	service "github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -77,9 +78,18 @@ func (drv *ControllerBoardDriver) HandleReadCommands(deviceName string, protocol
 	}
 
 	now := time.Now().UnixNano() / int64(time.Millisecond)
-	result := dsModels.NewStringValue(reqs[0].DeviceResourceName, now, drv.controllerBoard.GetStatus())
 
-	return []*dsModels.CommandValue{result}, nil
+	commandvalue, err := dsModels.NewCommandValueWithOrigin(
+		reqs[0].DeviceResourceName,
+		edgexcommon.ValueTypeString,
+		drv.controllerBoard.GetStatus(),
+		now,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error on NewCommandValueWithOrigin for %v: %v", reqs[0].DeviceResourceName, err)
+	}
+
+	return []*dsModels.CommandValue{commandvalue}, nil
 }
 
 // HandleWriteCommands handles incoming write commands from EdgeX.
@@ -90,9 +100,9 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 	switch deviceType {
 
 	case lock1:
-		cmdType := params[0].NumericValue[0]
+		cmdType := params[0].Value
 		switch cmdType {
-		case 1:
+		case true:
 			if err := drv.controllerBoard.Write(device.Command.UnLock1); err != nil {
 				return err
 			}
@@ -100,7 +110,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				time.Sleep(drv.config.LockTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock1)
 			}()
-		case 0:
+		case false:
 			if err := drv.controllerBoard.Write(device.Command.Lock1); err != nil {
 				return err
 			}
@@ -109,9 +119,9 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 		}
 
 	case lock2:
-		cmdType := params[0].NumericValue[0]
+		cmdType := params[0].Value
 		switch cmdType {
-		case 1:
+		case true:
 			if err := drv.controllerBoard.Write(device.Command.UnLock2); err != nil {
 				return err
 			}
@@ -119,7 +129,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				time.Sleep(drv.config.LockTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock2)
 			}()
-		case 0:
+		case false:
 			if err := drv.controllerBoard.Write(device.Command.Lock2); err != nil {
 				return err
 			}

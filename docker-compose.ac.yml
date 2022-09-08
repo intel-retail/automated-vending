@@ -109,4 +109,34 @@ services:
     logging:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
+  ds-controller-board:
+    image: "automated-checkout/ds-controller-board:dev"
+    container_name: automated-checkout_ds-controller-board
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+      consul:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      MESSAGEQUEUE_HOST: edgex-mqtt-broker
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: ds-controller-board
+    hostname: ds-controller-board
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:48097:48097/tcp
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
 version: '3.7'
