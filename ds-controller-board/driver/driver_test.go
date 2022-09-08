@@ -1,5 +1,7 @@
+//go:build all || !physical
 // +build all !physical
-// Copyright © 2020 Intel Corporation. All rights reserved.
+
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package driver
@@ -12,9 +14,9 @@ import (
 
 	"ds-controller-board/device"
 
-	"github.com/edgexfoundry/device-sdk-go/pkg/models"
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +24,7 @@ import (
 var lc logger.LoggingClient
 
 func TestMain(m *testing.M) {
-	lc = logger.NewClient("UnitTest", false, "./unit-test.log", "DEBUG")
+	lc = logger.NewMockClient()
 	os.Exit(m.Run())
 }
 
@@ -40,7 +42,7 @@ func TestDisconnectDevice(t *testing.T) {
 
 func TestInitialize(t *testing.T) {
 	target := CreateControllerBoardDriver(t, true, false, "")
-	err := target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
+	err := target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []models.DiscoveredDevice))
 	assert.NoError(t, err)
 }
 
@@ -50,14 +52,14 @@ func TestHandleReadCommands(t *testing.T) {
 	require := require.New(t)
 
 	expectedValue := "STATUS,L1,0,L2,0,D,0,T,78.58,H,19.54"
-	expectedType := models.String
+	expectedType := edgexcommon.ValueTypeString
 
 	target := CreateControllerBoardDriver(t, true, true, expectedValue)
 
 	request := models.CommandRequest{
 		DeviceResourceName: "L1",
 		Attributes:         nil,
-		Type:               0,
+		Type:               "",
 	}
 
 	actual, err := target.HandleReadCommands("ControllerBoard", nil, []models.CommandRequest{request})
@@ -82,10 +84,10 @@ func TestHandleWriteCommands(t *testing.T) {
 		CommandValue  interface{}
 		ExpectedError error
 	}{
-		{Name: "HandleWriteCommands - lock1 with 1", Resource: lock1, CommandValue: int32(0x01000000), ExpectedError: nil},
-		{Name: "HandleWriteCommands - lock2 with 1", Resource: lock2, CommandValue: int32(0x01000000), ExpectedError: nil},
-		{Name: "HandleWriteCommands - lock1 with 0", Resource: lock1, CommandValue: int32(0x00000000), ExpectedError: nil},
-		{Name: "HandleWriteCommands - lock2 with 0", Resource: lock2, CommandValue: int32(0x00000000), ExpectedError: nil},
+		{Name: "HandleWriteCommands - lock1 with 1", Resource: lock1, CommandValue: true, ExpectedError: nil},
+		{Name: "HandleWriteCommands - lock2 with 1", Resource: lock2, CommandValue: true, ExpectedError: nil},
+		{Name: "HandleWriteCommands - lock1 with 0", Resource: lock1, CommandValue: false, ExpectedError: nil},
+		{Name: "HandleWriteCommands - lock2 with 0", Resource: lock2, CommandValue: false, ExpectedError: nil},
 		{Name: "HandleWriteCommands - getStatus", Resource: getStatus, CommandValue: nil, ExpectedError: nil},
 		{Name: "HandleWriteCommands - displayRow0", Resource: displayRow0, CommandValue: "Row 0", ExpectedError: nil},
 		{Name: "HandleWriteCommands - displayRow1", Resource: displayRow1, CommandValue: "Row 1", ExpectedError: nil},
@@ -108,11 +110,23 @@ func TestHandleWriteCommands(t *testing.T) {
 
 			if testCase.CommandValue != nil {
 				if reflect.TypeOf(testCase.CommandValue).Kind() == reflect.String {
-					commandValue = models.NewStringValue(testCase.Resource, 0, testCase.CommandValue.(string))
+					commandValue, err = models.NewCommandValueWithOrigin(
+						testCase.Resource,
+						edgexcommon.ValueTypeString,
+						testCase.CommandValue.(string),
+						0,
+					)
+					require.NoError(err)
+
 				} else {
-					value, ok := testCase.CommandValue.(int32)
+					value, ok := testCase.CommandValue.(bool)
 					require.True(ok)
-					commandValue, err = models.NewInt32Value(testCase.Resource, 0, value)
+					commandValue, err = models.NewCommandValueWithOrigin(
+						testCase.Resource,
+						edgexcommon.ValueTypeBool,
+						value,
+						0,
+					)
 					require.NoError(err)
 				}
 			} else {
@@ -148,7 +162,7 @@ func CreateControllerBoardDriver(t *testing.T, virtual bool, initialize bool, ex
 	}
 
 	if initialize {
-		err = target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
+		err = target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []models.DiscoveredDevice))
 		require.NoError(err)
 
 		virtual, ok := target.controllerBoard.(*device.ControllerBoardVirtual)
