@@ -93,9 +93,8 @@ services:
       CLIENTS_CORE_COMMAND_HOST: edgex-core-command
       CLIENTS_CORE_DATA_HOST: edgex-core-data
       CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
-      DATABASES_PRIMARY_HOST: edgex-redis
       EDGEX_SECURITY_SECRET_STORE: "false"
-      MESSAGEQUEUE_HOST: edgex-redis
+      MESSAGEQUEUE_HOST: edgex-mqtt-broker
       REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: ds-card-reader
     hostname: ds-card-reader
