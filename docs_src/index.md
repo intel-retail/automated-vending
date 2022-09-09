@@ -29,7 +29,7 @@ The following items are required to build the Automated Checkout Reference Imple
 - **A device that allows badging-in to the Automated Checkout.** Intel provides a card reader service that can be simulated or integrated with a physical USB device. See the [Card Reader](./automated-checkout-services/device_services.md#card-reader) device service page for information on this service.
 - **A controller device that locks the door to the Automated Checkout**, as well as providing readouts (such as a small text-based LCD screen) to display authorization state, items purchased, and other sensor readings. This could be an Arduino-powered circuit. Intel provides a display service that can run in a simulated mode or with a physical USB/serial interface. See the [Controller Board](./automated-checkout-services/device_services.md#controller-board) device service page for implementation details.
 
-- <a href="https://releases.ubuntu.com/18.04.4/" rel="noopener noreferrer" target="_blank">Ubuntu 18.04</a>
+- <a href="https://releases.ubuntu.com/20.04.5/" rel="noopener noreferrer" target="_blank">Ubuntu 20.04</a>
 - <a href="https://docs.docker.com/install/" rel="noopener noreferrer" target="_blank">Docker</a>
 - <a href="https://docs.docker.com/compose/" rel="noopener noreferrer" target="_blank">Docker Compose</a>
 - <a href="https://golang.org/doc/devel/release.html" rel="noopener noreferrer" target="_blank">Go 1.12+</a> for development purposes or running without docker.
@@ -37,7 +37,7 @@ The following items are required to build the Automated Checkout Reference Imple
 - <a href="https://www.gnu.org/software/make/" rel="noopener noreferrer" target="_blank">GNU make</a>
 - A REST client such as <a href="https://github.com/curl/curl" rel="noopener noreferrer" target="_blank">curl</a> or <a href="https://www.postman.com/" rel="noopener noreferrer" target="_blank">Postman</a> for running through the phases outlined in the documentation.
 
-Here's how to install `git`, `curl`, and `make` on an Ubuntu 18.04 system - other operating systems may vary:
+Here's how to install `git`, `curl`, and `make` on an Ubuntu 20.04 system - other operating systems may vary:
 
 ```bash
 sudo apt-get update -y
