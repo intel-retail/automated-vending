@@ -3,7 +3,11 @@
 
 package functions
 
-import "time"
+import (
+	"time"
+
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+)
 
 // ControllerBoardStatusAppSettings is a data structure that holds the
 // validated application settings (loaded from configuration.toml).
@@ -15,19 +19,17 @@ type ControllerBoardStatusAppSettings struct {
 	MQTTEndpoint                              string
 	NotificationCategory                      string
 	NotificationEmailAddresses                []string
-	NotificationHost                          string
 	NotificationLabels                        []string
 	NotificationReceiver                      string
 	NotificationSender                        string
 	NotificationSeverity                      string
-	NotificationSlug                          string
-	NotificationSlugPrefix                    string
+	NotificationName                          string
 	NotificationSubscriptionMaxRESTRetries    int
 	NotificationSubscriptionRESTRetryInterval time.Duration
 	NotificationThrottleDuration              time.Duration
 	RESTCommandTimeout                        time.Duration
-	SubscriptionHost                          string
 	VendingEndpoint                           string
+	SubscriptionAdminState                    string
 }
 
 // ControllerBoardStatus is used to hold the data that will be passed to
@@ -63,6 +65,7 @@ type CheckBoardStatus struct {
 	Measurements            []TempMeasurement // used to store temperature readings over time.
 	LastNotified            time.Time         // used to store last time a notification was sent out so we don't spam the maintenance person
 	Configuration           *ControllerBoardStatusAppSettings
+	Service                 interfaces.ApplicationService
 }
 
 // VendingDoorStatus is a string representation of a boolean whose state corresponds

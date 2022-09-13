@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -13,24 +13,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/appcontext"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var eventClient coredata.EventClient
-
-var edgexcontext appcontext.Context
-
 func TestMain(m *testing.M) {
-	edgexcontext.CorrelationID = "correlationId"
-	edgexcontext.EventClient = eventClient
-	edgexcontext.LoggingClient = logger.NewClient("output_test", false, "", "DEBUG")
 	err := m.Run()
 	os.Exit(err)
 }
@@ -127,7 +118,7 @@ func TestCheckInferenceStatus(t *testing.T) {
 				}
 			}))
 			defer testServer.Close()
-			assert.Equal(t, tc.Expected, checkInferenceStatus(&edgexcontext, testServer.URL), "Expected value to match output")
+			assert.Equal(t, tc.Expected, checkInferenceStatus(logger.NewMockClient(), testServer.URL), "Expected value to match output")
 		})
 	}
 
@@ -160,7 +151,7 @@ func TestGetCardAuthInfo(t *testing.T) {
 			}))
 
 			defer testServer.Close()
-			vendingState.getCardAuthInfo(&edgexcontext, testServer.URL, tc.cardID)
+			vendingState.getCardAuthInfo(logger.NewMockClient(), testServer.URL, tc.cardID)
 			assert.Equal(t, tc.Expected, vendingState.CurrentUserData.CardID, "Expected value to match output")
 		})
 	}
@@ -205,7 +196,7 @@ func TestDisplayLedger(t *testing.T) {
 	ledger := Ledger{
 		LineItems: []LineItem{{ProductName: "itemX", ItemCount: 2, ItemPrice: 1.50, SKU: "1234"}},
 	}
-	err := vendingState.displayLedger(&edgexcontext, ledger)
+	err := vendingState.displayLedger(logger.NewMockClient(), ledger)
 	assert.NoError(t, err)
 }
 
@@ -246,16 +237,16 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 		{"Bad request case", http.StatusBadRequest, fmt.Errorf("error sending command: received status code: 400 Bad Request")},
 	}
 
-	// edgexContext initialization
-	edgexctx := appcontext.Context{
-		CorrelationID: "correlationId",
-		EventClient:   eventClient,
-		LoggingClient: logger.NewClient("output_test", false, "", "DEBUG"),
-	}
-
 	event := models.Event{
-		Device:   InferenceMQTTDevice,
-		Readings: []models.Reading{{Name: "inferenceSkuDelta", Value: `[{"SKU": "HXI86WHU", "delta": -2}]`}},
+		DeviceName: InferenceMQTTDevice,
+		Readings: []models.Reading{
+			models.SimpleReading{
+				BaseReading: models.BaseReading{
+					DeviceName: "test-reading",
+				},
+				Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -306,7 +297,7 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 				},
 			}
 
-			_, err := vendingState.HandleMqttDeviceReading(&edgexctx, event)
+			_, err := vendingState.HandleMqttDeviceReading(logger.NewMockClient(), event)
 
 			e, ok := err.(error)
 			if ok {
@@ -329,20 +320,20 @@ func TestVerifyDoorAccess(t *testing.T) {
 		{"Role 3", http.StatusOK, false, 3},
 	}
 
-	// edgexContext initialization
-	edgexctx := appcontext.Context{
-		CorrelationID: "correlationId",
-		EventClient:   eventClient,
-		LoggingClient: logger.NewClient("output_test", false, "", "DEBUG"),
-	}
-
 	// VendingState initialization
 	inferenceStopChannel := make(chan int)
 	stopChannel := make(chan int)
 
 	event := models.Event{
-		Device:   "ds-card-reader",
-		Readings: []models.Reading{{Name: "ds-card-reader", Value: `[{"SKU": "HXI86WHU", "delta": -2}]`}},
+		DeviceName: "ds-card-reader",
+		Readings: []models.Reading{
+			models.SimpleReading{
+				BaseReading: models.BaseReading{
+					DeviceName: "ds-card-reader",
+				},
+				Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
+			},
+		},
 	}
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -380,7 +371,7 @@ func TestVerifyDoorAccess(t *testing.T) {
 				},
 			}
 
-			_, err := vendingState.VerifyDoorAccess(&edgexctx, event)
+			_, err := vendingState.VerifyDoorAccess(logger.NewMockClient(), event)
 
 			e, ok := err.(error)
 			if ok {

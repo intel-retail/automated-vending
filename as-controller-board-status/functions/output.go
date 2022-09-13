@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -7,13 +7,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"sort"
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/appcontext"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -32,38 +34,43 @@ const (
 // correctly by this application service. In this case, only one unique type of EdgeX device will come
 // through to this function, but in general this is basically a template function that is also followed
 // in other services in the Automated Checkout project.
-func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(edgexcontext *appcontext.Context, params ...interface{}) (bool, interface{}) {
-	if len(params) < 1 {
+func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.AppFunctionContext, data interface{}) (bool, interface{}) {
+	if data == nil {
 		// We didn't receive a result
 		return false, nil
 	}
 
+	lc := ctx.LoggingClient()
 	// Declare shorthand for the LoggingClient
-	lc := edgexcontext.LoggingClient
+	event := data.(dtos.Event)
 
-	event := params[0].(models.Event)
-
-	if event.Device == ControllerBoardDeviceServiceDeviceName {
+	if event.DeviceName == ControllerBoardDeviceServiceDeviceName {
 		for _, eventReading := range event.Readings {
-			lc.Debug(fmt.Sprintf("Received event reading value: %v", eventReading.Value))
+			modelReading := dtos.ToReadingModel(eventReading)
+			var simpleReading models.SimpleReading
+			var ok bool
+			if simpleReading, ok = modelReading.(models.SimpleReading); !ok {
+				return false, fmt.Errorf("event reading can not be casted to SimpleReading %v", reflect.TypeOf(eventReading))
+			}
+			lc.Debugf("Received event reading value: %v", simpleReading.Value)
 
 			// Unmarshal the event reading data into the global controllerBoardStatus variable
-			err := json.Unmarshal([]byte(eventReading.Value), &controllerBoardStatus)
+			err := json.Unmarshal([]byte(simpleReading.Value), &controllerBoardStatus)
 			if err != nil {
-				lc.Error(fmt.Sprintf("Failed to unmarshal controller board data, the event data is: %v", eventReading))
+				lc.Errorf("Failed to unmarshal controller board data, the event data is: %v", simpleReading)
 				return false, nil
 			}
 
 			// Check if the temperature thresholds have been exceeded
 			err = boardStatus.processTemperature(lc, controllerBoardStatus.Temperature)
 			if err != nil {
-				lc.Error(fmt.Sprintf("Encountered error while checking temperature thresholds: %v", err.Error()))
+				lc.Errorf("Encountered error while checking temperature thresholds: %v", err.Error())
 			}
 
 			// Check if the door open/closed state requires action
 			err = boardStatus.processVendingDoorState(lc, controllerBoardStatus.DoorClosed)
 			if err != nil {
-				lc.Error(fmt.Sprintf("Encountered error while checking the open/closed state of the door: %v", err.Error()))
+				lc.Errorf("Encountered error while checking the open/closed state of the door: %v", err.Error())
 			}
 		}
 	}
@@ -127,7 +134,7 @@ func getTempThresholdExceededMessage(minOrMax string, avgTemp float64, tempThres
 // sendTempThresholdExceededNotification leverages the SendNotification
 // function to submit an EdgeX REST call to send a notification to a user.
 // It does not check if a notification needs to be sent, it simply sends it
-func (boardStatus *CheckBoardStatus) sendTempThresholdExceededNotification(message interface{}) error {
+func (boardStatus *CheckBoardStatus) sendTempThresholdExceededNotification(message string) error {
 	err := boardStatus.SendNotification(message)
 	if err != nil {
 		return fmt.Errorf("Encountered error sending notification for exceeding temperature threshold: %v", err.Error())

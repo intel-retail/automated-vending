@@ -64,6 +64,9 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 		fmt.Println(http.StatusBadRequest, "Failed to unmarshal body")
 		return
 	}
+
+	fmt.Printf("received message: %v+", edgeXMessage)
+
 	switch edgeXMessage["cmd"] {
 	case "inferenceHeartbeat":
 		{
@@ -91,6 +94,8 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 			token.Wait()
 			checkDoorStatus(isDoorClosed, client)
 		}
+	default:
+		fmt.Println("Unknown cmd " + edgeXMessage["cmd"])
 	}
 }
 
@@ -153,10 +158,11 @@ func (mqttCon *Connection) Connect(connectionString string) {
 	//create a ClientOptions struct setting the broker address, clientid, turn
 	//off trace output and set the default message handler
 	opts := MQTT.NewClientOptions().AddBroker(connectionString)
-
+	opts.SetClientID("ds-cv-inference")
 	//create and start a client using the above ClientOptions
 	mqttCon.MqttClient = MQTT.NewClient(opts)
 	attempts := 0
+	fmt.Println("Attempting to connect to mqtt broker at " + connectionString)
 	for attempts < retryCount {
 		if token := mqttCon.MqttClient.Connect(); token.Wait() && token.Error() == nil {
 			break
@@ -172,12 +178,14 @@ func (mqttCon *Connection) SubscribeToAutomatedCheckout() {
 	attempts := 0
 	for attempts < retryCount {
 		if token := mqttCon.MqttClient.Subscribe(commandTopic, 0, commandTopicFunction); token.Wait() && token.Error() == nil {
+			fmt.Println("subscribe successful")
 			break
 		}
 		time.Sleep(waitTime)
 		fmt.Println("Failed to subscribe to channel")
 		attempts++
 	}
+	fmt.Println("---done subscribing to " + commandTopic)
 }
 
 func (mqttCon *Connection) Subscribe(channel string, recvMesg func(client MQTT.Client, msg MQTT.Message)) {
