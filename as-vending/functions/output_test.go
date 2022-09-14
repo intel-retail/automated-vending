@@ -241,7 +241,7 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 		DeviceName: InferenceMQTTDevice,
 		Readings: []dtos.BaseReading{
 			{
-				DeviceName: "test-reading",
+				DeviceName: "inferenceSkuDelta",
 				SimpleReading: dtos.SimpleReading{
 					Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
 				},
