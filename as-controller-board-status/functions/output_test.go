@@ -14,10 +14,13 @@ import (
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
+	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -97,18 +100,15 @@ func getCommonApplicationSettings() map[string]string {
 		MQTTEndpoint:                              "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/vendingDoorStatus",
 		NotificationCategory:                      "HW_HEALTH",
 		NotificationEmailAddresses:                "test@site.com,test@site.com",
-		NotificationHost:                          "http://localhost:48060/api/v1/notification",
 		NotificationLabels:                        "HW_HEALTH",
 		NotificationReceiver:                      "System Administrator",
 		NotificationSender:                        "Automated Checkout Maintenance Notification",
 		NotificationSeverity:                      "CRITICAL",
-		NotificationSlug:                          "sys-admin",
-		NotificationSlugPrefix:                    "maintenance-notification",
+		NotificationName:                          "maintenance-notification",
 		NotificationSubscriptionMaxRESTRetries:    "10",
 		NotificationSubscriptionRESTRetryInterval: "10s",
 		NotificationThrottleDuration:              "1m",
 		RESTCommandTimeout:                        "15s",
-		SubscriptionHost:                          "http://localhost:48060/api/v1/subscription",
 		VendingEndpoint:                           "http://localhost:48099/boardStatus",
 	}
 }
@@ -122,18 +122,15 @@ func getCommonApplicationSettingsTyped() *ControllerBoardStatusAppSettings {
 		MQTTEndpoint:                              "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/vendingDoorStatus",
 		NotificationCategory:                      "HW_HEALTH",
 		NotificationEmailAddresses:                []string{"test@site.com", "test@site.com"},
-		NotificationHost:                          "http://localhost:48060/api/v1/notification",
 		NotificationLabels:                        []string{"HW_HEALTH"},
 		NotificationReceiver:                      "System Administrator",
 		NotificationSender:                        "Automated Checkout Maintenance Notification",
 		NotificationSeverity:                      "CRITICAL",
-		NotificationSlug:                          "sys-admin",
-		NotificationSlugPrefix:                    "maintenance-notification",
+		NotificationName:                          "maintenance-notification",
 		NotificationSubscriptionMaxRESTRetries:    10,
 		NotificationSubscriptionRESTRetryInterval: time.Second * 10,
 		NotificationThrottleDuration:              time.Minute * 1,
 		RESTCommandTimeout:                        time.Second * 15,
-		SubscriptionHost:                          "http://localhost:48060/api/v1/subscription",
 		VendingEndpoint:                           "http://localhost:48099/boardStatus",
 	}
 }
@@ -209,13 +206,18 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	lc := logger.NewMockClient()
 	correlationID := "test"
 
+	// mock for service
+	mockAppService := &mocks.ApplicationService{}
+	notificationClient := &client_mocks.NotificationClient{}
+	notificationClient.On("SendNotification", mock.Anything, mock.Anything).Return(nil, nil)
+	mockAppService.On("NotificationClient").Return(notificationClient)
+
 	// The success condition is ideal, and is configured to use URL's that all
 	// respond with responses that correspond to successful scenarios.
 	edgexcontextSuccess := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configSuccess := getCommonApplicationSettingsTyped()
 	configSuccess.MQTTEndpoint = testServerStatusOK.URL
 	configSuccess.VendingEndpoint = testServerStatusOK.URL
-	configSuccess.NotificationHost = testServerAccepted.URL
 	configSuccess.MinTemperatureThreshold = temp51
 	configSuccess.MaxTemperatureThreshold = temp49
 
@@ -226,7 +228,6 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	configSuccessMinThresholdExceeded := getCommonApplicationSettingsTyped()
 	configSuccessMinThresholdExceeded.MQTTEndpoint = testServerStatusOK.URL
 	configSuccessMinThresholdExceeded.VendingEndpoint = testServerStatusOK.URL
-	configSuccessMinThresholdExceeded.NotificationHost = testServerAccepted.URL
 	configSuccessMinThresholdExceeded.MinTemperatureThreshold = temp51
 
 	// Create the condition of exceeding the maximum temperature threshold,
@@ -235,7 +236,6 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	configBadVendingEndpointMaxThresholdExceeded := getCommonApplicationSettingsTyped()
 	configBadVendingEndpointMaxThresholdExceeded.MQTTEndpoint = testServerStatusOK.URL
 	configBadVendingEndpointMaxThresholdExceeded.VendingEndpoint = testServerThrowError.URL
-	configBadVendingEndpointMaxThresholdExceeded.NotificationHost = testServerAccepted.URL
 	configBadVendingEndpointMaxThresholdExceeded.MaxTemperatureThreshold = temp49
 
 	// Create the condition of exceeding the maximum temperature threshold,
@@ -245,7 +245,6 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	configUnacceptingNotificationHostMaxThresholdExceeded := getCommonApplicationSettingsTyped()
 	configUnacceptingNotificationHostMaxThresholdExceeded.MQTTEndpoint = testServerStatusOK.URL
 	configUnacceptingNotificationHostMaxThresholdExceeded.VendingEndpoint = testServerStatusOK.URL
-	configUnacceptingNotificationHostMaxThresholdExceeded.NotificationHost = testServer500.URL
 	configUnacceptingNotificationHostMaxThresholdExceeded.MaxTemperatureThreshold = temp49
 
 	// Create the condition of exceeding the maximum threshold, but also
@@ -254,7 +253,6 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// temperature exceeded" notification
 	edgexcontextBadNotificationHostThresholdsExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadNotificationHostThresholdsExceeded := getCommonApplicationSettingsTyped()
-	configBadNotificationHostThresholdsExceeded.NotificationHost = testServerThrowError.URL
 	configBadNotificationHostThresholdsExceeded.VendingEndpoint = testServerStatusOK.URL
 	configBadNotificationHostThresholdsExceeded.MaxTemperatureThreshold = temp49
 
@@ -290,28 +288,28 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 
 	// Following up from the previous 2 lines, the actual event itself (which
 	// contains the reading from above) looks like this in the ideal case
-	controllerBoardStatusEventSuccess := models.Event{
+	controllerBoardStatusEventSuccess := dtos.Event{
 		DeviceName: ControllerBoardDeviceServiceDeviceName,
-		Readings: []models.Reading{
-			models.SimpleReading{
-				BaseReading: models.BaseReading{
-					DeviceName: ControllerBoardDeviceServiceDeviceName,
+		Readings: []dtos.BaseReading{
+			{
+				DeviceName: ControllerBoardDeviceServiceDeviceName,
+				SimpleReading: dtos.SimpleReading{
+					Value: controllerBoardStatusSuccessReadingValue,
 				},
-				Value: controllerBoardStatusSuccessReadingValue,
 			},
 		},
 	}
 
 	// Similar to above, create an event that contains a reading with an
 	// unmarshalable value
-	controllerBoardStatusEventUnsuccessfulJSON := models.Event{
+	controllerBoardStatusEventUnsuccessfulJSON := dtos.Event{
 		DeviceName: ControllerBoardDeviceServiceDeviceName,
-		Readings: []models.Reading{
-			models.SimpleReading{
-				BaseReading: models.BaseReading{
-					DeviceName: ControllerBoardDeviceServiceDeviceName,
+		Readings: []dtos.BaseReading{
+			{
+				DeviceName: ControllerBoardDeviceServiceDeviceName,
+				SimpleReading: dtos.SimpleReading{
+					Value: `invalid json value`,
 				},
-				Value: `invalid json value`,
 			},
 		},
 	}
@@ -339,6 +337,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 					Measurements:            []TempMeasurement{},
 					LastNotified:            time.Now().Add(time.Minute * -3),
 					Configuration:           configSuccess,
+					Service:                 mockAppService,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -364,6 +363,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 					},
 					LastNotified:  time.Now().Add(time.Minute * -3),
 					Configuration: configSuccessMinThresholdExceeded,
+					Service:       mockAppService,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -389,6 +389,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 					},
 					LastNotified:  time.Now().Add(time.Minute * -3),
 					Configuration: configUnacceptingNotificationHostMaxThresholdExceeded,
+					Service:       mockAppService,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -410,6 +411,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				InputData:         controllerBoardStatusEventUnsuccessfulJSON,
 				InputCheckBoardStatus: CheckBoardStatus{
 					Configuration: configSuccess,
+					Service:       mockAppService,
 				},
 				OutputBool:      false,
 				OutputInterface: nil,
@@ -422,11 +424,12 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				InputCheckBoardStatus: CheckBoardStatus{
 					LastNotified:  time.Now().Add(time.Minute * -3),
 					Configuration: configBadNotificationHostThresholdsExceeded,
+					Service:       mockAppService,
 				},
 				OutputBool:      true,
 				OutputInterface: controllerBoardStatusEventSuccess,
 				OutputLogs: fmt.Sprintf(
-					`Encountered error while checking temperature thresholds: Failed to send temperature threshold exceeded notification(s) due to error: Encountered error sending the maximum temperature threshold message: Encountered error sending notification for exceeding temperature threshold: Failed to perform REST POST API call to send a notification to \"%v\", error: %v \"%v\": %v`, configBadNotificationHostThresholdsExceeded.NotificationHost, "Post", configBadNotificationHostThresholdsExceeded.NotificationHost, "EOF"),
+					`Encountered error while checking temperature thresholds: Failed to send temperature threshold exceeded notification(s) due to error: Encountered error sending the maximum temperature threshold message: Encountered error sending notification for exceeding temperature threshold: Failed to perform REST POST API call to send a notification to , error: %v : %v`, "Post", "EOF"),
 				ShouldLastNotifiedBeDifferent:             false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
@@ -437,6 +440,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				InputCheckBoardStatus: CheckBoardStatus{
 					LastNotified:  time.Now().Add(time.Minute * -3),
 					Configuration: configBadMQTTEndpoint,
+					Service:       mockAppService,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -451,6 +455,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				InputCheckBoardStatus: CheckBoardStatus{
 					LastNotified:  time.Now().Add(time.Minute * -3),
 					Configuration: configBadVendingEndpoint,
+					Service:       mockAppService,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -476,6 +481,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 					},
 					LastNotified:  time.Now().Add(time.Minute * -3),
 					Configuration: configBadVendingEndpointMaxThresholdExceeded,
+					Service:       mockAppService,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,

@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -23,18 +23,15 @@ const (
 	MQTTEndpoint                              = "MQTTEndpoint"
 	NotificationCategory                      = "NotificationCategory"
 	NotificationEmailAddresses                = "NotificationEmailAddresses"
-	NotificationHost                          = "NotificationHost"
 	NotificationLabels                        = "NotificationLabels"
 	NotificationReceiver                      = "NotificationReceiver"
 	NotificationSender                        = "NotificationSender"
 	NotificationSeverity                      = "NotificationSeverity"
-	NotificationSlug                          = "NotificationSlug"
-	NotificationSlugPrefix                    = "NotificationSlugPrefix"
+	NotificationName                          = "NotificationName"
 	NotificationSubscriptionMaxRESTRetries    = "NotificationSubscriptionMaxRESTRetries"
 	NotificationSubscriptionRESTRetryInterval = "NotificationSubscriptionRESTRetryInterval"
 	NotificationThrottleDuration              = "NotificationThrottleDuration"
 	RESTCommandTimeout                        = "RESTCommandTimeout"
-	SubscriptionHost                          = "SubscriptionHost"
 	VendingEndpoint                           = "VendingEndpoint"
 )
 
@@ -49,18 +46,15 @@ func GetCommonSuccessConfig() ControllerBoardStatusAppSettings {
 		MQTTEndpoint:                              "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/vendingDoorStatus",
 		NotificationCategory:                      "HW_HEALTH",
 		NotificationEmailAddresses:                []string{"test@site.com", "test@site.com"},
-		NotificationHost:                          "http://localhost:48060/api/v1/notification",
 		NotificationLabels:                        []string{"HW_HEALTH"},
 		NotificationReceiver:                      "System Administrator",
 		NotificationSender:                        "Automated Checkout Maintenance Notification",
 		NotificationSeverity:                      "CRITICAL",
-		NotificationSlug:                          "sys-admin",
-		NotificationSlugPrefix:                    "maintenance-notification",
+		NotificationName:                          "maintenance-notification",
 		NotificationSubscriptionMaxRESTRetries:    10,
 		NotificationSubscriptionRESTRetryInterval: 10 * time.Second,
 		NotificationThrottleDuration:              1 * time.Minute,
 		RESTCommandTimeout:                        15 * time.Second,
-		SubscriptionHost:                          "http://localhost:48060/api/v1/subscription",
 		VendingEndpoint:                           "http://localhost:48099/boardStatus",
 	}
 }
