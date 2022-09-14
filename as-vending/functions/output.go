@@ -9,13 +9,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"strconv"
 	"time"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -32,7 +31,7 @@ func (vendingState *VendingState) DeviceHelper(ctx interfaces.AppFunctionContext
 		return false, nil
 	}
 
-	event := data.(models.Event)
+	event := data.(dtos.Event)
 
 	switch event.DeviceName {
 	case "ds-card-reader":
@@ -52,7 +51,7 @@ func (vendingState *VendingState) DeviceHelper(ctx interfaces.AppFunctionContext
 
 // HandleMqttDeviceReading is an EdgeX function that simply handles events coming from
 // the MQTT device service.
-func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClient, event models.Event) (bool, interface{}) {
+func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClient, event dtos.Event) (bool, interface{}) {
 	if event.DeviceName == InferenceMQTTDevice {
 		lc.Debug("Inference mqtt device",
 			"workflow:", vendingState.CVWorkflowStarted,
@@ -65,18 +64,16 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 
 		lc.Debug("Processing reading from MQTT device service")
 		for _, eventReading := range event.Readings {
-			var simpleReading models.SimpleReading
-			var ok bool
-			if simpleReading, ok = eventReading.(models.SimpleReading); !ok {
-				return false, fmt.Errorf("event reading can not be casted to SimpleReading %v", reflect.TypeOf(eventReading))
+			if len(eventReading.Value) < 1 {
+				return false, fmt.Errorf("event reading was empty")
 			}
-			switch simpleReading.DeviceName {
+			switch eventReading.DeviceName {
 			case "inferenceSkuDelta":
 				{
 					fmt.Println("Inference Started")
 					var skuDelta []deltaSKU
-					if err := json.Unmarshal([]byte(simpleReading.Value), &skuDelta); err != nil {
-						lc.Error("HandleMqttDeviceReading failed to unmarshal skuDelta message")
+					if err := json.Unmarshal([]byte(eventReading.Value), &skuDelta); err != nil {
+						lc.Errorf("HandleMqttDeviceReading failed to unmarshal skuDelta message for %s: %v", eventReading.Value, err)
 						fmt.Println("Inference Failed")
 						return false, err
 					}
@@ -98,7 +95,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 						// POST the deltaLedger json string to the ledger endpoint
 						outputBytes, err := json.Marshal(deltaLedger)
 						if err != nil {
-							lc.Error("HandleMqttDeviceReading failed to marshal deltaLedger")
+							lc.Errorf("HandleMqttDeviceReading failed to marshal deltaLedger: %v", err)
 							return false, err
 						}
 
@@ -182,7 +179,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 
 // VerifyDoorAccess will take the card reader events and verify the read card id against the white list
 // If the card is valid the function will send the unlock message to the device-controller-board device service
-func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, event models.Event) (bool, interface{}) {
+func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, event dtos.Event) (bool, interface{}) {
 	lc.Info("new card scanned", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
 
 	if event.DeviceName == "ds-card-reader" && !vendingState.CVWorkflowStarted {
@@ -195,21 +192,19 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 		}
 
 		for _, eventReading := range event.Readings {
-			var simpleReading models.SimpleReading
-			var ok bool
-			if simpleReading, ok = eventReading.(models.SimpleReading); !ok {
-				return false, fmt.Errorf("event reading can not be casted to SimpleReading %v", reflect.TypeOf(eventReading))
+			if len(eventReading.Value) < 1 {
+				return false, fmt.Errorf("event reading was empty")
 			}
 
 			// Retrieve & Hit auth endpoint
-			vendingState.getCardAuthInfo(lc, vendingState.Configuration.AuthenticationEndpoint, simpleReading.Value)
+			vendingState.getCardAuthInfo(lc, vendingState.Configuration.AuthenticationEndpoint, eventReading.Value)
 
 			switch vendingState.CurrentUserData.RoleID {
 			// Check the role of the card scanned. Role 1 = customer and Role 2 = item stocker
 			case 1, 2:
 				{
 					if !vendingState.MaintenanceMode {
-						lc.Info(simpleReading.ResourceName + " readable value from " + simpleReading.DeviceName + " is " + simpleReading.Value)
+						lc.Info(eventReading.ResourceName + " readable value from " + eventReading.DeviceName + " is " + eventReading.Value)
 						// display "hello" on row 2
 						resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"hello\"}"))
 						if err != nil {
@@ -218,7 +213,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 						defer resp.Body.Close()
 
 						// display the card number on row 3
-						respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+simpleReading.Value+"\"}"))
+						respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
 						if err != nil {
 							return false, err
 						}
@@ -277,7 +272,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					close(vendingState.ThreadStopChannel)
 					vendingState.ThreadStopChannel = make(chan int)
 
-					lc.Info(simpleReading.ResourceName + " readable value from " + simpleReading.DeviceName + " is " + simpleReading.Value)
+					lc.Info(eventReading.ResourceName + " readable value from " + eventReading.DeviceName + " is " + eventReading.Value)
 
 					// display text "Maintenance Mode" in row 2
 					respRow2, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Maintenance Mode\"}"))
@@ -287,7 +282,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					defer respRow2.Body.Close()
 
 					// display any reading value in row 3
-					respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+simpleReading.Value+"\"}"))
+					respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
 					if err != nil {
 						return false, err
 					}
@@ -320,7 +315,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 				if err != nil {
 					return false, err
 				}
-				lc.Infof("Invalid card: %v", simpleReading.Value)
+				lc.Infof("Invalid card: %v", eventReading.Value)
 			}
 		}
 	}
@@ -354,7 +349,7 @@ func (vendingState *VendingState) getCardAuthInfo(lc logger.LoggingClient, authE
 	var auth OutputData
 	_, err = utilities.ParseJSONHTTPResponseContent(resp.Body, &auth)
 	if err != nil {
-		lc.Error("Could not read response body from AuthenticationEndpoint")
+		lc.Errorf("Could not read response body from AuthenticationEndpoint: %v", err)
 		return
 	}
 

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"sort"
 	"strconv"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -46,18 +44,16 @@ func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.A
 
 	if event.DeviceName == ControllerBoardDeviceServiceDeviceName {
 		for _, eventReading := range event.Readings {
-			modelReading := dtos.ToReadingModel(eventReading)
-			var simpleReading models.SimpleReading
-			var ok bool
-			if simpleReading, ok = modelReading.(models.SimpleReading); !ok {
-				return false, fmt.Errorf("event reading can not be casted to SimpleReading %v", reflect.TypeOf(eventReading))
+			if len(eventReading.Value) < 1 {
+				return false, fmt.Errorf("event reading was empty")
 			}
-			lc.Debugf("Received event reading value: %v", simpleReading.Value)
+
+			lc.Debugf("Received event reading value: %v", eventReading.Value)
 
 			// Unmarshal the event reading data into the global controllerBoardStatus variable
-			err := json.Unmarshal([]byte(simpleReading.Value), &controllerBoardStatus)
+			err := json.Unmarshal([]byte(eventReading.Value), &controllerBoardStatus)
 			if err != nil {
-				lc.Errorf("Failed to unmarshal controller board data, the event data is: %v", simpleReading)
+				lc.Errorf("Failed to unmarshal controller board data, the event data is: %v", eventReading)
 				return false, nil
 			}
 

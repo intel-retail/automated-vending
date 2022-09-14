@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 
 	"github.com/stretchr/testify/assert"
@@ -237,14 +237,14 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 		{"Bad request case", http.StatusBadRequest, fmt.Errorf("error sending command: received status code: 400 Bad Request")},
 	}
 
-	event := models.Event{
+	event := dtos.Event{
 		DeviceName: InferenceMQTTDevice,
-		Readings: []models.Reading{
-			models.SimpleReading{
-				BaseReading: models.BaseReading{
-					DeviceName: "test-reading",
+		Readings: []dtos.BaseReading{
+			{
+				DeviceName: "test-reading",
+				SimpleReading: dtos.SimpleReading{
+					Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
 				},
-				Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
 			},
 		},
 	}
@@ -324,14 +324,14 @@ func TestVerifyDoorAccess(t *testing.T) {
 	inferenceStopChannel := make(chan int)
 	stopChannel := make(chan int)
 
-	event := models.Event{
+	event := dtos.Event{
 		DeviceName: "ds-card-reader",
-		Readings: []models.Reading{
-			models.SimpleReading{
-				BaseReading: models.BaseReading{
-					DeviceName: "ds-card-reader",
+		Readings: []dtos.BaseReading{
+			{
+				DeviceName: "ds-card-reader",
+				SimpleReading: dtos.SimpleReading{
+					Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
 				},
-				Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
 			},
 		},
 	}
