@@ -20,6 +20,7 @@ import (
 
 const (
 	InferenceMQTTDevice = "Inference-MQTT-device"
+	DsCardReader        = "ds-card-reader"
 )
 
 // DeviceHelper is an EdgeX function that is passed into the EdgeX SDK's function pipeline.
@@ -34,7 +35,7 @@ func (vendingState *VendingState) DeviceHelper(ctx interfaces.AppFunctionContext
 	event := data.(dtos.Event)
 
 	switch event.DeviceName {
-	case "ds-card-reader":
+	case DsCardReader:
 		{
 			return vendingState.VerifyDoorAccess(ctx.LoggingClient(), event)
 		}
@@ -53,14 +54,13 @@ func (vendingState *VendingState) DeviceHelper(ctx interfaces.AppFunctionContext
 // the MQTT device service.
 func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClient, event dtos.Event) (bool, interface{}) {
 	if event.DeviceName == InferenceMQTTDevice {
-		lc.Debug("Inference mqtt device",
-			"workflow:", vendingState.CVWorkflowStarted,
-			"maintenance mode:", vendingState.MaintenanceMode,
-			"open:", vendingState.DoorOpenedDuringCVWorkflow,
-			"closed:", vendingState.DoorClosedDuringCVWorkflow,
-			"Inference:", vendingState.InferenceDataReceived,
-			"door:", vendingState.DoorClosed,
-		)
+		lc.Debugf("Inference mqtt device workflow: %t maintenance mode: %t open: %t closed: %t Inference: %t door: %t",
+			vendingState.CVWorkflowStarted,
+			vendingState.MaintenanceMode,
+			vendingState.DoorOpenedDuringCVWorkflow,
+			vendingState.DoorClosedDuringCVWorkflow,
+			vendingState.InferenceDataReceived,
+			vendingState.DoorClosed)
 
 		lc.Debug("Processing reading from MQTT device service")
 		for _, eventReading := range event.Readings {
@@ -104,7 +104,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 						// send SKU delta to ledger service and get back current ledger information
 						resp, err := sendCommand(lc, "POST", vendingState.Configuration.LedgerService, outputBytes)
 						if err != nil {
-							lc.Error("Ledger service failed: %v", err.Error())
+							lc.Errorf("Ledger service failed: %s", err.Error())
 							return false, err
 						}
 
@@ -180,12 +180,23 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 // VerifyDoorAccess will take the card reader events and verify the read card id against the white list
 // If the card is valid the function will send the unlock message to the device-controller-board device service
 func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, event dtos.Event) (bool, interface{}) {
-	lc.Info("new card scanned", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
-
-	if event.DeviceName == "ds-card-reader" && !vendingState.CVWorkflowStarted {
+	lc.Infof("new card scanned workflow: %t maintenance mode: %t open: %t closed: %t Inference: %t door: %t",
+		vendingState.CVWorkflowStarted,
+		vendingState.MaintenanceMode,
+		vendingState.DoorOpenedDuringCVWorkflow,
+		vendingState.DoorClosedDuringCVWorkflow,
+		vendingState.InferenceDataReceived,
+		vendingState.DoorClosed)
+	if event.DeviceName == DsCardReader && !vendingState.CVWorkflowStarted {
 		lc.Info("Verify the card reader input against the white list")
 
-		lc.Info("Card Scanned", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
+		lc.Infof("Card Scanned workflow: %t maintenance mode: %t open: %t closed: %t Inference: %t door: %t",
+			vendingState.CVWorkflowStarted,
+			vendingState.MaintenanceMode,
+			vendingState.DoorOpenedDuringCVWorkflow,
+			vendingState.DoorClosedDuringCVWorkflow,
+			vendingState.InferenceDataReceived,
+			vendingState.DoorClosed)
 		// check to see if inference is running and set maintenance mode accordingly
 		if !vendingState.MaintenanceMode {
 			vendingState.MaintenanceMode = !checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeat)
@@ -193,7 +204,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 
 		for _, eventReading := range event.Readings {
 			if len(eventReading.Value) < 1 {
-				return false, fmt.Errorf("event reading was empty")
+				return false, fmt.Errorf("event reading was empty, devicename: %s, resourcename: %s", eventReading.DeviceName, eventReading.ResourceName)
 			}
 
 			// Retrieve & Hit auth endpoint
@@ -204,7 +215,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 			case 1, 2:
 				{
 					if !vendingState.MaintenanceMode {
-						lc.Info(eventReading.ResourceName + " readable value from " + eventReading.DeviceName + " is " + eventReading.Value)
+						lc.Infof("%s readable value from %s is %s", eventReading.ResourceName, eventReading.DeviceName, eventReading.Value)
 						// display "hello" on row 2
 						resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"hello\"}"))
 						if err != nil {
@@ -243,7 +254,13 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 										vendingState.CVWorkflowStarted = false
 										vendingState.CurrentUserData = OutputData{}
 									}
-									lc.Info("Card scan: Waiting for open event", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
+									lc.Infof("Card scan: Waiting for open event workflow: %t maintenance mode: %t open: %t closed: %t Inference: %t door: %t",
+										vendingState.CVWorkflowStarted,
+										vendingState.MaintenanceMode,
+										vendingState.DoorOpenedDuringCVWorkflow,
+										vendingState.DoorClosedDuringCVWorkflow,
+										vendingState.InferenceDataReceived,
+										vendingState.DoorClosed)
 									return
 
 								case <-vendingState.DoorOpenWaitThreadStopChannel:
@@ -272,7 +289,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					close(vendingState.ThreadStopChannel)
 					vendingState.ThreadStopChannel = make(chan int)
 
-					lc.Info(eventReading.ResourceName + " readable value from " + eventReading.DeviceName + " is " + eventReading.Value)
+					lc.Infof("%s readable value from %s is %s", eventReading.ResourceName, eventReading.DeviceName, eventReading.Value)
 
 					// display text "Maintenance Mode" in row 2
 					respRow2, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Maintenance Mode\"}"))
@@ -300,7 +317,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					vendingState.DoorClosedDuringCVWorkflow = false
 					vendingState.DoorOpenedDuringCVWorkflow = false
 					vendingState.InferenceDataReceived = false
-					lc.Infof("Maintenance Scan: %v workflow: %v maintenance mode: %v open: %v closed: %v Inference: %v door: %v",
+					lc.Infof("Maintenance Scan: %t workflow: %t maintenance mode: %t open: %t closed: %t Inference: %t door: %t",
 						vendingState.CVWorkflowStarted,
 						vendingState.MaintenanceMode,
 						vendingState.DoorOpenedDuringCVWorkflow,
@@ -315,7 +332,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 				if err != nil {
 					return false, err
 				}
-				lc.Infof("Invalid card: %v", eventReading.Value)
+				lc.Infof("Invalid card: %s", eventReading.Value)
 			}
 		}
 	}
@@ -325,7 +342,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 func checkInferenceStatus(lc logger.LoggingClient, heartbeatEndPoint string) bool {
 	resp, err := sendCommand(lc, "GET", heartbeatEndPoint, []byte(""))
 	if err != nil {
-		lc.Errorf("error checking inference status: %v", err.Error())
+		lc.Errorf("error checking inference status: %v", err)
 		return false
 	}
 	defer resp.Body.Close()
@@ -340,7 +357,7 @@ func (vendingState *VendingState) getCardAuthInfo(lc logger.LoggingClient, authE
 
 	resp, err := sendCommand(lc, "GET", authEndpoint+"/"+cardID, []byte(""))
 	if err != nil {
-		lc.Info("Unauthorized card: " + cardID)
+		lc.Infof("Unauthorized card: %s", cardID)
 		return
 	}
 
@@ -487,8 +504,6 @@ func (vendingState *VendingState) BoardStatus(writer http.ResponseWriter, req *h
 									vendingState.CurrentUserData = OutputData{}
 									vendingState.MaintenanceMode = true
 								}
-								// TODO: remove print
-								fmt.Println("Door Opened: waiting for door closed event", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
 								return
 							}
 						case <-vendingState.DoorCloseWaitThreadStopChannel:
@@ -523,8 +538,6 @@ func (vendingState *VendingState) BoardStatus(writer http.ResponseWriter, req *h
 									vendingState.CurrentUserData = OutputData{}
 									vendingState.MaintenanceMode = true
 								}
-								// TODO: remove print
-								fmt.Println("Door Closed: waiting for door closed event", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
 								return
 							}
 						case <-vendingState.InferenceWaitThreadStopChannel:
@@ -566,14 +579,13 @@ func (vendingState *VendingState) ResetDoorLock(writer http.ResponseWriter, req 
 	vendingState.DoorOpenedDuringCVWorkflow = false
 	vendingState.InferenceDataReceived = false
 
-	fmt.Println("Maintenance card scanned: reset everything",
-		"workflow:", vendingState.CVWorkflowStarted,
-		"maintenance mode:", vendingState.MaintenanceMode,
-		"open:", vendingState.DoorOpenedDuringCVWorkflow,
-		"closed:", vendingState.DoorClosedDuringCVWorkflow,
-		"Inference:", vendingState.InferenceDataReceived,
-		"door:", vendingState.DoorClosed,
-	)
+	fmt.Printf("Maintenance card scanned: reset everything workflow: %t maintenance mode: %t open: %t closed: %t Inference: %t door: %t",
+		vendingState.CVWorkflowStarted,
+		vendingState.MaintenanceMode,
+		vendingState.DoorOpenedDuringCVWorkflow,
+		vendingState.DoorClosedDuringCVWorkflow,
+		vendingState.InferenceDataReceived,
+		vendingState.DoorClosed)
 
 	// Write the HTTP status header
 	writer.WriteHeader(http.StatusOK)

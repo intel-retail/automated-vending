@@ -19,8 +19,6 @@ const (
 )
 
 func main() {
-	// See https://docs.edgexfoundry.org/2.2/microservices/application/ApplicationServices/
-	//       for documentation on application services.
 	service, ok := pkg.NewAppService(serviceKey)
 	if !ok {
 		os.Exit(1)
@@ -45,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	lc.Infof("Running the application functions for %v devices...", vendingState.Configuration.DeviceNames)
+	lc.Infof("Running the application functions for %s devices...", vendingState.Configuration.DeviceNames)
 
 	// create stop channels for each of the wait threads
 	stopChannel := make(chan int)

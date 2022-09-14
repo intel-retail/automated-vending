@@ -17,8 +17,6 @@ const (
 )
 
 func main() {
-	// See https://docs.edgexfoundry.org/2.2/microservices/application/ApplicationServices/
-	//       for documentation on application services.
 	service, ok := pkg.NewAppService(serviceKey)
 	if !ok {
 		os.Exit(1)
@@ -43,7 +41,7 @@ func main() {
 	// configuration struct
 	err := utilities.MarshalSettings(appSettings, boardStatus.Configuration, false)
 	if err != nil {
-		lc.Errorf("Application settings could not be processed: %v", err.Error())
+		lc.Errorf("Application settings could not be processed: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -56,7 +54,7 @@ func main() {
 		boardStatus.CheckControllerBoardStatus,
 	)
 	if err != nil {
-		lc.Errorf("SDK initialization failed: %v", err.Error())
+		lc.Errorf("SDK initialization failed: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -70,14 +68,14 @@ func main() {
 	// Add the "status" REST API route
 	err = service.AddRoute("/status", functions.GetStatus, "GET", "OPTIONS")
 	if err != nil {
-		lc.Errorf("Error adding route: %v", err.Error())
+		lc.Errorf("Error adding route: %s", err.Error())
 		os.Exit(1)
 	}
 
 	// Tell the SDK to "start" and begin listening for events to trigger the pipeline
 	err = service.MakeItRun()
 	if err != nil {
-		lc.Errorf("MakeItRun returned error: %v", err.Error())
+		lc.Errorf("MakeItRun returned error: %s", err.Error())
 		os.Exit(1)
 	}
 

@@ -38,7 +38,6 @@ Type="edgex-messagebus"
     SubscribeTopics="edgex/events/#"
     [Trigger.EdgexMessageBus.Optional]
     authmode = "none"
-    # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
     ClientId ="as-controller-board-status"
     Qos =  "0" # Quality of Sevice values are 0 (At most once), 1 (At least once) or 2 (Exactly once)
     KeepAlive =  "10" # Seconds (must be 2 or greater)
@@ -55,18 +54,6 @@ Type="edgex-messagebus"
   Host = "localhost"
   Port = 59881
 
-  # Used for Event client which is used by PushToCoreData function
-  [Clients.core-data]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 59880
-
-  # Used for Command client
-  [Clients.core-command]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 59882
-
   # Used for Notification and Subscription clients
   [Clients.support-notifications]
   Protocol = "http"
@@ -78,7 +65,7 @@ Type="edgex-messagebus"
   DeviceName = "ds-controller-board"
   MaxTemperatureThreshold = "83"
   MinTemperatureThreshold = "10"
-  MQTTEndpoint = "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus" # TODO: update ds-inference-mock to use a different command and device name
+  MQTTEndpoint = "http://localhost:48082/api/v2/device/name/Inference-MQTT-device/command/inferenceDoorStatus" # TODO: update ds-inference-mock to use a different command and device name
   NotificationCategory = "HW_HEALTH"
   NotificationEmailAddresses = "your-email@site.com"
   NotificationLabels = "HW_HEALTH"

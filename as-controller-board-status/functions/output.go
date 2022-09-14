@@ -38,8 +38,9 @@ func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.A
 		return false, nil
 	}
 
-	lc := ctx.LoggingClient()
 	// Declare shorthand for the LoggingClient
+	lc := ctx.LoggingClient()
+
 	event := data.(dtos.Event)
 
 	if event.DeviceName == ControllerBoardDeviceServiceDeviceName {
@@ -48,25 +49,25 @@ func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.A
 				return false, fmt.Errorf("event reading was empty")
 			}
 
-			lc.Debugf("Received event reading value: %v", eventReading.Value)
+			lc.Debugf("Received event reading value: %s", eventReading.Value)
 
 			// Unmarshal the event reading data into the global controllerBoardStatus variable
 			err := json.Unmarshal([]byte(eventReading.Value), &controllerBoardStatus)
 			if err != nil {
-				lc.Errorf("Failed to unmarshal controller board data, the event data is: %v", eventReading)
+				lc.Errorf("Failed to unmarshal controller board data %s: %s", eventReading.Value, err.Error())
 				return false, nil
 			}
 
 			// Check if the temperature thresholds have been exceeded
 			err = boardStatus.processTemperature(lc, controllerBoardStatus.Temperature)
 			if err != nil {
-				lc.Errorf("Encountered error while checking temperature thresholds: %v", err.Error())
+				lc.Errorf("Encountered error while checking temperature thresholds: %s", err.Error())
 			}
 
 			// Check if the door open/closed state requires action
 			err = boardStatus.processVendingDoorState(lc, controllerBoardStatus.DoorClosed)
 			if err != nil {
-				lc.Errorf("Encountered error while checking the open/closed state of the door: %v", err.Error())
+				lc.Errorf("Encountered error while checking the open/closed state of the door: %s", err.Error())
 			}
 		}
 	}
