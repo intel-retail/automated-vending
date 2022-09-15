@@ -22,7 +22,6 @@ RUN go mod download
 WORKDIR /app
 COPY . .
 
-RUN go mod download
 # Compile the code
 RUN make gobuild
 

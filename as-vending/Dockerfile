@@ -23,7 +23,6 @@ RUN mkdir as-vending
 WORKDIR /usr/local/bin/as-vending/
 COPY . .
 
-RUN go mod download
 # Compile the code
 RUN make gobuild
 
