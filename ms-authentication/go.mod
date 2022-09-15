@@ -7,7 +7,6 @@ go 1.18
 
 require (
 	github.com/edgexfoundry/app-functions-sdk-go/v2 v2.2.0
-	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/intel-iot-devkit/automated-checkout-utilities v1.0.0
 	github.com/stretchr/testify v1.8.0
@@ -22,6 +21,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.5 // indirect
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0 // indirect
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0 // indirect
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0 // indirect
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0 // indirect
 	github.com/edgexfoundry/go-mod-registry/v2 v2.2.0 // indirect
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.2.0 // indirect

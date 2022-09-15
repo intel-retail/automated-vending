@@ -1,10 +1,19 @@
 # Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM automated-checkout/build:latest AS builder
+FROM golang:1.18-alpine3.16 AS builder
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2022: Intel'
+
+# add git for go modules
+RUN apk update && apk add --no-cache make git gcc libc-dev zeromq-dev linux-headers
+
+ENV GO111MODULE=on
+WORKDIR /usr/local/bin/
+
+COPY go.mod .
+RUN go mod download
 
 RUN mkdir ms-authentication
 WORKDIR /usr/local/bin/ms-authentication/
