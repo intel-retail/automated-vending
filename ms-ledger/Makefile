@@ -8,7 +8,10 @@ MICROSERVICE=automated-checkout/ms-ledger
 
 ARCH=$(shell uname -m)
 
-build:
+tidy:
+	go mod tidy
+
+build: tidy
 	docker build --rm \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
@@ -16,7 +19,7 @@ build:
 		-t $(MICROSERVICE):dev \
 		.
 
-gobuild:
+gobuild: tidy
 	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo main.go
 
 run:

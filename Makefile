@@ -11,7 +11,6 @@
 		build-image \
 
 DOCKERS= \
-		docker-build-image \
 		as-vending \
 		as-controller-board-status \
 		ds-card-reader \

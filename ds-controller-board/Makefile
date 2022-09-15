@@ -19,7 +19,7 @@ build: tidy
 		-t $(MICROSERVICE):dev \
 		.
 
-gobuild:
+gobuild: tidy
 	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo -o ds-controller-board
 
 run:
