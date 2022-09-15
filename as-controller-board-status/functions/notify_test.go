@@ -27,9 +27,9 @@ func prepBuildSubscriptionMessage() []testTableBuildSubscriptionMessageStruct {
 	commonSuccessConfig := GetCommonSuccessConfig()
 
 	mockAppService := &mocks.ApplicationService{}
-	subscriptionClient := &client_mocks.SubscriptionClient{}
-	subscriptionClient.On("Add", mock.Anything, mock.Anything).Return(nil, nil)
-	mockAppService.On("SubscriptionClient").Return(subscriptionClient)
+	mockSubscriptionClient := &client_mocks.SubscriptionClient{}
+	mockSubscriptionClient.On("Add", mock.Anything, mock.Anything).Return(nil, nil)
+	mockAppService.On("SubscriptionClient").Return(mockSubscriptionClient)
 	return []testTableBuildSubscriptionMessageStruct{
 		{
 			TestCaseName: "Success",
@@ -87,14 +87,14 @@ func prepSubscribeToNotificationServiceTest() ([]testTableSubscribeToNotificatio
 	failureConfig := GetCommonSuccessConfig()
 
 	mockAppService := &mocks.ApplicationService{}
-	subscriptionClient := &client_mocks.SubscriptionClient{}
-	subscriptionClient.On("Add", mock.Anything, mock.Anything).Return(nil, nil)
-	mockAppService.On("SubscriptionClient").Return(subscriptionClient)
+	mockSubscriptionClient := &client_mocks.SubscriptionClient{}
+	mockSubscriptionClient.On("Add", mock.Anything, mock.Anything).Return(nil, nil)
+	mockAppService.On("SubscriptionClient").Return(mockSubscriptionClient)
 
 	mockAppServiceFailed := &mocks.ApplicationService{}
-	subscriptionClientFailed := &client_mocks.SubscriptionClient{}
-	subscriptionClientFailed.On("Add", mock.Anything, mock.Anything).Return(nil, edgex_errors.NewCommonEdgeXWrapper(errors.New("test failed")))
-	mockAppServiceFailed.On("SubscriptionClient").Return(subscriptionClientFailed)
+	mockSubscriptionClientFailed := &client_mocks.SubscriptionClient{}
+	mockSubscriptionClientFailed.On("Add", mock.Anything, mock.Anything).Return(nil, edgex_errors.NewCommonEdgeXWrapper(errors.New("test failed")))
+	mockAppServiceFailed.On("SubscriptionClient").Return(mockSubscriptionClientFailed)
 
 	boardStatusSuccess := CheckBoardStatus{
 		Configuration: &successConfig,
@@ -149,9 +149,9 @@ func TestSubscribeToNotificationService(t *testing.T) {
 // elsewhere are covered
 func TestSendNotification(t *testing.T) {
 	mockAppService := &mocks.ApplicationService{}
-	notificationClient := &client_mocks.NotificationClient{}
-	notificationClient.On("SendNotification", mock.Anything, mock.Anything).Return(nil, edgex_errors.NewCommonEdgeXWrapper(errors.New("test failed")))
-	mockAppService.On("NotificationClient").Return(notificationClient)
+	mockNotificationClient := &client_mocks.NotificationClient{}
+	mockNotificationClient.On("SendNotification", mock.Anything, mock.Anything).Return(nil, edgex_errors.NewCommonEdgeXWrapper(errors.New("test failed")))
+	mockAppService.On("NotificationClient").Return(mockNotificationClient)
 
 	configSuccess := GetCommonSuccessConfig()
 	boardStatus := CheckBoardStatus{
