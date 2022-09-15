@@ -157,10 +157,8 @@ func CreateControllerBoardDriver(t *testing.T, virtual bool, initialize bool, ex
 	target := &ControllerBoardDriver{
 		lc: lc,
 		config: &device.ServiceConfig{
-			AppCustom: device.CustomConfig{
-				DriverConfig: device.Config{
-					VirtualControllerBoard: virtual,
-				},
+			DriverConfig: device.Config{
+				VirtualControllerBoard: virtual,
 			},
 		},
 	}

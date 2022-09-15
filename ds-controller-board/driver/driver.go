@@ -6,7 +6,6 @@ package driver
 import (
 	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
 	"ds-controller-board/device"
@@ -39,9 +38,11 @@ type ControllerBoardDriver struct {
 	StopChannel     chan int
 	controllerBoard device.ControllerBoard
 	config          *device.ServiceConfig
-	configMu        sync.RWMutex
 
-	svc ServiceWrapper
+	displayTimeout time.Duration
+	lockTimeout    time.Duration
+
+	svc *service.DeviceService
 }
 
 // NewControllerBoardDeviceDriver allows EdgeX to initialize the
@@ -56,30 +57,26 @@ func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh ch
 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.config == nil {
-		drv.svc = &DeviceSDKService{
-			DeviceService: service.RunningService(),
-			lc:            lc,
-		}
+		drv.svc = service.RunningService()
 
 		drv.config = &device.ServiceConfig{}
 
-		err := drv.svc.LoadCustomConfig(drv.config, "AppCustom")
+		err := drv.svc.LoadCustomConfig(drv.config, "DriverConfig")
 		if err != nil {
 			return errors.Wrap(err, "custom driver configuration failed to load")
 		}
-
-		drv.lc.Debugf("Custom config is : %+v", drv.config)
-
-		err = drv.svc.ListenForCustomConfigChanges(&drv.config.AppCustom, "AppCustom", drv.updateWritableConfig)
+		drv.displayTimeout, drv.lockTimeout, err = drv.config.Validate()
 		if err != nil {
-			return errors.Wrap(err, "failed to listen to custom config changes")
+			return err
 		}
+
+		drv.lc.Debugf("Custom driver config is : %+v", drv.config)
 
 	}
 
 	drv.StopChannel = make(chan int)
 
-	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, drv.config)
+	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, &drv.config.DriverConfig)
 	if err != nil {
 		return err
 	}
@@ -126,7 +123,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				return err
 			}
 			go func() {
-				time.Sleep(drv.config.AppCustom.DriverConfig.LockTimeout)
+				time.Sleep(drv.displayTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock1)
 			}()
 		case false:
@@ -145,7 +142,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				return err
 			}
 			go func() {
-				time.Sleep(drv.config.AppCustom.DriverConfig.LockTimeout)
+				time.Sleep(drv.lockTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock2)
 			}()
 		case false:
@@ -238,7 +235,7 @@ func (drv *ControllerBoardDriver) displayText(message string) {
 	go func() {
 		for {
 			select {
-			case <-time.After(drv.config.AppCustom.DriverConfig.DisplayTimeout):
+			case <-time.After(drv.displayTimeout):
 				drv.displayReset()
 				return
 			case <-drv.StopChannel:
@@ -278,25 +275,4 @@ func (drv *ControllerBoardDriver) RemoveDevice(deviceName string, protocols map[
 // Stop stops a device
 func (drv *ControllerBoardDriver) Stop(force bool) error {
 	return nil
-}
-
-func (drv *ControllerBoardDriver) updateWritableConfig(rawWritableConfig interface{}) {
-	updated, ok := rawWritableConfig.(*device.CustomConfig)
-	if !ok {
-		drv.lc.Error("unable to update writable custom config: Can not cast raw config to type 'CustomConfig'")
-		return
-	}
-
-	drv.configMu.Lock()
-	oldVID := drv.config.AppCustom.DriverConfig.VID
-	oldPID := drv.config.AppCustom.DriverConfig.PID
-	oldDisplayTimeout := drv.config.AppCustom.DriverConfig.DisplayTimeout
-	oldLockTimeout := drv.config.AppCustom.DriverConfig.LockTimeout
-	drv.config.AppCustom = *updated
-	drv.configMu.Unlock()
-
-	if updated.DriverConfig.VID != oldVID || updated.DriverConfig.PID != oldPID ||
-		updated.DriverConfig.DisplayTimeout != oldDisplayTimeout || updated.DriverConfig.LockTimeout != oldLockTimeout {
-		drv.lc.Info("Driver configuration has changed! Discovery will be triggered momentarily.")
-	}
 }

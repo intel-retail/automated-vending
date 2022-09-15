@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -8,23 +8,17 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestUpdateFromRaw(t *testing.T) {
-	expectedDisplayTimeout, err := time.ParseDuration("10s")
-	require.NoError(t, err)
-	expectedLockTimeout, err := time.ParseDuration("30s")
-	require.NoError(t, err)
+
 	expectedConfig := &ServiceConfig{
-		AppCustom: CustomConfig{
-			DriverConfig: Config{
-				VirtualControllerBoard: true,
-				PID:                    "8037",
-				VID:                    "2341",
-				DisplayTimeout:         expectedDisplayTimeout,
-				LockTimeout:            expectedLockTimeout,
-			},
+		DriverConfig: Config{
+			VirtualControllerBoard: true,
+			PID:                    "8037",
+			VID:                    "2341",
+			DisplayTimeout:         "30s",
+			LockTimeout:            "10s",
 		},
 	}
 	testCases := []struct {
@@ -40,7 +34,7 @@ func TestUpdateFromRaw(t *testing.T) {
 		{
 			Name:      "not valid",
 			isValid:   false,
-			rawConfig: expectedConfig.AppCustom,
+			rawConfig: expectedConfig.DriverConfig,
 		},
 	}
 
@@ -57,4 +51,60 @@ func TestUpdateFromRaw(t *testing.T) {
 		})
 	}
 
+}
+
+func TestServiceConfig_Validate(t *testing.T) {
+	type fields struct {
+		DriverConfig Config
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    time.Duration
+		want1   time.Duration
+		wantErr bool
+	}{
+		{
+			name: "successful vaidation",
+			fields: fields{
+				DriverConfig: Config{
+					DisplayTimeout: "30s",
+					LockTimeout:    "10s",
+				},
+			},
+			want:    time.Duration(30 * time.Second),
+			want1:   time.Duration(10 * time.Second),
+			wantErr: false,
+		},
+		{
+			name: "unsuccessful vaidation",
+			fields: fields{
+				DriverConfig: Config{
+					DisplayTimeout: "30s",
+					LockTimeout:    "10es",
+				},
+			},
+			want:    0,
+			want1:   0,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &ServiceConfig{
+				DriverConfig: tt.fields.DriverConfig,
+			}
+			got, got1, err := c.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ServiceConfig.Validate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ServiceConfig.Validate() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("ServiceConfig.Validate() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
 }

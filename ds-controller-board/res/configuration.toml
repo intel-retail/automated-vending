@@ -80,10 +80,9 @@ PublishTopicPrefix = "edgex/events/device" # /<device-profile-name>/<device-name
   ConnectTimeout = "5" # Seconds
   SkipCertVerify = "false"
 
-[AppCustom]
-  [DriverConfig]
-  VID = '2341'
-  PID = '8037'
-  DisplayTimeout = '10s'
-  LockTimeout = '30s'
-  VirtualControllerBoard = 'true'
+[DriverConfig]
+  VID = "2341"
+  PID = "8037"
+  DisplayTimeout = "10s"
+  LockTimeout = "30s"
+  VirtualControllerBoard = true
