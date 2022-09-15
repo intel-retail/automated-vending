@@ -20,13 +20,13 @@ type ControllerBoard interface {
 // NewControllerBoard is used to determine the ControllerBoard type
 // (i.e. Device or Virtual), and perform the necessary steps to initialize
 // a new ControllerBoard
-func NewControllerBoard(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, config *Config) (ControllerBoard, error) {
+func NewControllerBoard(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, config *ServiceConfig) (ControllerBoard, error) {
 	var controllerBoard ControllerBoard
 
-	if !config.VirtualControllerBoard {
+	if !config.AppCustom.DriverConfig.VirtualControllerBoard {
 
 		// Find the port name (like /dev/ttyACM0) connected to Controller Board
-		ttyPort, err := FindControllerBoard(config.VID, config.PID)
+		ttyPort, err := FindControllerBoard(config.AppCustom.DriverConfig.VID, config.AppCustom.DriverConfig.PID)
 		if err != nil {
 			return nil, fmt.Errorf("can't find controller board, check if it is connected: %s", err.Error())
 		}

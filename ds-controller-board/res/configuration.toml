@@ -64,13 +64,6 @@ UseMessageBus = true
   Enabled = false
   Interval = "30s"
 
-[Driver]
-  VID = '2341'
-  PID = '8037'
-  DisplayTimeout = '10s'
-  LockTimeout = '30s'
-  VirtualControllerBoard = 'true'
-
 [MessageQueue]
 Protocol = "tcp"
 Host = "localhost"
@@ -86,3 +79,11 @@ PublishTopicPrefix = "edgex/events/device" # /<device-profile-name>/<device-name
   AutoReconnect = "true"
   ConnectTimeout = "5" # Seconds
   SkipCertVerify = "false"
+
+[AppCustom]
+  [DriverConfig]
+  VID = '2341'
+  PID = '8037'
+  DisplayTimeout = '10s'
+  LockTimeout = '30s'
+  VirtualControllerBoard = 'true'
