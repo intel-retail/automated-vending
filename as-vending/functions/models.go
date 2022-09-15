@@ -25,24 +25,24 @@ type VendingState struct {
 }
 
 type ServiceConfiguration struct {
-	AuthenticationEndpoint            string        // "http://localhost:48096/authentication"
-	DeviceControllerBoarddisplayReset string        // "http://localhost:48082/api/v1/device/name/ds-controller-board/command/displayReset"
-	DeviceControllerBoarddisplayRow0  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow0"
-	DeviceControllerBoarddisplayRow1  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow1"
-	DeviceControllerBoarddisplayRow2  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow2"
-	DeviceControllerBoarddisplayRow3  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow3"
-	DeviceControllerBoardLock1        string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/lock1"
-	DeviceControllerBoardLock2        string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/lock2"
-	DeviceNames                       []string      // "ds-card-reader,Inference-MQTT-device"
-	DoorCloseStateTimeout             time.Duration // "20s"
-	DoorOpenStateTimeout              time.Duration // "15s"
-	InferenceDoorStatus               string        // "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus"
-	InferenceHeartbeat                string        // "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat"
-	InferenceTimeout                  time.Duration // "20s"
-	InventoryAuditLogService          string        // "http://localhost:48095/auditlog"
-	InventoryService                  string        // "http://localhost:48095/inventory/delta"
-	LCDRowLength                      int           // "19"
-	LedgerService                     string        // "http://localhost:48093/ledger"
+	AuthenticationEndpoint            string
+	DeviceControllerBoarddisplayReset string
+	DeviceControllerBoarddisplayRow0  string
+	DeviceControllerBoarddisplayRow1  string
+	DeviceControllerBoarddisplayRow2  string
+	DeviceControllerBoarddisplayRow3  string
+	DeviceControllerBoardLock1        string
+	DeviceControllerBoardLock2        string
+	DeviceNames                       []string
+	DoorCloseStateTimeout             time.Duration
+	DoorOpenStateTimeout              time.Duration
+	InferenceDoorStatus               string
+	InferenceHeartbeat                string
+	InferenceTimeout                  time.Duration
+	InventoryAuditLogService          string
+	InventoryService                  string
+	LCDRowLength                      int
+	LedgerService                     string
 }
 
 // MaintenanceMode is a simple structure used to return the state of

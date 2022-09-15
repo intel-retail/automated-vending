@@ -188,6 +188,37 @@ services:
     security_opt:
     - no-new-privileges:true
     user: 2002:2001
+  device-mqtt:
+    container_name: edgex-device-mqtt
+    depends_on:
+    - consul
+    - data
+    - metadata
+    - mqtt-broker
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
+      CLIENTS_SUPPORT_SCHEDULER_HOST: edgex-support-scheduler
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      MESSAGEQUEUE_HOST: edgex-mqtt-broker
+      MQTTBROKERINFO_HOST: edgex-mqtt-broker
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: edgex-device-mqtt
+    volumes:
+      - ./res/device-mqtt:/res
+    hostname: edgex-device-mqtt
+    image: edgexfoundry/device-mqtt:2.2.0
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:59982:59982/tcp
+    read_only: true
+    restart: always
+    security_opt:
+    - no-new-privileges:true
+    user: 2002:2001
 
 version: '3.7'
 volumes:

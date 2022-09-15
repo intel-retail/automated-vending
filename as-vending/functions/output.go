@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -12,34 +12,36 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/appcontext"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 const (
 	InferenceMQTTDevice = "Inference-MQTT-device"
+	DsCardReader        = "ds-card-reader"
 )
 
 // DeviceHelper is an EdgeX function that is passed into the EdgeX SDK's function pipeline.
 // It is a decision function that allows for multiple devices to have their events processed
 // correctly by this application service.
-func (vendingState *VendingState) DeviceHelper(edgexcontext *appcontext.Context, params ...interface{}) (bool, interface{}) {
-	if len(params) < 1 {
+func (vendingState *VendingState) DeviceHelper(ctx interfaces.AppFunctionContext, data interface{}) (bool, interface{}) {
+	if data == nil {
 		// We didn't receive a result
 		return false, nil
 	}
 
-	event := params[0].(models.Event)
+	event := data.(dtos.Event)
 
-	switch event.Device {
-	case "ds-card-reader":
+	switch event.DeviceName {
+	case DsCardReader:
 		{
-			return vendingState.VerifyDoorAccess(edgexcontext, event)
+			return vendingState.VerifyDoorAccess(ctx.LoggingClient(), event)
 		}
 	case InferenceMQTTDevice:
 		{
-			return vendingState.HandleMqttDeviceReading(edgexcontext, event)
+			return vendingState.HandleMqttDeviceReading(ctx.LoggingClient(), event)
 		}
 	default:
 		{
@@ -50,29 +52,29 @@ func (vendingState *VendingState) DeviceHelper(edgexcontext *appcontext.Context,
 
 // HandleMqttDeviceReading is an EdgeX function that simply handles events coming from
 // the MQTT device service.
-func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appcontext.Context, event models.Event) (bool, interface{}) {
-	if event.Device == InferenceMQTTDevice {
-		for _, eventReading := range event.Readings {
-			fmt.Println(eventReading.Value)
-		}
-		edgexcontext.LoggingClient.Debug("Inference mqtt device",
-			"workflow:", vendingState.CVWorkflowStarted,
-			"maintenance mode:", vendingState.MaintenanceMode,
-			"open:", vendingState.DoorOpenedDuringCVWorkflow,
-			"closed:", vendingState.DoorClosedDuringCVWorkflow,
-			"Inference:", vendingState.InferenceDataReceived,
-			"door:", vendingState.DoorClosed,
-		)
+func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClient, event dtos.Event) (bool, interface{}) {
+	if event.DeviceName == InferenceMQTTDevice {
 
-		edgexcontext.LoggingClient.Debug("Processing reading from MQTT device service")
+		lc.Debugf("Inference mqtt device")
+		lc.Debugf("workflow: +%v", vendingState.CVWorkflowStarted)
+		lc.Debugf("maintenance mode: +%v", vendingState.MaintenanceMode)
+		lc.Debugf("open: +%v", vendingState.DoorOpenedDuringCVWorkflow)
+		lc.Debugf("closed: +%v", vendingState.DoorClosedDuringCVWorkflow)
+		lc.Debugf("Inference: +%v ", vendingState.InferenceDataReceived)
+		lc.Debugf("door: +%v", vendingState.DoorClosed)
+
+		lc.Debug("Processing reading from MQTT device service")
 		for _, eventReading := range event.Readings {
-			switch eventReading.Name {
+			if len(eventReading.Value) < 1 {
+				return false, fmt.Errorf("event reading was empty")
+			}
+			switch eventReading.DeviceName {
 			case "inferenceSkuDelta":
 				{
 					fmt.Println("Inference Started")
 					var skuDelta []deltaSKU
 					if err := json.Unmarshal([]byte(eventReading.Value), &skuDelta); err != nil {
-						edgexcontext.LoggingClient.Error("HandleMqttDeviceReading failed to unmarshal skuDelta message")
+						lc.Errorf("HandleMqttDeviceReading failed to unmarshal skuDelta message for %s: %v", eventReading.Value, err)
 						fmt.Println("Inference Failed")
 						return false, err
 					}
@@ -94,22 +96,22 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 						// POST the deltaLedger json string to the ledger endpoint
 						outputBytes, err := json.Marshal(deltaLedger)
 						if err != nil {
-							edgexcontext.LoggingClient.Error("HandleMqttDeviceReading failed to marshal deltaLedger")
+							lc.Errorf("HandleMqttDeviceReading failed to marshal deltaLedger: %v", err)
 							return false, err
 						}
 
-						edgexcontext.LoggingClient.Info("Sending SKU delta to ledger service")
+						lc.Info("Sending SKU delta to ledger service")
 
 						// send SKU delta to ledger service and get back current ledger information
-						resp, err := sendCommand(edgexcontext, "POST", vendingState.Configuration.LedgerService, outputBytes)
+						resp, err := sendCommand(lc, "POST", vendingState.Configuration.LedgerService, outputBytes)
 						if err != nil {
-							edgexcontext.LoggingClient.Error("Ledger service failed: %v", err.Error())
+							lc.Errorf("Ledger service failed: %s", err.Error())
 							return false, err
 						}
 
 						defer resp.Body.Close()
 
-						edgexcontext.LoggingClient.Info("Successfully updated the user's ledger")
+						lc.Info("Successfully updated the user's ledger")
 
 						var currentLedger Ledger
 						_, err = utilities.ParseJSONHTTPResponseContent(resp.Body, &currentLedger)
@@ -118,7 +120,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 						}
 
 						// Display Ledger Total on LCD
-						if displayErr := vendingState.displayLedger(edgexcontext, currentLedger); displayErr != nil {
+						if displayErr := vendingState.displayLedger(lc, currentLedger); displayErr != nil {
 							return false, displayErr
 						}
 
@@ -130,8 +132,8 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 						return false, fmt.Errorf("HandleMqttDeviceReading failed to marshal deltaLedger.DeltaSKUs")
 					}
 
-					edgexcontext.LoggingClient.Info("Sending SKU delta to inventory service")
-					inventoryResp, err := sendCommand(edgexcontext, "POST", vendingState.Configuration.InventoryService, outputBytes)
+					lc.Info("Sending SKU delta to inventory service")
+					inventoryResp, err := sendCommand(lc, "POST", vendingState.Configuration.InventoryService, outputBytes)
 					if err != nil {
 						return false, err
 					}
@@ -151,22 +153,22 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 						return false, err
 					}
 
-					edgexcontext.LoggingClient.Info("Sending audit log entry to inventory service")
-					auditResp, err := sendCommand(edgexcontext, "POST", vendingState.Configuration.InventoryAuditLogService, outputBytes)
+					lc.Info("Sending audit log entry to inventory service")
+					auditResp, err := sendCommand(lc, "POST", vendingState.Configuration.InventoryAuditLogService, outputBytes)
 					if err != nil {
 						return false, err
 					}
 					defer auditResp.Body.Close()
 					vendingState.CurrentUserData = OutputData{}
 					vendingState.CVWorkflowStarted = false
-					edgexcontext.LoggingClient.Info("Inference complete and workflow status reset")
+					lc.Info("Inference complete and workflow status reset")
 					// Close all thread to ensure all threads are cleaned up before the next card is scanned.
 					close(vendingState.ThreadStopChannel)
 					vendingState.ThreadStopChannel = make(chan int)
 				}
 			default:
 				{
-					edgexcontext.LoggingClient.Info("Received an event with an unknown name")
+					lc.Info("Received an event with an unknown name")
 					return false, nil
 				}
 			}
@@ -178,44 +180,62 @@ func (vendingState *VendingState) HandleMqttDeviceReading(edgexcontext *appconte
 
 // VerifyDoorAccess will take the card reader events and verify the read card id against the white list
 // If the card is valid the function will send the unlock message to the device-controller-board device service
-func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Context, event models.Event) (bool, interface{}) {
-	edgexcontext.LoggingClient.Info("new card scanned", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
+func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, event dtos.Event) (bool, interface{}) {
 
-	if event.Device == "ds-card-reader" && !vendingState.CVWorkflowStarted {
-		edgexcontext.LoggingClient.Info("Verify the card reader input against the white list")
+	lc.Infof("new card scanned")
+	lc.Infof("workflow: +%v", vendingState.CVWorkflowStarted)
+	lc.Infof("maintenance mode: +%v", vendingState.MaintenanceMode)
+	lc.Infof("open: +%v", vendingState.DoorOpenedDuringCVWorkflow)
+	lc.Infof("closed: +%v", vendingState.DoorClosedDuringCVWorkflow)
+	lc.Infof("Inference: +%v ", vendingState.InferenceDataReceived)
+	lc.Infof("door: +%v", vendingState.DoorClosed)
 
-		edgexcontext.LoggingClient.Info("Card Scanned", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
+	if event.DeviceName == DsCardReader && !vendingState.CVWorkflowStarted {
+		lc.Info("Verify the card reader input against the white list")
+
+		lc.Infof("Card Scanned")
+		lc.Infof("workflow: +%v", vendingState.CVWorkflowStarted)
+		lc.Infof("maintenance mode: +%v", vendingState.MaintenanceMode)
+		lc.Infof("open: +%v", vendingState.DoorOpenedDuringCVWorkflow)
+		lc.Infof("closed: +%v", vendingState.DoorClosedDuringCVWorkflow)
+		lc.Infof("Inference: +%v ", vendingState.InferenceDataReceived)
+		lc.Infof("door: +%v", vendingState.DoorClosed)
+
 		// check to see if inference is running and set maintenance mode accordingly
 		if !vendingState.MaintenanceMode {
-			vendingState.MaintenanceMode = !checkInferenceStatus(edgexcontext, vendingState.Configuration.InferenceHeartbeat)
+			vendingState.MaintenanceMode = !checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeat)
 		}
 
 		for _, eventReading := range event.Readings {
+			if len(eventReading.Value) < 1 {
+				return false, fmt.Errorf("event reading was empty, devicename: %s, resourcename: %s", eventReading.DeviceName, eventReading.ResourceName)
+			}
+
 			// Retrieve & Hit auth endpoint
-			vendingState.getCardAuthInfo(edgexcontext, vendingState.Configuration.AuthenticationEndpoint, eventReading.Value)
+			vendingState.getCardAuthInfo(lc, vendingState.Configuration.AuthenticationEndpoint, eventReading.Value)
 
 			switch vendingState.CurrentUserData.RoleID {
 			// Check the role of the card scanned. Role 1 = customer and Role 2 = item stocker
 			case 1, 2:
 				{
 					if !vendingState.MaintenanceMode {
-						edgexcontext.LoggingClient.Info(eventReading.Name + " readable value from " + event.Device + " is " + eventReading.Value)
+						lc.Infof("%s readable value from %s is %s", eventReading.ResourceName, eventReading.DeviceName, eventReading.Value)
 						// display "hello" on row 2
-						resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"hello\"}"))
+						resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"hello\"}"))
 						if err != nil {
 							return false, err
 						}
 						defer resp.Body.Close()
 
 						// display the card number on row 3
-						respRow3, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
+						respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
 						if err != nil {
 							return false, err
 						}
 						defer respRow3.Body.Close()
 
 						// unlock
-						respLock, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
+						respLock, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
 						if err != nil {
 							return false, err
 						}
@@ -234,26 +254,33 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 								select {
 								case <-time.After(vendingState.Configuration.DoorOpenStateTimeout):
 									if !vendingState.DoorOpenedDuringCVWorkflow {
-										edgexcontext.LoggingClient.Info("door wasn't opened so we reset")
+										lc.Info("door wasn't opened so we reset")
 										vendingState.CVWorkflowStarted = false
 										vendingState.CurrentUserData = OutputData{}
 									}
-									edgexcontext.LoggingClient.Info("Card scan: Waiting for open event", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
+
+									lc.Infof("Card Scan")
+									lc.Infof("workflow: +%v", vendingState.CVWorkflowStarted)
+									lc.Infof("maintenance mode: +%v", vendingState.MaintenanceMode)
+									lc.Infof("open: +%v", vendingState.DoorOpenedDuringCVWorkflow)
+									lc.Infof("closed: +%v", vendingState.DoorClosedDuringCVWorkflow)
+									lc.Infof("Inference: +%v ", vendingState.InferenceDataReceived)
+									lc.Infof("door: +%v", vendingState.DoorClosed)
 									return
 
 								case <-vendingState.DoorOpenWaitThreadStopChannel:
-									edgexcontext.LoggingClient.Info("Stopped the door open wait thread")
+									lc.Info("Stopped the door open wait thread")
 									return
 
 								case <-vendingState.ThreadStopChannel:
-									edgexcontext.LoggingClient.Info("Globally stopped the door open wait thread")
+									lc.Info("Globally stopped the door open wait thread")
 									return
 								}
 							}
 						}()
 					} else {
 						// display out of order when door waiting state is set to false
-						resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\"Out of Order\"}"))
+						resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\"Out of Order\"}"))
 						if err != nil {
 							return false, err
 						}
@@ -267,24 +294,24 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 					close(vendingState.ThreadStopChannel)
 					vendingState.ThreadStopChannel = make(chan int)
 
-					edgexcontext.LoggingClient.Info(eventReading.Name + " readable value from " + event.Device + " is " + eventReading.Value)
+					lc.Infof("%s readable value from %s is %s", eventReading.ResourceName, eventReading.DeviceName, eventReading.Value)
 
 					// display text "Maintenance Mode" in row 2
-					respRow2, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Maintenance Mode\"}"))
+					respRow2, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Maintenance Mode\"}"))
 					if err != nil {
 						return false, err
 					}
 					defer respRow2.Body.Close()
 
 					// display any reading value in row 3
-					respRow3, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
+					respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
 					if err != nil {
 						return false, err
 					}
 					defer respRow3.Body.Close()
 
 					// send lock command
-					respLock, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
+					respLock, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
 					if err != nil {
 						return false, err
 					}
@@ -295,26 +322,32 @@ func (vendingState *VendingState) VerifyDoorAccess(edgexcontext *appcontext.Cont
 					vendingState.DoorClosedDuringCVWorkflow = false
 					vendingState.DoorOpenedDuringCVWorkflow = false
 					vendingState.InferenceDataReceived = false
-					edgexcontext.LoggingClient.Info("Maintenance Scan: ", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
+					lc.Infof("Maintenance Scan")
+					lc.Infof("workflow: +%v", vendingState.CVWorkflowStarted)
+					lc.Infof("maintenance mode: +%v", vendingState.MaintenanceMode)
+					lc.Infof("open: +%v", vendingState.DoorOpenedDuringCVWorkflow)
+					lc.Infof("closed: +%v", vendingState.DoorClosedDuringCVWorkflow)
+					lc.Infof("Inference: +%v ", vendingState.InferenceDataReceived)
+					lc.Infof("door: +%v", vendingState.DoorClosed)
 				}
 			default:
 				// display "Unauthorized" on display row 2
-				resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Unauthorized\"}"))
+				resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Unauthorized\"}"))
 				defer resp.Body.Close()
 				if err != nil {
 					return false, err
 				}
-				edgexcontext.LoggingClient.Info("Invalid card: " + eventReading.Value)
+				lc.Infof("Invalid card: %s", eventReading.Value)
 			}
 		}
 	}
 	return true, event // Continues the functions pipeline execution with the current event
 }
 
-func checkInferenceStatus(edgexcontext *appcontext.Context, heartbeatEndPoint string) bool {
-	resp, err := sendCommand(edgexcontext, "GET", heartbeatEndPoint, []byte(""))
+func checkInferenceStatus(lc logger.LoggingClient, heartbeatEndPoint string) bool {
+	resp, err := sendCommand(lc, "GET", heartbeatEndPoint, []byte(""))
 	if err != nil {
-		edgexcontext.LoggingClient.Error(fmt.Sprintf("error checking inference status: %v", err.Error()))
+		lc.Errorf("error checking inference status: %v", err)
 		return false
 	}
 	defer resp.Body.Close()
@@ -322,14 +355,14 @@ func checkInferenceStatus(edgexcontext *appcontext.Context, heartbeatEndPoint st
 	return true
 }
 
-func (vendingState *VendingState) getCardAuthInfo(edgexcontext *appcontext.Context, authEndpoint string, cardID string) {
+func (vendingState *VendingState) getCardAuthInfo(lc logger.LoggingClient, authEndpoint string, cardID string) {
 	// Push the authenticated user info to the current vendingState
 	// First, reset it, then populate it at the end of the function
 	vendingState.CurrentUserData = OutputData{}
 
-	resp, err := sendCommand(edgexcontext, "GET", authEndpoint+"/"+cardID, []byte(""))
+	resp, err := sendCommand(lc, "GET", authEndpoint+"/"+cardID, []byte(""))
 	if err != nil {
-		edgexcontext.LoggingClient.Info("Unauthorized card: " + cardID)
+		lc.Infof("Unauthorized card: %s", cardID)
 		return
 	}
 
@@ -338,18 +371,18 @@ func (vendingState *VendingState) getCardAuthInfo(edgexcontext *appcontext.Conte
 	var auth OutputData
 	_, err = utilities.ParseJSONHTTPResponseContent(resp.Body, &auth)
 	if err != nil {
-		edgexcontext.LoggingClient.Error("Could not read response body from AuthenticationEndpoint")
+		lc.Errorf("Could not read response body from AuthenticationEndpoint: %v", err)
 		return
 	}
 
 	// Set the door waiting state to false while processing a use
 	vendingState.CurrentUserData = auth
-	edgexcontext.LoggingClient.Info("Successfully found user data for card " + cardID)
+	lc.Info("Successfully found user data for card " + cardID)
 }
 
-func (vendingState *VendingState) displayLedger(edgexcontext *appcontext.Context, ledger Ledger) error {
+func (vendingState *VendingState) displayLedger(lc logger.LoggingClient, ledger Ledger) error {
 	// reset LCD
-	resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
+	resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
 	if err != nil {
 		return fmt.Errorf("sendCommand returned error for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayReset, err.Error())
 	}
@@ -360,7 +393,7 @@ func (vendingState *VendingState) displayLedger(edgexcontext *appcontext.Context
 		// Line Item is item count and product name, and truncated or padded with whitespaces so it is same length as LCD Row
 		displayLineItem := fmt.Sprintf("%-[1]*.[1]*s", vendingState.Configuration.LCDRowLength, strconv.Itoa(lineItem.ItemCount)+" "+lineItem.ProductName)
 		// push line item to LCD and pause three seconds before displaying next line item
-		resp, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLineItem+"\"}"))
+		resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLineItem+"\"}"))
 		if err != nil {
 			return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayRow1, err.Error())
 		}
@@ -370,7 +403,7 @@ func (vendingState *VendingState) displayLedger(edgexcontext *appcontext.Context
 	}
 
 	//reset the LCD
-	respDisplayReset, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
+	respDisplayReset, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
 	if err != nil {
 		return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayReset, err.Error())
 	}
@@ -378,7 +411,7 @@ func (vendingState *VendingState) displayLedger(edgexcontext *appcontext.Context
 
 	//display ledger.LineTotal from in currency format
 	displayLedgerTotal := "Total: $" + fmt.Sprintf("%3.2f", ledger.LineTotal)
-	respDisplayRow, err := sendCommand(edgexcontext, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLedgerTotal+"\"}"))
+	respDisplayRow, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLedgerTotal+"\"}"))
 	if err != nil {
 		return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayRow1, err.Error())
 	}
@@ -388,8 +421,9 @@ func (vendingState *VendingState) displayLedger(edgexcontext *appcontext.Context
 }
 
 // sendCommand will make an http request to an EdgeX command endpoint
-func sendCommand(edgexcontext *appcontext.Context, method string, commandURL string, inputBytes []byte) (*http.Response, error) {
-	edgexcontext.LoggingClient.Debug(fmt.Sprintf("sending command to edgex endpoint: %v", commandURL))
+func sendCommand(lc logger.LoggingClient, method string, commandURL string, inputBytes []byte) (*http.Response, error) {
+
+	lc.Debugf("sending command to edgex endpoint: %v", commandURL)
 
 	// Create the http request based on the parameters
 	request, _ := http.NewRequest(method, commandURL, bytes.NewBuffer(inputBytes))
@@ -476,8 +510,6 @@ func (vendingState *VendingState) BoardStatus(writer http.ResponseWriter, req *h
 									vendingState.CurrentUserData = OutputData{}
 									vendingState.MaintenanceMode = true
 								}
-								// TODO: remove print
-								fmt.Println("Door Opened: waiting for door closed event", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
 								return
 							}
 						case <-vendingState.DoorCloseWaitThreadStopChannel:
@@ -512,8 +544,6 @@ func (vendingState *VendingState) BoardStatus(writer http.ResponseWriter, req *h
 									vendingState.CurrentUserData = OutputData{}
 									vendingState.MaintenanceMode = true
 								}
-								// TODO: remove print
-								fmt.Println("Door Closed: waiting for door closed event", "workflow:", vendingState.CVWorkflowStarted, "maintenance mode:", vendingState.MaintenanceMode, "open:", vendingState.DoorOpenedDuringCVWorkflow, "closed:", vendingState.DoorClosedDuringCVWorkflow, "Inference:", vendingState.InferenceDataReceived, "door:", vendingState.DoorClosed)
 								return
 							}
 						case <-vendingState.InferenceWaitThreadStopChannel:
@@ -555,14 +585,13 @@ func (vendingState *VendingState) ResetDoorLock(writer http.ResponseWriter, req 
 	vendingState.DoorOpenedDuringCVWorkflow = false
 	vendingState.InferenceDataReceived = false
 
-	fmt.Println("Maintenance card scanned: reset everything",
-		"workflow:", vendingState.CVWorkflowStarted,
-		"maintenance mode:", vendingState.MaintenanceMode,
-		"open:", vendingState.DoorOpenedDuringCVWorkflow,
-		"closed:", vendingState.DoorClosedDuringCVWorkflow,
-		"Inference:", vendingState.InferenceDataReceived,
-		"door:", vendingState.DoorClosed,
-	)
+	fmt.Println("Maintenance card scanned")
+	fmt.Printf("workflow: %t", vendingState.CVWorkflowStarted)
+	fmt.Printf("maintenance mode: %t", vendingState.MaintenanceMode)
+	fmt.Printf("open: %t", vendingState.DoorOpenedDuringCVWorkflow)
+	fmt.Printf("closed: %t", vendingState.DoorClosedDuringCVWorkflow)
+	fmt.Printf("Inference: %t", vendingState.InferenceDataReceived)
+	fmt.Printf("door: %t", vendingState.DoorClosed)
 
 	// Write the HTTP status header
 	writer.WriteHeader(http.StatusOK)
