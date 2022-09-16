@@ -13,7 +13,6 @@ import (
 	"github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	"github.com/pkg/errors"
 )
 
 // CardReaderDriver represents the EdgeX driver that interfaces with the
@@ -40,7 +39,7 @@ func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- 
 
 		err := drv.svc.LoadCustomConfig(drv.Config, "DriverConfig")
 		if err != nil {
-			return errors.Wrap(err, "custom card reader configuration failed to load")
+			return fmt.Errorf("custom card reader configuration failed to load: %v", err)
 		}
 
 		drv.LoggingClient.Debugf("Custom card reader config is : %+v", drv.Config)

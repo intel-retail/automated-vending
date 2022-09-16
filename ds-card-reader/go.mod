@@ -9,7 +9,6 @@ require (
 	github.com/edgexfoundry/device-sdk-go/v2 v2.2.0
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0
 	github.com/gvalkov/golang-evdev v0.0.0-20180516222720-b6f418b1fe5a
-	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.0
 )
 
