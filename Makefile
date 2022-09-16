@@ -27,7 +27,7 @@ getlatest:
 	git submodule update --init --recursive --remote
 
 docker-rm:
-	-docker rm $$(docker ps -aq)
+	-docker rm -f $$(docker ps -aq)
 
 clean-docker: docker-rm
 	docker volume prune -f && \
@@ -37,20 +37,20 @@ run-portainer:
 	docker-compose -f docker-compose.portainer.yml up -d
 
 run:
-	docker-compose -f docker-compose.yml up -d
+	docker-compose -f docker-compose.ac.yml -f docker-compose.edgex.yml up -d
 
 run-physical:
-	docker-compose -f docker-compose.yml -f docker-compose.physical.card-reader.yml -f docker-compose.physical.controller-board.yml up -d
+	docker-compose -f docker-compose.ac.yml -f docker-compose.edgex.yml -f docker-compose.physical.card-reader.yml -f docker-compose.physical.controller-board.yml up -d
 
 run-physical-card-reader:
-	docker-compose -f docker-compose.yml -f docker-compose.physical.card-reader.yml up -d
+	docker-compose -f docker-compose.ac.yml -f docker-compose.edgex.yml -f docker-compose.physical.card-reader.yml up -d
 
 run-physical-controller-board:
-	docker-compose -f docker-compose.yml -f docker-compose.physical.controller-board.yml up -d
+	docker-compose -f docker-compose.ac.yml -f docker-compose.edgex.yml -f docker-compose.physical.controller-board.yml up -d
 
 down:
-	-docker-compose -f docker-compose.yml stop -t 1
-	-docker-compose -f docker-compose.yml down
+	-docker-compose -f docker-compose.ac.yml -f docker-compose.edgex.yml stop -t 1
+	-docker-compose -f docker-compose.ac.yml -f docker-compose.edgex.yml down
 
 clean: down docker-rm
 	docker rmi -f $$(docker images | grep '<none>' | awk '{print $$3}') && \
