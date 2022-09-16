@@ -18,7 +18,6 @@ import (
 	"ds-card-reader/common"
 	"ds-card-reader/device"
 	"fmt"
-	"sync"
 	"testing"
 
 	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
@@ -29,26 +28,26 @@ import (
 	require "github.com/stretchr/testify/require"
 )
 
-var once sync.Once
-
 const (
 	invalid                     = "invalid"
 	cardReaderDeviceServiceName = "ds-card-reader"
 	expectedCardNumber          = "0003292356"
 )
 
-// getDefaultCardReaderConfig returns a CardReaderConfig that contains the
+// getDefaultDriverConfig returns a DriverConfig that contains the
 // same values as the current default values in configuration.toml
 //
 // WARNING: If changing the default values in configuration.toml, please
 // update this function
-func getDefaultCardReaderConfig() *common.CardReaderConfig {
-	return &common.CardReaderConfig{
-		DeviceName:       cardReaderDeviceServiceName,
-		DeviceSearchPath: "/dev/input/event*",
-		VID:              0xffff,
-		PID:              0x0035,
-		SimulateDevice:   true,
+func getDefaultDriverConfig() *device.ServiceConfig {
+	return &device.ServiceConfig{
+		DriverConfig: device.Config{
+			DeviceName:       cardReaderDeviceServiceName,
+			DeviceSearchPath: "/dev/input/event*",
+			VID:              0xffff,
+			PID:              0x0035,
+			SimulateDevice:   true,
+		},
 	}
 }
 
@@ -68,7 +67,7 @@ func TestInitialize(t *testing.T) {
 	var emptyLogger logger.LoggingClient
 	var emptyCardReaderDevice device.CardReader
 
-	driver.Config = getDefaultCardReaderConfig()
+	driver.Config = getDefaultDriverConfig()
 
 	err := driver.Initialize(
 		lc,
@@ -78,7 +77,7 @@ func TestInitialize(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.NotEqual(emptyLogger, driver.LoggingClient)
-	assert.Equal(getDefaultCardReaderConfig(), driver.Config)
+	assert.Equal(getDefaultDriverConfig(), driver.Config)
 	assert.NotEqual(emptyCardReaderDevice, driver.CardReader)
 }
 
@@ -86,7 +85,11 @@ func TestInitialize(t *testing.T) {
 // throwing any errors
 func TestStop(t *testing.T) {
 	driver := CardReaderDriver{
-		Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+		Config: &device.ServiceConfig{
+			DriverConfig: device.Config{
+				DeviceName: cardReaderDeviceServiceName,
+			},
+		},
 	}
 
 	err := driver.Stop(false)
@@ -97,11 +100,15 @@ func TestStop(t *testing.T) {
 // implemented without throwing any errors
 func TestDisconnectDevice(t *testing.T) {
 	driver := CardReaderDriver{
-		Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+		Config: &device.ServiceConfig{
+			DriverConfig: device.Config{
+				DeviceName: cardReaderDeviceServiceName,
+			},
+		},
 	}
 
 	err := driver.DisconnectDevice(
-		driver.Config.DeviceName,
+		driver.Config.DriverConfig.DeviceName,
 		map[string]models.ProtocolProperties{},
 	)
 
@@ -139,7 +146,11 @@ func TestHandleReadCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName: cardReaderDeviceServiceName,
+					},
+				},
 			},
 		},
 		{
@@ -156,7 +167,11 @@ func TestHandleReadCommands(t *testing.T) {
 					LoggingClient:       lc,
 					MockFailStatusCheck: true,
 				},
-				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName: cardReaderDeviceServiceName,
+					},
+				},
 			},
 		},
 		{
@@ -169,7 +184,11 @@ func TestHandleReadCommands(t *testing.T) {
 				CardReader: &device.CardReaderVirtual{
 					LoggingClient: lc,
 				},
-				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName: cardReaderDeviceServiceName,
+					},
+				},
 			},
 		},
 	}
@@ -179,7 +198,7 @@ func TestHandleReadCommands(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 
 			result, err := test.driver.HandleReadCommands(
-				test.driver.Config.DeviceName,
+				test.driver.Config.DriverConfig.DeviceName,
 				map[string]models.ProtocolProperties{},
 				[]dsModels.CommandRequest{
 					{
@@ -235,7 +254,11 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName: cardReaderDeviceServiceName,
+					},
+				},
 			},
 		},
 		{
@@ -250,7 +273,11 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName: cardReaderDeviceServiceName,
+					},
+				},
 			},
 		},
 		{
@@ -265,7 +292,11 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName: cardReaderDeviceServiceName,
+					},
+				},
 			},
 		},
 		{
@@ -280,7 +311,11 @@ func TestHandleWriteCommands(t *testing.T) {
 					AsyncCh:       make(chan *dsModels.AsyncValues, 16),
 					LoggingClient: lc,
 				},
-				Config: &common.CardReaderConfig{DeviceName: cardReaderDeviceServiceName},
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName: cardReaderDeviceServiceName,
+					},
+				},
 			},
 		},
 	}
@@ -291,7 +326,7 @@ func TestHandleWriteCommands(t *testing.T) {
 
 			// run the handle write commands function
 			err = test.driver.HandleWriteCommands(
-				test.driver.Config.DeviceName,
+				test.driver.Config.DriverConfig.DeviceName,
 				protocolProperties,
 				test.inputReqs,
 				test.inputParams,

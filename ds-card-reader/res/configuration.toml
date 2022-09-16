@@ -49,7 +49,7 @@ Type = "consul"
   Host = "localhost"
   Port = 59881
 
-[Driver]
+[DriverConfig]
   DeviceName = 'card-reader'
   DeviceSearchPath = '/dev/input/event*'
   VID = '65535' # 0xFFFF
