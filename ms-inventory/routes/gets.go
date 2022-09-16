@@ -118,7 +118,7 @@ func (c *Controller) AuditLogGetEntry(writer http.ResponseWriter, req *http.Requ
 			utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, outputAuditLogEntryJSON, false)
 			return
 		}
-		c.lc.Infof("valid entry ID in the form of /auditlog/{entry} not set")
+		c.lc.Info("valid entry ID in the form of /auditlog/{entry} not set")
 		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Please enter a valid entry ID in the form of /auditlog/{entry}", false)
 	})
 }
