@@ -21,9 +21,10 @@ const DeleteAllQueryString = "all"
 
 // GetInventoryItems returns a list of InventoryItems by reading the inventory
 // JSON file
-func GetInventoryItems() (inventoryItems Products, err error) {
+func (c *Controller) GetInventoryItems() (inventoryItems Products, err error) {
 	err = utilities.LoadFromJSONFile(InventoryFileName, &inventoryItems)
 	if err != nil {
+		c.lc.Errorf("Failed to load inventory JSON file: %s", err.Error())
 		return inventoryItems, errors.New(
 			"Failed to load inventory JSON file: " + err.Error(),
 		)
@@ -33,9 +34,10 @@ func GetInventoryItems() (inventoryItems Products, err error) {
 
 // GetInventoryItemBySKU returns an inventory item by reading from the
 // inventory JSON file
-func GetInventoryItemBySKU(SKU string) (inventoryItem Product, inventoryItems Products, err error) {
-	inventoryItems, err = GetInventoryItems()
+func (c *Controller) GetInventoryItemBySKU(SKU string) (inventoryItem Product, inventoryItems Products, err error) {
+	inventoryItems, err = c.GetInventoryItems()
 	if err != nil {
+		c.lc.Errorf("Failed to get inventory items: %s", err.Error())
 		return Product{}, Products{}, errors.New(
 			"Failed to get inventory items: " + err.Error(),
 		)
@@ -50,9 +52,10 @@ func GetInventoryItemBySKU(SKU string) (inventoryItem Product, inventoryItems Pr
 
 // GetAuditLog returns a list of audit log entries by reading from the
 // audit log JSON file
-func GetAuditLog() (auditLog AuditLog, err error) {
+func (c *Controller) GetAuditLog() (auditLog AuditLog, err error) {
 	err = utilities.LoadFromJSONFile(AuditLogFileName, &auditLog)
 	if err != nil {
+		c.lc.Errorf("Failed to load audit log JSON file: %s", err.Error())
 		return auditLog, errors.New(
 			"Failed to load audit log JSON file: " + err.Error(),
 		)
@@ -62,9 +65,10 @@ func GetAuditLog() (auditLog AuditLog, err error) {
 
 // GetAuditLogEntryByID returns an audit log entry by reading from the
 // audit log JSON file
-func GetAuditLogEntryByID(auditEntryID string) (auditLogEntry AuditLogEntry, auditLogEntries AuditLog, err error) {
-	auditLogEntries, err = GetAuditLog()
+func (c *Controller) GetAuditLogEntryByID(auditEntryID string) (auditLogEntry AuditLogEntry, auditLogEntries AuditLog, err error) {
+	auditLogEntries, err = c.GetAuditLog()
 	if err != nil {
+		c.lc.Errorf("Failed to get audit log items: %s" + err.Error())
 		return AuditLogEntry{}, AuditLog{}, errors.New(
 			"Failed to get audit log items: " + err.Error(),
 		)
@@ -78,36 +82,42 @@ func GetAuditLogEntryByID(auditEntryID string) (auditLogEntry AuditLogEntry, aud
 }
 
 // DeleteInventory will reset the content of the inventory JSON file
-func DeleteInventory() error {
-	return WriteJSON(InventoryFileName, Products{Data: []Product{}})
+func (c *Controller) DeleteInventory() error {
+	c.lc.Info("Inventory JSON content reset")
+	return c.WriteJSON(InventoryFileName, Products{Data: []Product{}})
 }
 
 // DeleteAuditLog will reset the content of the audit log JSON file
-func DeleteAuditLog() error {
-	return WriteJSON(AuditLogFileName, AuditLog{Data: []AuditLogEntry{}})
+func (c *Controller) DeleteAuditLog() error {
+	c.lc.Info("Audit Log JSON content reset")
+	return c.WriteJSON(AuditLogFileName, AuditLog{Data: []AuditLogEntry{}})
 }
 
 // WriteJSON is a shorthand for writing an interface to JSON
-func WriteJSON(fileName string, content interface{}) error {
+func (c *Controller) WriteJSON(fileName string, content interface{}) error {
+	c.lc.Debugf("Wrote: %s to Inventory JSON: %s", content, fileName)
 	return utilities.WriteToJSONFile(fileName, content, 0644)
 }
 
 // WriteInventory is a shorthand for writing the inventory quickly
-func (inventoryItems *Products) WriteInventory() error {
-	return WriteJSON(InventoryFileName, inventoryItems)
+func (c *Controller) WriteInventory() error {
+	c.lc.Debugf("Wrote: %s to Inventory: %s", c.inventoryItems, InventoryFileName)
+	return c.WriteJSON(InventoryFileName, c.inventoryItems)
 }
 
 // WriteAuditLog is a shorthand for writing the audit log quickly
-func (auditLog *AuditLog) WriteAuditLog() error {
-	return WriteJSON(AuditLogFileName, auditLog)
+func (c *Controller) WriteAuditLog() error {
+	c.lc.Debugf("Wrote: %s to Inventory: %s", c.auditLog, AuditLogFileName)
+	return c.WriteJSON(AuditLogFileName, c.auditLog)
 }
 
 // DeleteInventoryItem deletes an inventory item matching the
 // specified SKU
-func (inventoryItems *Products) DeleteInventoryItem(inventoryItem Product) {
-	for i, item := range inventoryItems.Data {
+func (c *Controller) DeleteInventoryItem(inventoryItem Product) {
+	for i, item := range c.inventoryItems.Data {
 		if item.SKU == inventoryItem.SKU {
-			inventoryItems.Data = append(inventoryItems.Data[:i], inventoryItems.Data[i+1:]...)
+			c.inventoryItems.Data = append(c.inventoryItems.Data[:i], c.inventoryItems.Data[i+1:]...)
+			c.lc.Debugf("Deleted: %s from inventory", inventoryItem.SKU)
 			break
 		}
 	}
@@ -115,10 +125,11 @@ func (inventoryItems *Products) DeleteInventoryItem(inventoryItem Product) {
 
 // DeleteAuditLogEntry deletes an audit log entry item matching the
 // specified EntryID
-func (auditLog *AuditLog) DeleteAuditLogEntry(auditLogEntry AuditLogEntry) {
-	for i, item := range auditLog.Data {
+func (c *Controller) DeleteAuditLogEntry(auditLogEntry AuditLogEntry) {
+	for i, item := range c.auditLog.Data {
 		if item.AuditEntryID == auditLogEntry.AuditEntryID {
-			auditLog.Data = append(auditLog.Data[:i], auditLog.Data[i+1:]...)
+			c.auditLog.Data = append(c.auditLog.Data[:i], c.auditLog.Data[i+1:]...)
+			c.lc.Debugf("Deleted: %s from audit log", auditLogEntry.AuditEntryID)
 			break
 		}
 	}

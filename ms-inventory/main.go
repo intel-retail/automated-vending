@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 const (
@@ -24,35 +23,12 @@ func main() {
 		os.Exit(1)
 	}
 	lc := service.LoggingClient()
-
-	var err error
-	err = service.AddRoute("/inventory", routes.InventoryGet, "GET")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/inventory", routes.InventoryPost, "POST", "OPTIONS")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/inventory/delta", routes.DeltaInventorySKUPost, "POST", "OPTIONS")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/inventory/{sku}", routes.InventoryItemGet, "GET")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/inventory/{sku}", routes.InventoryDelete, "DELETE", "OPTIONS")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/auditlog", routes.AuditLogGetAll, "GET", "OPTIONS")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/auditlog", routes.AuditLogPost, "POST")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/auditlog/{entry}", routes.AuditLogGetEntry, "GET", "OPTIONS")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/auditlog/{entry}", routes.AuditLogDelete, "DELETE")
-	errorAddRouteHandler(lc, err)
-
+	controller := routes.NewController(lc, service)
+	err := controller.AddAllRoutes()
+	if err != nil {
+		lc.Errorf("failed to add all Routes: %s", err.Error())
+		os.Exit(1)
+	}
 	if err := service.MakeItRun(); err != nil {
 		lc.Errorf("MakeItRun returned error: %s", err.Error())
 		os.Exit(1)
@@ -61,11 +37,4 @@ func main() {
 	// Do any required cleanup here
 
 	os.Exit(0)
-}
-
-func errorAddRouteHandler(lc logger.LoggingClient, err error) {
-	if err != nil {
-		lc.Errorf("Error adding route: %s", err.Error())
-		os.Exit(1)
-	}
 }

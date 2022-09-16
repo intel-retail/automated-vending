@@ -10,13 +10,20 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/stretchr/testify/require"
 )
 
 // TestInventoryPost tests the function InventoryPost
 func TestInventoryPost(t *testing.T) {
 	// Product slice
+
 	products := getDefaultProductsList()
+	c := Controller{
+		lc:             logger.NewMockClient(),
+		service:        nil,
+		inventoryItems: products,
+	}
 
 	tests := []struct {
 		Name                string
@@ -38,21 +45,21 @@ func TestInventoryPost(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteInventory()
+			err := c.DeleteInventory()
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
 				err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
-				err := products.WriteInventory()
+				err := c.WriteInventory()
 				require.NoError(t, err)
 			}
 
 			req := httptest.NewRequest("POST", "http://localhost:48096/inventory", bytes.NewBuffer([]byte(currentTest.ProductUpdateString)))
 			w := httptest.NewRecorder()
 			req.Header.Set("Content-Type", "application/json")
-			InventoryPost(w, req)
+			c.InventoryPost(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -60,7 +67,7 @@ func TestInventoryPost(t *testing.T) {
 
 			if !test.BadInventory {
 				// run GetInventoryItems and get the result as JSON
-				productsFromFile, err := GetInventoryItems()
+				productsFromFile, err := c.GetInventoryItems()
 				require.NoError(t, err)
 
 				if currentTest.ProductsMatch {
@@ -78,7 +85,11 @@ func TestInventoryPost(t *testing.T) {
 func TestAuditLogPost(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
-
+	c := Controller{
+		lc:       logger.NewMockClient(),
+		service:  nil,
+		auditLog: audits,
+	}
 	tests := []struct {
 		Name               string
 		BadAuditLog        bool
@@ -95,21 +106,21 @@ func TestAuditLogPost(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteAuditLog()
+			err := c.DeleteAuditLog()
 			require.NoError(t, err)
 
 			if currentTest.BadAuditLog {
 				err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
-				err := audits.WriteAuditLog()
+				err := c.WriteAuditLog()
 				require.NoError(t, err)
 			}
 
 			req := httptest.NewRequest("POST", "http://localhost:48096/auditlog", bytes.NewBuffer([]byte(currentTest.AuditLogUpdate)))
 			w := httptest.NewRecorder()
 			req.Header.Set("Content-Type", "application/json")
-			AuditLogPost(w, req)
+			c.AuditLogPost(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -117,7 +128,7 @@ func TestAuditLogPost(t *testing.T) {
 
 			if !currentTest.BadAuditLog {
 				// run GetAuditLog and get the result as JSON
-				auditsFromFile, err := GetAuditLog()
+				auditsFromFile, err := c.GetAuditLog()
 				require.NoError(t, err)
 
 				if currentTest.AuditsMatch {
@@ -165,6 +176,11 @@ func TestDeltaInventorySKUPost(t *testing.T) {
 			UnitsOnHand:        5,
 			UpdatedAt:          1567787309,
 		}}}
+	c := Controller{
+		lc:             logger.NewMockClient(),
+		service:        nil,
+		inventoryItems: products,
+	}
 
 	tests := []struct {
 		Name               string
@@ -182,21 +198,21 @@ func TestDeltaInventorySKUPost(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteInventory()
+			err := c.DeleteInventory()
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
 				err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
-				err := products.WriteInventory()
+				err := c.WriteInventory()
 				require.NoError(t, err)
 			}
 
 			req := httptest.NewRequest("POST", "http://localhost:48096/inventory/delta", bytes.NewBuffer([]byte(currentTest.DeltaUpdateString)))
 			w := httptest.NewRecorder()
 			req.Header.Set("Content-Type", "application/json")
-			DeltaInventorySKUPost(w, req)
+			c.DeltaInventorySKUPost(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -204,7 +220,7 @@ func TestDeltaInventorySKUPost(t *testing.T) {
 
 			if !currentTest.BadInventory {
 				// run GetInventoryItems and get the result as JSON
-				productsFromFile, err := GetInventoryItems()
+				productsFromFile, err := c.GetInventoryItems()
 				require.NoError(t, err)
 
 				if currentTest.ProductsMatch {
