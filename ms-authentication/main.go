@@ -24,7 +24,7 @@ func main() {
 	}
 	lc := service.LoggingClient()
 
-	controller := routes.NewController(lc, service)
+	controller := routes.NewController(service)
 	err := controller.AddAllRoutes()
 	if err != nil {
 		lc.Errorf("failed to add all Routes: %s", err.Error())

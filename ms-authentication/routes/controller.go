@@ -7,17 +7,14 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 type Controller struct {
-	lc      logger.LoggingClient
 	service interfaces.ApplicationService
 }
 
-func NewController(lc logger.LoggingClient, service interfaces.ApplicationService) Controller {
+func NewController(service interfaces.ApplicationService) Controller {
 	return Controller{
-		lc:      lc,
 		service: service,
 	}
 }
