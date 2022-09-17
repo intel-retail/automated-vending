@@ -14,6 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const(
+	// LedgerFileName is the filename for ledger.json file
+	LedgerFileName = "ledger.json"
+)
+
 func getDefaultAccountLedgers() Accounts {
 	return Accounts{
 		Data: []Account{{

@@ -48,7 +48,7 @@ func (c *Controller) SetPaymentStatus(writer http.ResponseWriter, req *http.Requ
 					if paymentStatus.TransactionID == transaction.TransactionID {
 						accountLedgers.Data[accountIndex].Ledgers[transactionIndex].IsPaid = paymentStatus.IsPaid
 
-						err := utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+						err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 						if err != nil {
 							utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to update ledger", true)
 							return
@@ -137,7 +137,7 @@ func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.
 			return
 		}
 
-		err = utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+		err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to update ledger", true)
 			return

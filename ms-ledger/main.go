@@ -41,7 +41,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	controller := routes.NewController(lc, service, inventoryEndpoint)
+	ledgerFileName, err := service.GetAppSetting("LedgerFileName")
+	if err != nil {
+		lc.Errorf("failed load ApplicationSettings: %s", err.Error())
+		os.Exit(1)
+	}
+
+	if len(ledgerFileName) == 0 {
+		lc.Error("InventoryEndpoint is not set in ApplicationSettings")
+		os.Exit(1)
+	}
+
+	controller := routes.NewController(lc, service, inventoryEndpoint,ledgerFileName)
 	err = controller.AddAllRoutes()
 	if err != nil {
 		lc.Errorf("failed to add all Routes: %s", err.Error())
