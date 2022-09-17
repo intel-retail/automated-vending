@@ -1,9 +1,13 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
 
-import "time"
+import (
+	"time"
+
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+)
 
 // VendingState is a representation of the entire state of vending workflow.
 // The information stored in this is shared across this application service.
@@ -22,6 +26,7 @@ type VendingState struct {
 	InferenceDataReceived          bool       `json:"inferenceDataReceived"` // inference event
 	InferenceWaitThreadStopChannel chan int   `json:"inferenceWaitThreadStopChannel"`
 	Configuration                  *ServiceConfiguration
+	Service                        interfaces.ApplicationService
 }
 
 type ServiceConfiguration struct {

@@ -5,7 +5,9 @@ package functions
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -73,6 +75,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 				{
 					fmt.Println("Inference Started")
 					var skuDelta []deltaSKU
+
 					if err := json.Unmarshal([]byte(eventReading.Value), &skuDelta); err != nil {
 						lc.Errorf("HandleMqttDeviceReading failed to unmarshal skuDelta message for %s: %v", eventReading.Value, err)
 						fmt.Println("Inference Failed")
@@ -101,9 +104,8 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 						}
 
 						lc.Info("Sending SKU delta to ledger service")
-
 						// send SKU delta to ledger service and get back current ledger information
-						resp, err := sendCommand(lc, "POST", vendingState.Configuration.LedgerService, outputBytes)
+						resp, err := sendHttpRequest(lc, http.MethodPost, vendingState.Configuration.LedgerService, outputBytes)
 						if err != nil {
 							lc.Errorf("Ledger service failed: %s", err.Error())
 							return false, err
@@ -120,7 +122,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 						}
 
 						// Display Ledger Total on LCD
-						if displayErr := vendingState.displayLedger(lc, currentLedger); displayErr != nil {
+						if displayErr := vendingState.displayLedger(lc, eventReading.DeviceName, currentLedger); displayErr != nil {
 							return false, displayErr
 						}
 
@@ -133,7 +135,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 					}
 
 					lc.Info("Sending SKU delta to inventory service")
-					inventoryResp, err := sendCommand(lc, "POST", vendingState.Configuration.InventoryService, outputBytes)
+					inventoryResp, err := sendHttpRequest(lc, http.MethodPost, vendingState.Configuration.InventoryService, outputBytes)
 					if err != nil {
 						return false, err
 					}
@@ -154,7 +156,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 					}
 
 					lc.Info("Sending audit log entry to inventory service")
-					auditResp, err := sendCommand(lc, "POST", vendingState.Configuration.InventoryAuditLogService, outputBytes)
+					auditResp, err := sendHttpRequest(lc, http.MethodPost, vendingState.Configuration.InventoryAuditLogService, outputBytes)
 					if err != nil {
 						return false, err
 					}
@@ -203,7 +205,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 
 		// check to see if inference is running and set maintenance mode accordingly
 		if !vendingState.MaintenanceMode {
-			vendingState.MaintenanceMode = !checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeat)
+			vendingState.MaintenanceMode = !vendingState.checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeat, event.DeviceName)
 		}
 
 		for _, eventReading := range event.Readings {
@@ -221,25 +223,28 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					if !vendingState.MaintenanceMode {
 						lc.Infof("%s readable value from %s is %s", eventReading.ResourceName, eventReading.DeviceName, eventReading.Value)
 						// display "hello" on row 2
-						resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"hello\"}"))
+						settings := make(map[string]string)
+						settings["displayRow2"] = "hello"
+						err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow2, settings)
 						if err != nil {
 							return false, err
 						}
-						defer resp.Body.Close()
 
+						settings = make(map[string]string)
+						settings["displayRow3"] = eventReading.Value
 						// display the card number on row 3
-						respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
+						err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow3, settings)
 						if err != nil {
 							return false, err
 						}
-						defer respRow3.Body.Close()
 
+						settings = make(map[string]string)
+						settings["lock1"] = "true"
 						// unlock
-						respLock, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
+						err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoardLock1, settings)
 						if err != nil {
 							return false, err
 						}
-						defer respLock.Body.Close()
 
 						// Start the workflow state and set all of the thread states to false
 						vendingState.CVWorkflowStarted = true
@@ -279,12 +284,13 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 							}
 						}()
 					} else {
+						settings := make(map[string]string)
+						settings["displayRow1"] = "Out of Order"
 						// display out of order when door waiting state is set to false
-						resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\"Out of Order\"}"))
+						err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow1, settings)
 						if err != nil {
 							return false, err
 						}
-						defer resp.Body.Close()
 					}
 
 				}
@@ -297,25 +303,28 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					lc.Infof("%s readable value from %s is %s", eventReading.ResourceName, eventReading.DeviceName, eventReading.Value)
 
 					// display text "Maintenance Mode" in row 2
-					respRow2, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Maintenance Mode\"}"))
+					settings := make(map[string]string)
+					settings["displayRow2"] = "Maintenance Mode"
+					err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow2, settings)
 					if err != nil {
 						return false, err
 					}
-					defer respRow2.Body.Close()
 
 					// display any reading value in row 3
-					respRow3, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow3, []byte("{\"displayRow3\":\""+eventReading.Value+"\"}"))
+					settings = make(map[string]string)
+					settings["displayRow3"] = eventReading.Value
+					err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow3, settings)
 					if err != nil {
 						return false, err
 					}
-					defer respRow3.Body.Close()
 
 					// send lock command
-					respLock, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoardLock1, []byte("{\"lock1\":\"true\"}"))
+					settings = make(map[string]string)
+					settings["lock1"] = "true"
+					err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoardLock1, settings)
 					if err != nil {
 						return false, err
 					}
-					defer respLock.Body.Close()
 
 					vendingState.MaintenanceMode = false
 					vendingState.CVWorkflowStarted = false
@@ -332,8 +341,9 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 				}
 			default:
 				// display "Unauthorized" on display row 2
-				resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow2, []byte("{\"displayRow2\":\"Unauthorized\"}"))
-				defer resp.Body.Close()
+				settings := make(map[string]string)
+				settings["displayRow2"] = "Unauthorized"
+				err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow2, settings)
 				if err != nil {
 					return false, err
 				}
@@ -344,13 +354,12 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 	return true, event // Continues the functions pipeline execution with the current event
 }
 
-func checkInferenceStatus(lc logger.LoggingClient, heartbeatEndPoint string) bool {
-	resp, err := sendCommand(lc, "GET", heartbeatEndPoint, []byte(""))
+func (vendingState *VendingState) checkInferenceStatus(lc logger.LoggingClient, heartbeatEndPoint string, deviceName string) bool {
+	err := vendingState.SendCommand(lc, http.MethodGet, deviceName, heartbeatEndPoint, nil)
 	if err != nil {
 		lc.Errorf("error checking inference status: %v", err)
 		return false
 	}
-	defer resp.Body.Close()
 
 	return true
 }
@@ -360,7 +369,7 @@ func (vendingState *VendingState) getCardAuthInfo(lc logger.LoggingClient, authE
 	// First, reset it, then populate it at the end of the function
 	vendingState.CurrentUserData = OutputData{}
 
-	resp, err := sendCommand(lc, "GET", authEndpoint+"/"+cardID, []byte(""))
+	resp, err := sendHttpRequest(lc, http.MethodGet, authEndpoint+"/"+cardID, []byte(""))
 	if err != nil {
 		lc.Infof("Unauthorized card: %s", cardID)
 		return
@@ -380,48 +389,91 @@ func (vendingState *VendingState) getCardAuthInfo(lc logger.LoggingClient, authE
 	lc.Info("Successfully found user data for card " + cardID)
 }
 
-func (vendingState *VendingState) displayLedger(lc logger.LoggingClient, ledger Ledger) error {
+func (vendingState *VendingState) displayLedger(lc logger.LoggingClient, deviceName string, ledger Ledger) error {
+	settings := make(map[string]string)
+	settings["displayReset"] = ""
 	// reset LCD
-	resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
+	err := vendingState.SendCommand(lc, http.MethodPut, deviceName, vendingState.Configuration.DeviceControllerBoarddisplayReset, settings)
 	if err != nil {
 		return fmt.Errorf("sendCommand returned error for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayReset, err.Error())
 	}
-	defer resp.Body.Close()
 
 	// Loop through lineItems in Ledger and display on LCD
 	for _, lineItem := range ledger.LineItems {
 		// Line Item is item count and product name, and truncated or padded with whitespaces so it is same length as LCD Row
 		displayLineItem := fmt.Sprintf("%-[1]*.[1]*s", vendingState.Configuration.LCDRowLength, strconv.Itoa(lineItem.ItemCount)+" "+lineItem.ProductName)
+		settings := make(map[string]string)
+		settings["displayRow1"] = displayLineItem
 		// push line item to LCD and pause three seconds before displaying next line item
-		resp, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLineItem+"\"}"))
+		err := vendingState.SendCommand(lc, http.MethodPut, deviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow1, settings)
 		if err != nil {
 			return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayRow1, err.Error())
 		}
-		defer resp.Body.Close()
 
 		time.Sleep(3 * time.Second)
 	}
 
 	//reset the LCD
-	respDisplayReset, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayReset, []byte("{\"displayReset\":\"\"}"))
+	settings = make(map[string]string)
+	settings["displayReset"] = ""
+	err = vendingState.SendCommand(lc, http.MethodPut, deviceName, vendingState.Configuration.DeviceControllerBoarddisplayReset, settings)
 	if err != nil {
 		return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayReset, err.Error())
 	}
-	defer respDisplayReset.Body.Close()
 
 	//display ledger.LineTotal from in currency format
 	displayLedgerTotal := "Total: $" + fmt.Sprintf("%3.2f", ledger.LineTotal)
-	respDisplayRow, err := sendCommand(lc, "PUT", vendingState.Configuration.DeviceControllerBoarddisplayRow1, []byte("{\"displayRow1\":\""+displayLedgerTotal+"\"}"))
+	settings = make(map[string]string)
+	settings["displayRow1"] = displayLedgerTotal
+	err = vendingState.SendCommand(lc, http.MethodPut, deviceName, vendingState.Configuration.DeviceControllerBoarddisplayRow1, settings)
 	if err != nil {
 		return fmt.Errorf("sendCommand returned nil for %v : %v", vendingState.Configuration.DeviceControllerBoarddisplayRow1, err.Error())
 	}
-	defer respDisplayRow.Body.Close()
 
 	return nil
 }
 
-// sendCommand will make an http request to an EdgeX command endpoint
-func sendCommand(lc logger.LoggingClient, method string, commandURL string, inputBytes []byte) (*http.Response, error) {
+func (vendingState *VendingState) SendCommand(lc logger.LoggingClient, actionName string, deviceName string,
+	commandName string, settings map[string]string) error {
+	lc.Debug("Sending Command")
+
+	commandClient := vendingState.Service.CommandClient()
+	if commandClient == nil {
+		return errors.New("error command service missing from client's configuration")
+	}
+
+	switch actionName {
+	case http.MethodPut:
+		lc.Infof("executing %s action", actionName)
+		lc.Infof("Sending command '%s' for device '%s'", commandName, deviceName)
+
+		response, err := commandClient.IssueSetCommandByName(context.Background(), deviceName, commandName, settings)
+		//(res dtoCommon.BaseResponse, err errors.EdgeX)
+		if err != nil {
+			return fmt.Errorf("failed to send '%s' set command to '%s' device: %s", commandName, deviceName, err.Error())
+		}
+
+		lc.Infof("response status: %d", response.StatusCode)
+
+	case http.MethodGet:
+		lc.Infof("executing %s action", actionName)
+		lc.Infof("Sending command '%s' for device '%s'", commandName, deviceName)
+		response, err := commandClient.IssueGetCommandByName(context.Background(), deviceName, commandName, "no", "yes")
+		if err != nil {
+			return fmt.Errorf("failed to send '%s' get command to '%s' device: %s", commandName, deviceName, err.Error())
+		}
+		lc.Infof("response status: %d", response.StatusCode)
+
+	default:
+		lc.Errorf("Invalid action requested: %s", actionName)
+		return errors.New("Invalid action requested: " + actionName)
+	}
+
+	return nil
+}
+
+// sendHttpRequest will make an http request to an EdgeX command endpoint
+func sendHttpRequest(lc logger.LoggingClient, method string, commandURL string, inputBytes []byte) (*http.Response, error) {
 
 	lc.Debugf("sending command to edgex endpoint: %v", commandURL)
 
