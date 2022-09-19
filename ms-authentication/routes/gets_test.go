@@ -246,8 +246,8 @@ func TestAuthenticationGet(t *testing.T) {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
 			mockAppService := &mocks.ApplicationService{}
-			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).
-				On("LoggingClient").Return(logger.NewMockClient())
+			mockAppService.On("LoggingClient").Return(logger.NewMockClient())
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			c := NewController(mockAppService)
 
