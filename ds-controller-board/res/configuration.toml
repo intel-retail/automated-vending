@@ -81,6 +81,7 @@ PublishTopicPrefix = "edgex/events/device" # /<device-profile-name>/<device-name
   SkipCertVerify = "false"
 
 [DriverConfig]
+  DeviceName = "controller-board"
   VID = "2341"
   PID = "8037"
   DisplayTimeout = "10s"

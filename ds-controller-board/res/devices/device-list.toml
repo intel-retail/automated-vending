@@ -3,7 +3,7 @@
 
 # Pre-define Devices
 [[DeviceList]]
-  Name = 'ds-controller-board'
+  Name = 'controller-board'
   ProfileName = 'ds-controller-board'
   [DeviceList.Protocols]
     [DeviceList.Protocols.other]

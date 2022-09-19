@@ -16,6 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	deviceName = "controller-board"
+)
+
 func TestVirtualRead(t *testing.T) {
 	// use community-recommended shorthand (known name clash)
 	assert := assert.New(t)
@@ -30,6 +34,7 @@ func TestVirtualRead(t *testing.T) {
 	target := ControllerBoardVirtual{
 		LoggingClient: logger.NewMockClient(),
 		AsyncCh:       asyncChan,
+		DeviceName:    deviceName,
 	}
 
 	// Send a command so there is something to read

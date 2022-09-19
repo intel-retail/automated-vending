@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	deviceName     = "ds-controller-board"
 	deviceResource = "controller-board-status"
 )
 
@@ -29,6 +28,7 @@ type ControllerBoardPhysical struct {
 	LoggingClient logger.LoggingClient
 	DevSerialPort serial.Port
 	TTYPort       string // typically is /dev/ttyACM0
+	DeviceName    string
 }
 
 // Write is used to handle commands being written to the
@@ -101,7 +101,7 @@ func (board *ControllerBoardPhysical) Read() {
 			}
 
 			asyncValues := &dsModels.AsyncValues{
-				DeviceName:    deviceName,
+				DeviceName:    board.DeviceName,
 				CommandValues: []*dsModels.CommandValue{commandvalue},
 			}
 
