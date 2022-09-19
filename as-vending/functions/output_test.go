@@ -14,7 +14,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -127,11 +126,9 @@ func TestCheckInferenceStatus(t *testing.T) {
 			}))
 			defer testServer.Close()
 
-			mockAppService := &mocks.ApplicationService{}
 			mockCommandClient := &client_mocks.CommandClient{}
 			resp := responses.NewEventResponse("", "", tc.statusCode, dtos.Event{})
 			mockCommandClient.On("IssueGetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&resp, tc.GetCommandError)
-			mockAppService.On("CommandClient").Return(mockCommandClient)
 
 			vendingstate := VendingState{
 				CommandClient: mockCommandClient,
@@ -196,14 +193,12 @@ func TestResetDoorLock(t *testing.T) {
 
 func TestDisplayLedger(t *testing.T) {
 
-	mockAppService := &mocks.ApplicationService{}
 	mockCommandClient := &client_mocks.CommandClient{}
 	resp := common.BaseResponse{
 		StatusCode: http.StatusOK,
 	}
 
 	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
-	mockAppService.On("CommandClient").Return(mockCommandClient)
 
 	vendingState := VendingState{
 		Configuration: &ServiceConfiguration{
@@ -270,14 +265,12 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 		},
 	}
 
-	mockAppService := &mocks.ApplicationService{}
 	mockCommandClient := &client_mocks.CommandClient{}
 	resp := common.BaseResponse{
 		StatusCode: http.StatusOK,
 	}
 
 	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
-	mockAppService.On("CommandClient").Return(mockCommandClient)
 
 	for _, tc := range testCases {
 
@@ -355,7 +348,6 @@ func TestVerifyDoorAccess(t *testing.T) {
 	inferenceStopChannel := make(chan int)
 	stopChannel := make(chan int)
 
-	mockAppService := &mocks.ApplicationService{}
 	mockCommandClient := &client_mocks.CommandClient{}
 	eventResp := responses.NewEventResponse("", "", http.StatusOK, dtos.Event{})
 	resp := common.BaseResponse{
@@ -364,7 +356,6 @@ func TestVerifyDoorAccess(t *testing.T) {
 
 	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
 	mockCommandClient.On("IssueGetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&eventResp, nil)
-	mockAppService.On("CommandClient").Return(mockCommandClient)
 
 	event := dtos.Event{
 		DeviceName: "ds-card-reader",
