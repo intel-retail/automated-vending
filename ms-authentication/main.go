@@ -4,9 +4,8 @@
 package main
 
 import (
-	"os"
-
 	"ms-authentication/routes"
+	"os"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
 )
@@ -25,11 +24,12 @@ func main() {
 	}
 	lc := service.LoggingClient()
 
-	if err := service.AddRoute("/authentication/{cardid}", routes.AuthenticationGet, "GET"); err != nil {
-		lc.Errorf("Unable to add /authentication/{cardid} GET route: %s", err.Error())
+	controller := routes.NewController(service)
+	err := controller.AddAllRoutes()
+	if err != nil {
+		lc.Errorf("failed to add all Routes: %s", err.Error())
 		os.Exit(1)
 	}
-
 	if err := service.MakeItRun(); err != nil {
 		lc.Errorf("MakeItRun returned error: %s", err.Error())
 		os.Exit(1)
