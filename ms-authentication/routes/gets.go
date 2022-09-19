@@ -105,10 +105,6 @@ func (c *Controller) AuthenticationGet(writer http.ResponseWriter, req *http.Req
 		// (I did some searching and that is my conclusion, I'm not stating this
 		// as fact)
 
-		// if err != nil {
-		// 	utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to return authentication data properly", true)
-		// 	return
-		// }
 		c.service.LoggingClient().Infof("Successfully authenticated person and card")
 		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, authDataJSON, false)
 	})
