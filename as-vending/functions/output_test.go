@@ -6,6 +6,7 @@ package functions
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,11 +14,16 @@ import (
 	"os"
 	"testing"
 
+	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+	edgexError "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -98,12 +104,13 @@ func TestGetMaintenanceMode(t *testing.T) {
 
 func TestCheckInferenceStatus(t *testing.T) {
 	testCases := []struct {
-		TestCaseName string
-		statusCode   int
-		Expected     bool
+		TestCaseName    string
+		statusCode      int
+		Expected        bool
+		GetCommandError edgexError.EdgeX
 	}{
-		{"Successful case", http.StatusOK, true},
-		{"Negative case", http.StatusInternalServerError, false},
+		{"Successful case", http.StatusOK, true, nil},
+		{"Negative case", http.StatusInternalServerError, false, edgexError.NewCommonEdgeXWrapper(errors.New("failed"))},
 	}
 
 	for _, tc := range testCases {
@@ -118,7 +125,16 @@ func TestCheckInferenceStatus(t *testing.T) {
 				}
 			}))
 			defer testServer.Close()
-			assert.Equal(t, tc.Expected, checkInferenceStatus(logger.NewMockClient(), testServer.URL), "Expected value to match output")
+
+			mockCommandClient := &client_mocks.CommandClient{}
+			resp := responses.NewEventResponse("", "", tc.statusCode, dtos.Event{})
+			mockCommandClient.On("IssueGetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&resp, tc.GetCommandError)
+
+			vendingstate := VendingState{
+				CommandClient: mockCommandClient,
+			}
+
+			assert.Equal(t, tc.Expected, vendingstate.checkInferenceStatus(logger.NewMockClient(), testServer.URL, "test-device"), "Expected value to match output")
 		})
 	}
 
@@ -176,27 +192,27 @@ func TestResetDoorLock(t *testing.T) {
 }
 
 func TestDisplayLedger(t *testing.T) {
-	// Http test servers
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte{})
-		if err != nil {
-			t.Fatal(err.Error())
-		}
-	}))
+
+	mockCommandClient := &client_mocks.CommandClient{}
+	resp := common.BaseResponse{
+		StatusCode: http.StatusOK,
+	}
+
+	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
 
 	vendingState := VendingState{
 		Configuration: &ServiceConfiguration{
-			LCDRowLength:                      20,
-			DeviceControllerBoarddisplayReset: testServer.URL,
-			DeviceControllerBoarddisplayRow1:  testServer.URL,
+			LCDRowLength:                   20,
+			ControllerBoardDisplayResetCmd: "displayReset",
+			ControllerBoardDisplayRow1Cmd:  "diplayrow1",
 		},
+		CommandClient: mockCommandClient,
 	}
 
 	ledger := Ledger{
 		LineItems: []LineItem{{ProductName: "itemX", ItemCount: 2, ItemPrice: 1.50, SKU: "1234"}},
 	}
-	err := vendingState.displayLedger(logger.NewMockClient(), ledger)
+	err := vendingState.displayLedger(logger.NewMockClient(), "test-device", ledger)
 	assert.NoError(t, err)
 }
 
@@ -249,6 +265,13 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 		},
 	}
 
+	mockCommandClient := &client_mocks.CommandClient{}
+	resp := common.BaseResponse{
+		StatusCode: http.StatusOK,
+	}
+
+	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
+
 	for _, tc := range testCases {
 
 		t.Run(tc.TestCaseName, func(t *testing.T) {
@@ -289,12 +312,13 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 				ThreadStopChannel:              stopChannel,
 				CurrentUserData:                OutputData{RoleID: 1},
 				Configuration: &ServiceConfiguration{
-					InventoryService:                  testServer.URL,
-					InventoryAuditLogService:          testServer.URL,
-					DeviceControllerBoarddisplayReset: testServer.URL,
-					DeviceControllerBoarddisplayRow1:  testServer.URL,
-					LedgerService:                     testServer.URL,
+					InventoryService:               testServer.URL,
+					InventoryAuditLogService:       testServer.URL,
+					ControllerBoardDisplayResetCmd: "displayreset",
+					ControllerBoardDisplayRow1Cmd:  "displayrow1",
+					LedgerService:                  testServer.URL,
 				},
+				CommandClient: mockCommandClient,
 			}
 
 			_, err := vendingState.HandleMqttDeviceReading(logger.NewMockClient(), event)
@@ -324,6 +348,15 @@ func TestVerifyDoorAccess(t *testing.T) {
 	inferenceStopChannel := make(chan int)
 	stopChannel := make(chan int)
 
+	mockCommandClient := &client_mocks.CommandClient{}
+	eventResp := responses.NewEventResponse("", "", http.StatusOK, dtos.Event{})
+	resp := common.BaseResponse{
+		StatusCode: http.StatusOK,
+	}
+
+	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
+	mockCommandClient.On("IssueGetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&eventResp, nil)
+
 	event := dtos.Event{
 		DeviceName: "ds-card-reader",
 		Readings: []dtos.BaseReading{
@@ -335,13 +368,6 @@ func TestVerifyDoorAccess(t *testing.T) {
 			},
 		},
 	}
-
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write(nil)
-		assert.NoError(t, err)
-	}))
 
 	for _, tc := range testCases {
 
@@ -362,13 +388,14 @@ func TestVerifyDoorAccess(t *testing.T) {
 				CVWorkflowStarted:              false,
 				MaintenanceMode:                tc.MaintenanceMode,
 				Configuration: &ServiceConfiguration{
-					InferenceHeartbeat:               testServer.URL,
-					DeviceControllerBoarddisplayRow1: testServer.URL,
-					DeviceControllerBoarddisplayRow2: testServer.URL,
-					DeviceControllerBoarddisplayRow3: testServer.URL,
-					DeviceControllerBoardLock1:       testServer.URL,
-					AuthenticationEndpoint:           authServer.URL,
+					InferenceHeartbeatCmd:         "inferenceHeartbeat",
+					ControllerBoardDisplayRow1Cmd: "displayrow1",
+					ControllerBoardDisplayRow2Cmd: "displayrow2",
+					ControllerBoardDisplayRow3Cmd: "displayrow3",
+					ControllerBoardLock1Cmd:       "lock1",
+					AuthenticationEndpoint:        authServer.URL,
 				},
+				CommandClient: mockCommandClient,
 			}
 
 			_, err := vendingState.VerifyDoorAccess(logger.NewMockClient(), event)

@@ -35,6 +35,11 @@ func main() {
 
 	var vendingState functions.VendingState
 	vendingState.Configuration = new(functions.ServiceConfiguration)
+	vendingState.CommandClient = service.CommandClient()
+	if vendingState.CommandClient == nil {
+		lc.Error("Error command service missing from client's configuration")
+		os.Exit(1)
+	}
 
 	// retrieve & parse the required application settings into a proper
 	// configuration struct

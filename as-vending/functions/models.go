@@ -1,9 +1,13 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
 
-import "time"
+import (
+	"time"
+
+	clientInterfaces "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
+)
 
 // VendingState is a representation of the entire state of vending workflow.
 // The information stored in this is shared across this application service.
@@ -22,27 +26,28 @@ type VendingState struct {
 	InferenceDataReceived          bool       `json:"inferenceDataReceived"` // inference event
 	InferenceWaitThreadStopChannel chan int   `json:"inferenceWaitThreadStopChannel"`
 	Configuration                  *ServiceConfiguration
+	CommandClient                  clientInterfaces.CommandClient
 }
 
 type ServiceConfiguration struct {
-	AuthenticationEndpoint            string
-	DeviceControllerBoarddisplayReset string
-	DeviceControllerBoarddisplayRow0  string
-	DeviceControllerBoarddisplayRow1  string
-	DeviceControllerBoarddisplayRow2  string
-	DeviceControllerBoarddisplayRow3  string
-	DeviceControllerBoardLock1        string
-	DeviceControllerBoardLock2        string
-	DeviceNames                       []string
-	DoorCloseStateTimeout             time.Duration
-	DoorOpenStateTimeout              time.Duration
-	InferenceDoorStatus               string
-	InferenceHeartbeat                string
-	InferenceTimeout                  time.Duration
-	InventoryAuditLogService          string
-	InventoryService                  string
-	LCDRowLength                      int
-	LedgerService                     string
+	AuthenticationEndpoint         string
+	ControllerBoardDisplayResetCmd string
+	ControllerBoardDisplayRow0Cmd  string
+	ControllerBoardDisplayRow1Cmd  string
+	ControllerBoardDisplayRow2Cmd  string
+	ControllerBoardDisplayRow3Cmd  string
+	ControllerBoardLock1Cmd        string
+	ControllerBoardLock2Cmd        string
+	DeviceNames                    []string
+	DoorCloseStateTimeout          time.Duration
+	DoorOpenStateTimeout           time.Duration
+	InferenceDoorStatusCmd         string
+	InferenceHeartbeatCmd          string
+	InferenceTimeout               time.Duration
+	InventoryAuditLogService       string
+	InventoryService               string
+	LCDRowLength                   int
+	LedgerService                  string
 }
 
 // MaintenanceMode is a simple structure used to return the state of
