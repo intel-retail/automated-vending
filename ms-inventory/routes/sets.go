@@ -173,11 +173,11 @@ func (c *Controller) InventoryPost(writer http.ResponseWriter, req *http.Request
 						}
 						// Item is under minimum stock level. Send notification
 						if inventoryItems.Data[i].UnitsOnHand <= inventoryItems.Data[i].MinRestockingLevel {
-							c.lc.Infof("Product %s needs to be restocked\n", postedInventoryItem["sku"])
+							c.lc.Infof("Product %s needs to be restocked", postedInventoryItem["sku"])
 						}
 						// Item is under maximum stock level. Send notification
 						if inventoryItems.Data[i].UnitsOnHand > inventoryItems.Data[i].MaxRestockingLevel {
-							c.lc.Infof("Product %s is overstocked\n", postedInventoryItem["sku"])
+							c.lc.Infof("Product %s is overstocked", postedInventoryItem["sku"])
 						}
 					}
 					inventoryItems.Data[i].UpdatedAt = time.Now().UnixNano()
