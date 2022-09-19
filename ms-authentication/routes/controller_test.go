@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -34,10 +35,10 @@ func TestController_AddAllRoutes(t *testing.T) {
 			mockAppService := &mocks.ApplicationService{}
 			if !tt.failAddRoute {
 				mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(nil)
+					Return(nil).On("LoggingClient").Return(logger.NewMockClient())
 			} else {
 				mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(fmt.Errorf("fail"))
+					Return(fmt.Errorf("fail")).On("LoggingClient").Return(logger.NewMockClient())
 			}
 
 			c := NewController(mockAppService)

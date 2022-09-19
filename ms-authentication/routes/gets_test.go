@@ -247,11 +247,9 @@ func TestAuthenticationGet(t *testing.T) {
 		t.Run(currentTest.Name, func(t *testing.T) {
 			mockAppService := &mocks.ApplicationService{}
 			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).On("LoggingClient").
-				Return(logger.NewMockClient())
+				Return(logger.NewMockClient()).On("LoggingClient").Return(logger.NewMockClient())
 
-			c := Controller{
-				service: mockAppService,
-			}
+			c := NewController(mockAppService)
 			if currentTest.WriteFiles {
 				err := writeJSONFiles(people, accounts, cards)
 				require.NoError(err, "Failed to write to test file")
