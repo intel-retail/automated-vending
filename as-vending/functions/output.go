@@ -445,7 +445,6 @@ func (vendingState *VendingState) SendCommand(lc logger.LoggingClient, actionNam
 		lc.Infof("Issuing SET command '%s' for device '%s'", commandName, deviceName)
 
 		response, err := vendingState.CommandClient.IssueSetCommandByName(context.Background(), deviceName, commandName, settings)
-		//(res dtoCommon.BaseResponse, err errors.EdgeX)
 		if err != nil {
 			return fmt.Errorf("failed to issue '%s' set command to '%s' device: %s", commandName, deviceName, err.Error())
 		}
