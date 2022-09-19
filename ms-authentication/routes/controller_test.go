@@ -40,9 +40,7 @@ func TestController_AddAllRoutes(t *testing.T) {
 					Return(fmt.Errorf("fail"))
 			}
 
-			c := &Controller{
-				service: mockAppService,
-			}
+			c := NewController(mockAppService)
 
 			err := c.AddAllRoutes()
 
