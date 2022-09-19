@@ -11,11 +11,11 @@ import (
 	"ds-controller-board/device"
 
 	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	service "github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
+	"github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -37,7 +37,12 @@ type ControllerBoardDriver struct {
 	lc              logger.LoggingClient
 	StopChannel     chan int
 	controllerBoard device.ControllerBoard
-	config          *device.Config
+	config          *device.ServiceConfig
+
+	displayTimeout time.Duration
+	lockTimeout    time.Duration
+
+	svc *service.DeviceService
 }
 
 // NewControllerBoardDeviceDriver allows EdgeX to initialize the
@@ -52,15 +57,26 @@ func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh ch
 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.config == nil {
-		drv.config = new(device.Config)
-		if err = utilities.MarshalSettings(service.DriverConfigs(), drv.config, true); err != nil {
+		drv.svc = service.RunningService()
+
+		drv.config = &device.ServiceConfig{}
+
+		err := drv.svc.LoadCustomConfig(drv.config, "DriverConfig")
+		if err != nil {
+			return errors.Wrap(err, "custom driver configuration failed to load")
+		}
+		drv.displayTimeout, drv.lockTimeout, err = drv.config.Validate()
+		if err != nil {
 			return err
 		}
+
+		drv.lc.Debugf("Custom driver config is : %+v", drv.config)
+
 	}
 
 	drv.StopChannel = make(chan int)
 
-	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, drv.config)
+	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, &drv.config.DriverConfig)
 	if err != nil {
 		return err
 	}
@@ -107,7 +123,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				return err
 			}
 			go func() {
-				time.Sleep(drv.config.LockTimeout)
+				time.Sleep(drv.displayTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock1)
 			}()
 		case false:
@@ -126,7 +142,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				return err
 			}
 			go func() {
-				time.Sleep(drv.config.LockTimeout)
+				time.Sleep(drv.lockTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock2)
 			}()
 		case false:
@@ -219,7 +235,7 @@ func (drv *ControllerBoardDriver) displayText(message string) {
 	go func() {
 		for {
 			select {
-			case <-time.After(drv.config.DisplayTimeout):
+			case <-time.After(drv.displayTimeout):
 				drv.displayReset()
 				return
 			case <-drv.StopChannel:
