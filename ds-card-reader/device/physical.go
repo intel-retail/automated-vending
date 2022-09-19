@@ -61,7 +61,7 @@ func (reader *CardReaderPhysical) Listen() {
 				continue
 			}
 
-			reader.LoggingClient.Info(fmt.Sprintf("successfully re-grabbed device"))
+			reader.LoggingClient.Info("successfully re-grabbed device")
 			reader.StableDevice = true
 		}
 	}
@@ -74,7 +74,7 @@ func (reader *CardReaderPhysical) Status() error {
 	// function should actually fail, hence why err == nil is checked
 	_, err := GrabCardReader(reader.DeviceSearchPath, reader.VID, reader.PID)
 	if err == nil {
-		errMsg := fmt.Sprintf("failure: physical card reader is not locked")
+		errMsg := "failure: physical card reader is not locked"
 		reader.LoggingClient.Error(errMsg)
 		return fmt.Errorf(errMsg)
 	}

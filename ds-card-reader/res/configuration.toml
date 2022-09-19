@@ -49,12 +49,12 @@ Type = "consul"
   Host = "localhost"
   Port = 59881
 
-[Driver]
-  DeviceName = 'card-reader'
-  DeviceSearchPath = '/dev/input/event*'
-  VID = '65535' # 0xFFFF
-  PID = '53'    # 0x0035
-  SimulateDevice = 'true'
+[DriverConfig]
+  DeviceName = "card-reader"
+  DeviceSearchPath = "/dev/input/event*"
+  VID = 65535 # 0xFFFF
+  PID = 53    # 0x0035
+  SimulateDevice = true
 
 [Device]
 DataTransform = true

@@ -13,7 +13,6 @@ import (
 	"github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 // CardReaderDriver represents the EdgeX driver that interfaces with the
@@ -21,7 +20,9 @@ import (
 type CardReaderDriver struct {
 	LoggingClient logger.LoggingClient
 	CardReader    device.CardReader
-	Config        *common.CardReaderConfig
+	Config        *device.ServiceConfig
+
+	svc *service.DeviceService
 }
 
 // Initialize initializes the card reader device within EdgeX. This is the
@@ -32,12 +33,16 @@ func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- 
 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.Config == nil {
-		drv.Config = new(common.CardReaderConfig)
-		// parse the device's configuration into a proper struct
-		err := utilities.MarshalSettings(service.DriverConfigs(), drv.Config, false)
+		drv.svc = service.RunningService()
+
+		drv.Config = &device.ServiceConfig{}
+
+		err := drv.svc.LoadCustomConfig(drv.Config, "DriverConfig")
 		if err != nil {
-			return fmt.Errorf("failed to process card reader settings, check configuration.toml: %w", err)
+			return fmt.Errorf("custom card reader configuration failed to load: %v", err)
 		}
+
+		drv.LoggingClient.Debugf("Custom card reader config is : %+v", drv.Config)
 	}
 
 	// initialize the card reader device so that it can be controlled by our
@@ -45,11 +50,11 @@ func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- 
 	drv.CardReader, err = device.InitializeCardReader(
 		lc,
 		asyncCh,
-		drv.Config.DeviceSearchPath,
-		drv.Config.DeviceName,
-		drv.Config.VID,
-		drv.Config.PID,
-		drv.Config.SimulateDevice,
+		drv.Config.DriverConfig.DeviceSearchPath,
+		drv.Config.DriverConfig.DeviceName,
+		drv.Config.DriverConfig.VID,
+		drv.Config.DriverConfig.PID,
+		drv.Config.DriverConfig.SimulateDevice,
 		false,
 	)
 	if err != nil {

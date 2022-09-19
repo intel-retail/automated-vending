@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	virtualCardReaderDeviceServiceName = "ds-card-reader"
 	virtualDeviceSearchPath            = ""
 	virtualDeviceName                  = "ds-card-reader"
 	virtualVID                         = uint16(0x0000)
