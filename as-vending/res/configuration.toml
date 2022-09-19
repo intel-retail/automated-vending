@@ -44,20 +44,33 @@ Type="edgex-messagebus"
     ConnectTimeout = "5" # Seconds
     SkipCertVerify = "false"
 
+[Clients]
+  # Used for version check on start-up
+  # Also used for DeviceService, DeviceProfile and Device clients
+  [Clients.core-metadata]
+  Protocol = "http"
+  Host = "localhost"
+  Port = 59881
+
+  [Clients.core-command]
+  Protocol = "http"
+  Host = "localhost"
+  Port = 59882
+
 [ApplicationSettings]
   AuthenticationEndpoint = "http://localhost:48096/authentication"
-  DeviceControllerBoarddisplayReset = "displayReset"
-  DeviceControllerBoarddisplayRow0 = "displayRow0"
-  DeviceControllerBoarddisplayRow1 = "displayRow1"
-  DeviceControllerBoarddisplayRow2 = "displayRow2"
-  DeviceControllerBoarddisplayRow3 = "displayRow3"
-  DeviceControllerBoardLock1 = "lock1"
-  DeviceControllerBoardLock2 = "lock2"
+  ControllerBoardDisplayResetCmd = "displayReset"
+  ControllerBoardDisplayRow0Cmd = "displayRow0"
+  ControllerBoardDisplayRow1Cmd = "displayRow1"
+  ControllerBoardDisplayRow2Cmd = "displayRow2"
+  ControllerBoardDisplayRow3Cmd = "displayRow3"
+  ControllerBoardLock1Cmd = "lock1"
+  ControllerBoardLock2Cmd = "lock2"
   DeviceNames   = "ds-card-reader,Inference-MQTT-device"
   DoorCloseStateTimeout = "20s"
   DoorOpenStateTimeout = "15s"
-  InferenceDoorStatus = "inferenceDoorStatus"
-  InferenceHeartbeat = "inferenceHeartbeat"
+  InferenceDoorStatusCmd = "inferenceDoorStatus"
+  InferenceHeartbeatCmd = "inferenceHeartbeat"
   InferenceTimeout = "20s"
   InventoryAuditLogService = "http://localhost:48095/auditlog"
   InventoryService = "http://localhost:48095/inventory/delta"

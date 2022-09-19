@@ -134,7 +134,7 @@ func TestCheckInferenceStatus(t *testing.T) {
 			mockAppService.On("CommandClient").Return(mockCommandClient)
 
 			vendingstate := VendingState{
-				Service: mockAppService,
+				CommandClient: mockCommandClient,
 			}
 
 			assert.Equal(t, tc.Expected, vendingstate.checkInferenceStatus(logger.NewMockClient(), testServer.URL, "test-device"), "Expected value to match output")
@@ -205,22 +205,13 @@ func TestDisplayLedger(t *testing.T) {
 	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
 	mockAppService.On("CommandClient").Return(mockCommandClient)
 
-	// Http test servers
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte{})
-		if err != nil {
-			t.Fatal(err.Error())
-		}
-	}))
-
 	vendingState := VendingState{
 		Configuration: &ServiceConfiguration{
-			LCDRowLength:                      20,
-			DeviceControllerBoarddisplayReset: testServer.URL,
-			DeviceControllerBoarddisplayRow1:  testServer.URL,
+			LCDRowLength:                   20,
+			ControllerBoardDisplayResetCmd: "displayReset",
+			ControllerBoardDisplayRow1Cmd:  "diplayrow1",
 		},
-		Service: mockAppService,
+		CommandClient: mockCommandClient,
 	}
 
 	ledger := Ledger{
@@ -328,13 +319,13 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 				ThreadStopChannel:              stopChannel,
 				CurrentUserData:                OutputData{RoleID: 1},
 				Configuration: &ServiceConfiguration{
-					InventoryService:                  testServer.URL,
-					InventoryAuditLogService:          testServer.URL,
-					DeviceControllerBoarddisplayReset: testServer.URL,
-					DeviceControllerBoarddisplayRow1:  testServer.URL,
-					LedgerService:                     testServer.URL,
+					InventoryService:               testServer.URL,
+					InventoryAuditLogService:       testServer.URL,
+					ControllerBoardDisplayResetCmd: "displayreset",
+					ControllerBoardDisplayRow1Cmd:  "displayrow1",
+					LedgerService:                  testServer.URL,
 				},
-				Service: mockAppService,
+				CommandClient: mockCommandClient,
 			}
 
 			_, err := vendingState.HandleMqttDeviceReading(logger.NewMockClient(), event)
@@ -387,13 +378,6 @@ func TestVerifyDoorAccess(t *testing.T) {
 		},
 	}
 
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write(nil)
-		assert.NoError(t, err)
-	}))
-
 	for _, tc := range testCases {
 
 		t.Run(tc.TestCaseName, func(t *testing.T) {
@@ -413,14 +397,14 @@ func TestVerifyDoorAccess(t *testing.T) {
 				CVWorkflowStarted:              false,
 				MaintenanceMode:                tc.MaintenanceMode,
 				Configuration: &ServiceConfiguration{
-					InferenceHeartbeat:               testServer.URL,
-					DeviceControllerBoarddisplayRow1: testServer.URL,
-					DeviceControllerBoarddisplayRow2: testServer.URL,
-					DeviceControllerBoarddisplayRow3: testServer.URL,
-					DeviceControllerBoardLock1:       testServer.URL,
-					AuthenticationEndpoint:           authServer.URL,
+					InferenceHeartbeatCmd:         "inferenceHeartbeat",
+					ControllerBoardDisplayRow1Cmd: "displayrow1",
+					ControllerBoardDisplayRow2Cmd: "displayrow2",
+					ControllerBoardDisplayRow3Cmd: "displayrow3",
+					ControllerBoardLock1Cmd:       "lock1",
+					AuthenticationEndpoint:        authServer.URL,
 				},
-				Service: mockAppService,
+				CommandClient: mockCommandClient,
 			}
 
 			_, err := vendingState.VerifyDoorAccess(logger.NewMockClient(), event)
