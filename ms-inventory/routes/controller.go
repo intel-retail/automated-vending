@@ -33,12 +33,12 @@ func (c *Controller) AddAllRoutes() error {
 		return errWithMsg
 	}
 
-	err = c.service.AddRoute("/inventory", c.InventoryPost, "POST", http.MethodOptions)
+	err = c.service.AddRoute("/inventory", c.InventoryPost, http.MethodPost)
 	if errWithMsg := c.errorAddRouteHandler(err); errWithMsg != nil {
 		return errWithMsg
 	}
 
-	err = c.service.AddRoute("/inventory/delta", c.DeltaInventorySKUPost, "POST", http.MethodOptions)
+	err = c.service.AddRoute("/inventory/delta", c.DeltaInventorySKUPost, http.MethodPost)
 	if errWithMsg := c.errorAddRouteHandler(err); errWithMsg != nil {
 		return errWithMsg
 	}
@@ -48,12 +48,12 @@ func (c *Controller) AddAllRoutes() error {
 		return errWithMsg
 	}
 
-	err = c.service.AddRoute("/inventory/{sku}", c.InventoryDelete, "DELETE", http.MethodOptions)
+	err = c.service.AddRoute("/inventory/{sku}", c.InventoryDelete, http.MethodDelete)
 	if errWithMsg := c.errorAddRouteHandler(err); errWithMsg != nil {
 		return errWithMsg
 	}
 
-	err = c.service.AddRoute("/auditlog", c.AuditLogGetAll, "GET", http.MethodOptions)
+	err = c.service.AddRoute("/auditlog", c.AuditLogGetAll, http.MethodGet)
 	if errWithMsg := c.errorAddRouteHandler(err); errWithMsg != nil {
 		return errWithMsg
 	}
@@ -63,7 +63,7 @@ func (c *Controller) AddAllRoutes() error {
 		return errWithMsg
 	}
 
-	err = c.service.AddRoute("/auditlog/{entry}", c.AuditLogGetEntry, "GET", http.MethodOptions)
+	err = c.service.AddRoute("/auditlog/{entry}", c.AuditLogGetEntry, http.MethodGet)
 	if errWithMsg := c.errorAddRouteHandler(err); errWithMsg != nil {
 		return errWithMsg
 	}

@@ -83,13 +83,13 @@ func (c *Controller) GetAuditLogEntryByID(auditEntryID string) (auditLogEntry Au
 
 // DeleteInventory will reset the content of the inventory JSON file
 func (c *Controller) DeleteInventory() error {
-	c.lc.Info("Inventory JSON content reset")
+	c.lc.Debug("Inventory JSON content reset")
 	return c.WriteJSON(InventoryFileName, Products{Data: []Product{}})
 }
 
 // DeleteAuditLog will reset the content of the audit log JSON file
 func (c *Controller) DeleteAuditLog() error {
-	c.lc.Info("Audit Log JSON content reset")
+	c.lc.Debug("Audit Log JSON content reset")
 	return c.WriteJSON(AuditLogFileName, AuditLog{Data: []AuditLogEntry{}})
 }
 
