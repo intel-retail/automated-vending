@@ -34,11 +34,11 @@ func TestController_AddAllRoutes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAppService := &mocks.ApplicationService{}
 			if !tt.failAddRoute {
-				mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(nil).On("LoggingClient").Return(logger.NewMockClient())
+				mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).
+					On("LoggingClient").Return(logger.NewMockClient())
 			} else {
-				mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(fmt.Errorf("fail")).On("LoggingClient").Return(logger.NewMockClient())
+				mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(fmt.Errorf("fail")).
+					On("LoggingClient").Return(logger.NewMockClient())
 			}
 
 			c := NewController(mockAppService)
