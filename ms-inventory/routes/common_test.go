@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/stretchr/testify/require"
 )
 
 func getDefaultProductsList() Products {
@@ -52,7 +52,12 @@ func getDefaultProductsList() Products {
 func TestWriteInventory(t *testing.T) {
 	// Product slice
 	products := getDefaultProductsList()
-	err := products.WriteInventory()
+	c := Controller{
+		lc:             logger.NewMockClient(),
+		service:        nil,
+		inventoryItems: products,
+	}
+	err := c.WriteInventory()
 	require.NoError(t, err)
 
 	// load product from file to validate
@@ -69,11 +74,16 @@ func TestWriteInventory(t *testing.T) {
 func TestGetInventoryItems(t *testing.T) {
 	// Product slice
 	products := getDefaultProductsList()
-	err := products.WriteInventory()
+	c := Controller{
+		lc:             logger.NewMockClient(),
+		service:        nil,
+		inventoryItems: products,
+	}
+	err := c.WriteInventory()
 	require.NoError(t, err)
 
 	// run GetInventoryItems and get the result as JSON
-	productsFromFile, err := GetInventoryItems()
+	productsFromFile, err := c.GetInventoryItems()
 	require.NoError(t, err)
 
 	// Check to make sure items do not match
@@ -85,6 +95,11 @@ func TestGetInventoryItems(t *testing.T) {
 func TestGetInventoryItemBySKU(t *testing.T) {
 	// Product slice
 	products := getDefaultProductsList()
+	c := Controller{
+		lc:             logger.NewMockClient(),
+		service:        nil,
+		inventoryItems: products,
+	}
 	// variables
 	missingSKUToReturn := "0000000000"
 
@@ -100,14 +115,14 @@ func TestGetInventoryItemBySKU(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteInventory()
+			err := c.DeleteInventory()
 			require.NoError(t, err)
 
-			err = products.WriteInventory()
+			err = c.WriteInventory()
 			require.NoError(t, err)
 
 			// run GetInventoryItems and get the result as JSON
-			productBySKU, productsFromFile, err := GetInventoryItemBySKU(currentTest.InventorySKU)
+			productBySKU, productsFromFile, err := c.GetInventoryItemBySKU(currentTest.InventorySKU)
 			require.NoError(t, err)
 
 			for _, product := range productsFromFile.Data {
@@ -128,11 +143,16 @@ func TestGetInventoryItemBySKU(t *testing.T) {
 func TestDeleteInventoryItem(t *testing.T) {
 	// Product slice
 	products := getDefaultProductsList()
-	err := products.WriteInventory()
+	c := Controller{
+		lc:             logger.NewMockClient(),
+		service:        nil,
+		inventoryItems: products,
+	}
+	err := c.WriteInventory()
 	require.NoError(t, err)
 
 	deletedProductID := products.Data[0].SKU
-	products.DeleteInventoryItem(products.Data[0])
+	c.DeleteInventoryItem(products.Data[0])
 
 	for _, product := range products.Data {
 		if product.SKU == deletedProductID {
@@ -146,28 +166,33 @@ func TestDeleteInventoryItem(t *testing.T) {
 func TestGetInventoryItemErrors(t *testing.T) {
 	// Product slice
 	products := getDefaultProductsList()
-	err := products.WriteInventory()
+	c := Controller{
+		lc:             logger.NewMockClient(),
+		service:        nil,
+		inventoryItems: products,
+	}
+	err := c.WriteInventory()
 	require.NoError(t, err)
 
 	t.Run("Test GetInventoryItems Error", func(t *testing.T) {
 		err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
-		_, err = GetInventoryItems()
+		_, err = c.GetInventoryItems()
 		require.NotNil(t, err, "Expected inventory get to fail")
 	})
 	t.Run("Test GetInventoryItemBySKU Error", func(t *testing.T) {
 		err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
-		_, _, err = GetInventoryItemBySKU(products.Data[0].SKU)
+		_, _, err = c.GetInventoryItemBySKU(products.Data[0].SKU)
 		require.NotNil(t, err, "Expected inventory get to fail")
 	})
 	t.Run("Test DeleteInventory", func(t *testing.T) {
-		err := DeleteInventory()
+		err := c.DeleteInventory()
 		require.NoError(t, err)
 
-		productsFromFile, err := GetInventoryItems()
+		productsFromFile, err := c.GetInventoryItems()
 		require.NoError(t, err)
 		require.LessOrEqual(t, len(productsFromFile.Data), 0, "Expected products list to be empty but it contained 1 or more entry")
 	})
@@ -231,7 +256,12 @@ func getDefaultAuditsList() AuditLog {
 func TestWriteAuditLog(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
-	err := audits.WriteAuditLog()
+	c := Controller{
+		lc:       logger.NewMockClient(),
+		service:  nil,
+		auditLog: audits,
+	}
+	err := c.WriteAuditLog()
 	require.NoError(t, err)
 
 	// load audits from file to validate
@@ -248,11 +278,16 @@ func TestWriteAuditLog(t *testing.T) {
 func TestGetAuditLog(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
-	err := audits.WriteAuditLog()
+	c := Controller{
+		lc:       logger.NewMockClient(),
+		service:  nil,
+		auditLog: audits,
+	}
+	err := c.WriteAuditLog()
 	require.NoError(t, err)
 
 	// run GetInventoryItems and get the result as JSON
-	auditsFromFile, err := GetAuditLog()
+	auditsFromFile, err := c.GetAuditLog()
 	require.NoError(t, err)
 
 	// Check to make sure audit entries match
@@ -264,7 +299,12 @@ func TestGetAuditLog(t *testing.T) {
 func TestGetAuditLogEntryByID(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
-	err := audits.WriteAuditLog()
+	c := Controller{
+		lc:       logger.NewMockClient(),
+		service:  nil,
+		auditLog: audits,
+	}
+	err := c.WriteAuditLog()
 	require.NoError(t, err)
 
 	// variables
@@ -273,7 +313,7 @@ func TestGetAuditLogEntryByID(t *testing.T) {
 
 	t.Run("Test GetAuditLogEntryByID", func(t *testing.T) {
 		// run GetAuditLogEntryByID and get the result as JSON
-		auditLogEntry, auditsFromFile, err := GetAuditLogEntryByID(entryIDToReturn)
+		auditLogEntry, auditsFromFile, err := c.GetAuditLogEntryByID(entryIDToReturn)
 		require.NoError(t, err)
 
 		// Check to make sure audit entries match
@@ -292,7 +332,7 @@ func TestGetAuditLogEntryByID(t *testing.T) {
 	})
 	t.Run("Test GetAuditLogEntryByID invalid entry ID", func(t *testing.T) {
 		// run GetAuditLogEntryByID and get the result as JSON
-		auditLogEntry, auditsFromFile, err := GetAuditLogEntryByID(invalidEntryIDToReturn)
+		auditLogEntry, auditsFromFile, err := c.GetAuditLogEntryByID(invalidEntryIDToReturn)
 		require.NoError(t, err)
 
 		// Check to make sure audit entries match
@@ -316,11 +356,16 @@ func TestGetAuditLogEntryByID(t *testing.T) {
 func TestDeleteAuditLogEntry(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
-	err := audits.WriteAuditLog()
+	c := Controller{
+		lc:       logger.NewMockClient(),
+		service:  nil,
+		auditLog: audits,
+	}
+	err := c.WriteAuditLog()
 	require.NoError(t, err)
 
 	deletedAuditID := audits.Data[0].AuditEntryID
-	audits.DeleteAuditLogEntry(audits.Data[0])
+	c.DeleteAuditLogEntry(audits.Data[0])
 
 	for _, audit := range audits.Data {
 		if audit.AuditEntryID == deletedAuditID {
@@ -334,7 +379,12 @@ func TestDeleteAuditLogEntry(t *testing.T) {
 func TestGetAuditLogErrors(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
-	err := audits.WriteAuditLog()
+	c := Controller{
+		lc:       logger.NewMockClient(),
+		service:  nil,
+		auditLog: audits,
+	}
+	err := c.WriteAuditLog()
 	require.NoError(t, err)
 
 	// variables
@@ -344,21 +394,21 @@ func TestGetAuditLogErrors(t *testing.T) {
 		err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
-		_, err = GetAuditLog()
+		_, err = c.GetAuditLog()
 		require.NotNil(t, err, "Expected audit log get to fail")
 	})
 	t.Run("Test GetAuditLogEntryByID Error", func(t *testing.T) {
 		err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
-		_, _, err = GetAuditLogEntryByID(entryIDToReturn)
+		_, _, err = c.GetAuditLogEntryByID(entryIDToReturn)
 		require.NotNil(t, err, "Expected audit log get to fail")
 	})
 	t.Run("Test DeleteAuditLog", func(t *testing.T) {
-		err := DeleteAuditLog()
+		err := c.DeleteAuditLog()
 		require.NoError(t, err)
 
-		auditsFromFile, err := GetAuditLog()
+		auditsFromFile, err := c.GetAuditLog()
 		require.NoError(t, err)
 		require.LessOrEqual(t, len(auditsFromFile.Data), 0, "Expected audits list to be empty but it contained 1 or more entry")
 	})

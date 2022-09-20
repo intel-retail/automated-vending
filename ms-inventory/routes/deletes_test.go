@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
@@ -38,14 +39,21 @@ func TestInventoryDelete(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteInventory()
+			products := getDefaultProductsList()
+
+			c := Controller{
+				lc:             logger.NewMockClient(),
+				service:        nil,
+				inventoryItems: products,
+			}
+			err := c.DeleteInventory()
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
 				err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
-				err := products.WriteInventory()
+				err := c.WriteInventory()
 				require.NoError(t, err)
 			}
 			InventoryFileName = currentTest.InventoryPath
@@ -54,7 +62,7 @@ func TestInventoryDelete(t *testing.T) {
 			w := httptest.NewRecorder()
 			req = mux.SetURLVars(req, map[string]string{"sku": currentTest.InventorySKU})
 			req.Header.Set("Content-Type", "application/json")
-			InventoryDelete(w, req)
+			c.InventoryDelete(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -63,7 +71,7 @@ func TestInventoryDelete(t *testing.T) {
 			InventoryFileName = "inventory.json"
 			if !currentTest.BadInventory {
 				// run GetInventoryItems and get the result as JSON
-				productsFromFile, err := GetInventoryItems()
+				productsFromFile, err := c.GetInventoryItems()
 				require.NoError(t, err)
 
 				if currentTest.ProductsMatch {
@@ -99,15 +107,21 @@ func TestAuditLogDelete(t *testing.T) {
 
 	for _, test := range tests {
 		currentTest := test
+		audits := getDefaultAuditsList()
+		c := Controller{
+			lc:       logger.NewMockClient(),
+			service:  nil,
+			auditLog: audits,
+		}
 		t.Run(currentTest.Name, func(t *testing.T) {
-			err := DeleteAuditLog()
+			err := c.DeleteAuditLog()
 			require.NoError(t, err)
 
 			if currentTest.BadAuditID {
 				err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
-				err := audits.WriteAuditLog()
+				err := c.WriteAuditLog()
 				require.NoError(t, err)
 			}
 			AuditLogFileName = currentTest.AuditLogPath
@@ -116,7 +130,7 @@ func TestAuditLogDelete(t *testing.T) {
 			w := httptest.NewRecorder()
 			req = mux.SetURLVars(req, map[string]string{"entry": currentTest.AuditEntryID})
 			req.Header.Set("Content-Type", "application/json")
-			AuditLogDelete(w, req)
+			c.AuditLogDelete(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 
@@ -125,7 +139,7 @@ func TestAuditLogDelete(t *testing.T) {
 			AuditLogFileName = "auditlog.json"
 			if !currentTest.BadAuditID {
 				// run GetAuditLog and get the result as JSON
-				auditsFromFile, err := GetAuditLog()
+				auditsFromFile, err := c.GetAuditLog()
 				require.NoError(t, err)
 
 				if currentTest.ProductsMatch {
