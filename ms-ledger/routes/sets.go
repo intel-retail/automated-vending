@@ -25,6 +25,7 @@ func (c *Controller) SetPaymentStatus(writer http.ResponseWriter, req *http.Requ
 		_, err := io.ReadFull(req.Body, body)
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to parse request body", true)
+			c.lc.Errorf("Failed to parse request body %s", err.Error())
 			return
 		}
 
@@ -32,6 +33,7 @@ func (c *Controller) SetPaymentStatus(writer http.ResponseWriter, req *http.Requ
 		var paymentStatus paymentInfo
 		if err := json.Unmarshal(body, &paymentStatus); err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to unmarshal body", true)
+			c.lc.Errorf("Failed to unmarshal body %s", err.Error())
 			return
 		}
 
@@ -39,6 +41,7 @@ func (c *Controller) SetPaymentStatus(writer http.ResponseWriter, req *http.Requ
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
+			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
 			return
 		}
 
@@ -51,18 +54,22 @@ func (c *Controller) SetPaymentStatus(writer http.ResponseWriter, req *http.Requ
 						err := utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
 						if err != nil {
 							utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to update ledger", true)
+							c.lc.Errorf("Failed to update ledger %s", err.Error())
 							return
 						}
 
 						utilities.WriteStringHTTPResponse(writer, req, http.StatusOK, "Updated Payment Status for transaction "+strconv.FormatInt(paymentStatus.TransactionID, 10), false)
+						c.lc.Infof("Updated Payment Status for transaction %s ", strconv.FormatInt(paymentStatus.TransactionID, 10))
 						return
 					}
 				}
 				utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find Transaction "+strconv.FormatInt(paymentStatus.TransactionID, 10), true)
+				c.lc.Errorf("Could not find Transaction %s", strconv.FormatInt(paymentStatus.TransactionID, 10))
 				return
 			}
 		}
 		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find account "+strconv.Itoa(paymentStatus.AccountID), true)
+		c.lc.Errorf("Could not find account %s", strconv.Itoa(paymentStatus.AccountID))
 	})
 }
 
@@ -77,6 +84,7 @@ func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.
 		_, err := io.ReadFull(req.Body, body)
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to parse request body", true)
+			c.lc.Errorf("Failed to parse request body %s", err.Error())
 			return
 		}
 
@@ -85,6 +93,7 @@ func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.
 		var updateLedger deltaLedger
 		if err := json.Unmarshal(body, &updateLedger); err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to unmarshal request body", true)
+			c.lc.Errorf("Failed to unmarshal request body %s", err.Error())
 			return
 		}
 
@@ -92,6 +101,7 @@ func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
+			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
 			return
 		}
 
@@ -114,6 +124,7 @@ func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.
 					itemInfo, err := c.getInventoryItemInfo(c.inventoryEndpoint, deltaSKU.SKU)
 					if err != nil {
 						utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find product Info for "+deltaSKU.SKU+" "+err.Error(), true)
+						c.lc.Errorf("Could not find product Info for %s errir: %s", deltaSKU.SKU, err.Error())
 						return
 					}
 					newLineItem := LineItem{
@@ -134,12 +145,14 @@ func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.
 
 		if !ledgerChanged {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Account not found", true)
+			c.lc.Error("No ledger change in any account")
 			return
 		}
 
 		err = utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to update ledger", true)
+			c.lc.Errorf("Failed to update ledger %s", err.Error())
 			return
 		}
 
@@ -148,8 +161,10 @@ func (c *Controller) LedgerAddTransaction(writer http.ResponseWriter, req *http.
 		newLedgerJSON, err := utilities.GetAsJSON(newLedger)
 		if err != nil {
 			response.SetStringHTTPResponseFields(http.StatusOK, "Updated ledger successfully", false)
+			c.lc.Warnf("Updated ledger successfully with error %s", err.Error())
 		} else {
 			response.SetJSONHTTPResponseFields(http.StatusOK, newLedgerJSON, false)
+			c.lc.Infof("Updated ledger %s successfully", newLedgerJSON)
 		}
 		response.WriteHTTPResponse(writer, req)
 	})

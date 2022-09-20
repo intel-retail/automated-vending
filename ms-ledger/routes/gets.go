@@ -18,6 +18,7 @@ func (c *Controller) LedgerAccountGet(writer http.ResponseWriter, req *http.Requ
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
+			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
 			return
 		}
 
@@ -27,6 +28,7 @@ func (c *Controller) LedgerAccountGet(writer http.ResponseWriter, req *http.Requ
 		accountID, err := strconv.Atoi(accountIDstr)
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "AccountID is invalid "+err.Error(), true)
+			c.lc.Errorf("AccountID is invalid %s", err.Error())
 			return
 		}
 
@@ -36,13 +38,16 @@ func (c *Controller) LedgerAccountGet(writer http.ResponseWriter, req *http.Requ
 					accountLedger, err := utilities.GetAsJSON(account)
 					if err != nil {
 						utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve account ledger "+err.Error(), true)
+						c.lc.Errorf("Failed to retrieve account ledger %s", err.Error())
 						return
 					}
 					utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, accountLedger, false)
+					c.lc.Info("GET ledger account successfully")
 					return
 				}
 			}
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "AccountID not found in ledger", false)
+			c.lc.Errorf("AccountID %s not found in ledger", accountID)
 			return
 		}
 	})
@@ -56,6 +61,7 @@ func (c *Controller) AllAccountsGet(writer http.ResponseWriter, req *http.Reques
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
+			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
 			return
 		}
 
@@ -64,8 +70,10 @@ func (c *Controller) AllAccountsGet(writer http.ResponseWriter, req *http.Reques
 		accountLedgersJSON, err := utilities.GetAsJSON(accountLedgers)
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to unmarshal accountLedgers", true)
+			c.lc.Errorf("Failed to unmarshal accountLedgers %s", err.Error())
 			return
 		}
 		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, accountLedgersJSON, false)
+		c.lc.Info("GET ALL ledger accounts successfully")
 	})
 }

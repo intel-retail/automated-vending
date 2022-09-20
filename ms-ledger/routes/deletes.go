@@ -19,6 +19,7 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
+			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
 			return
 		}
 
@@ -28,6 +29,7 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 		tid, tiderr := strconv.ParseInt(tidstr, 10, 64)
 		if tiderr != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "transactionID contains bad data", true)
+			c.lc.Errorf("transactionID contains bad data %s", tiderr.Error())
 			return
 		}
 
@@ -35,6 +37,7 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 		accountID, accountIDerr := strconv.Atoi(accountIDstr)
 		if accountIDerr != nil {
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "accountID contains bad data", true)
+			c.lc.Errorf("accountID contains bad data %s", accountIDerr.Error())
 			return
 		}
 
@@ -49,17 +52,21 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 							err := utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
 							if err != nil {
 								utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to update ledger with deleted transaction", true)
+								c.lc.Errorf("Failed to update ledger with deleted transaction %s", err.Error())
 								return
 							}
 							utilities.WriteStringHTTPResponse(writer, req, http.StatusOK, "Deleted ledger "+tidstr, false)
+							c.lc.Info("Deleted ledger successfully")
 							return
 						}
 					}
 					utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find Transaction "+strconv.FormatInt(tid, 10), true)
+					c.lc.Errorf("Could not find Transaction %s", strconv.FormatInt(tid, 10))
 					return
 				}
 			}
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find account "+strconv.Itoa(accountID), true)
+			c.lc.Errorf("Could not find account %s", strconv.Itoa(accountID))
 			return
 		}
 	})
