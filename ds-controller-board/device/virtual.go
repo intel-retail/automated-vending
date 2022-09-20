@@ -24,6 +24,7 @@ type ControllerBoardVirtual struct {
 	DoorClosed    int
 	Temperature   float64
 	Humidity      int64
+	DeviceName    string
 }
 
 // Read : A continuous loop that reads ControllerBoard Status and forwards it to the EdgeX stack as a Reading.
@@ -59,7 +60,7 @@ func (board *ControllerBoardVirtual) Read() {
 		}
 
 		asyncValues := &dsModels.AsyncValues{
-			DeviceName:    deviceName,
+			DeviceName:    board.DeviceName,
 			CommandValues: []*dsModels.CommandValue{commandvalue},
 		}
 		board.AsyncCh <- asyncValues

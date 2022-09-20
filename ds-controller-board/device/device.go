@@ -44,6 +44,7 @@ func NewControllerBoard(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncV
 			LoggingClient: lc,
 			DevSerialPort: devSerialPort,
 			TTYPort:       ttyPort,
+			DeviceName:    config.DeviceName,
 		}
 	} else {
 		controllerBoard = &ControllerBoardVirtual{
@@ -55,6 +56,7 @@ func NewControllerBoard(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncV
 			DoorClosed:    1,
 			Temperature:   78.00,
 			Humidity:      10,
+			DeviceName:    config.DeviceName,
 		}
 	}
 

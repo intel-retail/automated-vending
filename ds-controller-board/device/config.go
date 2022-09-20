@@ -16,6 +16,7 @@ type ServiceConfig struct {
 // Config is the global device configuration, which is populated by values in
 // the "Driver" section of res/configuration.toml
 type Config struct {
+	DeviceName             string
 	VirtualControllerBoard bool
 	PID                    string
 	VID                    string

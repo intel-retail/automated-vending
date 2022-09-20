@@ -72,8 +72,8 @@ func TestServiceConfig_Validate(t *testing.T) {
 					LockTimeout:    "10s",
 				},
 			},
-			want:    time.Duration(30 * time.Second),
-			want1:   time.Duration(10 * time.Second),
+			want:    30 * time.Second,
+			want1:   10 * time.Second,
 			wantErr: false,
 		},
 		{
