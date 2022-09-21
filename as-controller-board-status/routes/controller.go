@@ -30,7 +30,7 @@ func NewController(lc logger.LoggingClient, service interfaces.ApplicationServic
 
 func (c *Controller) AddAllRoutes() error {
 	// Add the "status" REST API route
-	err := c.service.AddRoute("/status", c.GetStatus, "GET", "OPTIONS")
+	err := c.service.AddRoute("/status", c.GetStatus, http.MethodGet, http.MethodOptions)
 	if err != nil {
 		return fmt.Errorf("error adding route: %s", err.Error())
 	}

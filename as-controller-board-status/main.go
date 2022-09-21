@@ -53,7 +53,6 @@ func main() {
 		SubscriptionClient: subscriptionClient,
 	}
 
-	// Subscribe to the EdgeX notification service
 	err = boardStatus.SubscribeToNotificationService()
 	if err != nil {
 		lc.Errorf("Error subscribing to EdgeX notification service %s", err.Error())

@@ -13,11 +13,11 @@ import (
 
 const (
 	// RESTPost is a const used for REST commands using the specified method.
-	RESTPost = "POST"
+	RESTPost = http.MethodPost
 	// RESTPut is a const used for REST commands using the specified method.
-	RESTPut = "PUT"
+	RESTPut = http.MethodPut
 	// RESTGet is a const used for REST commands using the specified method.
-	RESTGet = "GET"
+	RESTGet = http.MethodGet
 	// ApplicationJSONContentType is a const holding the common HTTP
 	// Content-Type header value, "application/json"
 	ApplicationJSONContentType = "application/json"
