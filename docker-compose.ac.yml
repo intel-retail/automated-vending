@@ -224,7 +224,7 @@ services:
       edgex-network: {}
     ports:
     - 127.0.0.1:48094:48094/tcp
-    # restart: always
+    restart: always
     ipc: none
     security_opt:
     - no-new-privileges:true

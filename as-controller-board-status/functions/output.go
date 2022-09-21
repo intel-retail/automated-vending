@@ -6,7 +6,6 @@ package functions
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"sort"
 	"strconv"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 var controllerBoardStatus = ControllerBoardStatus{}
@@ -236,7 +234,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 	if boardStatus.DoorClosed != doorClosed {
 		// Set the boardStatus's DoorClosed value to the new value
 		boardStatus.DoorClosed = doorClosed
-		lc.Info(fmt.Sprintf("The door closed status has changed to: %v", doorClosed))
+		lc.Infof("The door closed status has changed to: %t", doorClosed)
 
 		// Set the door closed state and make sure MinTemp and MaxTemp status
 		// are false to avoid triggering a false temperature event
@@ -262,16 +260,11 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 	return nil
 }
 
-// GetStatus is a REST API endpoint that enables a web UI or some other downstream
-// service to inquire about the status of the upstream Automated Checkout hardware interface(s).
-func GetStatus(writer http.ResponseWriter, req *http.Request) {
-	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
-		controllerBoardStatusJSON, err := utilities.GetAsJSON(controllerBoardStatus)
-		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to serialize the controller board's current state.", true)
-			return
-		}
+func (boardStatus *CheckBoardStatus) GetControllerBoardStatus() ControllerBoardStatus {
+	return controllerBoardStatus
+}
 
-		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, controllerBoardStatusJSON, false)
-	})
+// for testing purpose
+func (boardStatus *CheckBoardStatus) SetControllerBoardStatus(controllerBoardStatusInput ControllerBoardStatus) {
+	controllerBoardStatus = controllerBoardStatusInput
 }

@@ -5,6 +5,7 @@ package main
 
 import (
 	"as-controller-board-status/functions"
+	"as-controller-board-status/routes"
 	"os"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
@@ -31,31 +32,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	boardStatus := functions.CheckBoardStatus{
-		DoorClosed:    true, // Set default door state to closed
-		Configuration: new(functions.ControllerBoardStatusAppSettings),
-		Service:       service,
+	subscriptionClient := service.SubscriptionClient()
+	if subscriptionClient == nil {
+		lc.Errorf("error notification service missing from client's configuration")
+		os.Exit(1)
 	}
 
+	config := new(functions.ControllerBoardStatusAppSettings)
 	// Retrieve & parse the required application settings into a proper
 	// configuration struct
-	err := utilities.MarshalSettings(appSettings, boardStatus.Configuration, false)
+	err := utilities.MarshalSettings(appSettings, config, false)
 	if err != nil {
 		lc.Errorf("Application settings could not be processed: %s", err.Error())
 		os.Exit(1)
 	}
 
-	boardStatus.MaxTemperatureThreshold = boardStatus.Configuration.MaxTemperatureThreshold
-	boardStatus.MinTemperatureThreshold = boardStatus.Configuration.MinTemperatureThreshold
-
-	// Create the function pipeline to run when an event is read on the device channels
-	err = service.SetFunctionsPipeline(
-		transforms.NewFilterFor([]string{boardStatus.Configuration.DeviceName}).FilterByDeviceName,
-		boardStatus.CheckControllerBoardStatus,
-	)
-	if err != nil {
-		lc.Errorf("SDK initialization failed: %s", err.Error())
-		os.Exit(1)
+	boardStatus := functions.CheckBoardStatus{
+		DoorClosed:         true, // Set default door state to closed
+		Configuration:      config,
+		SubscriptionClient: subscriptionClient,
 	}
 
 	// Subscribe to the EdgeX notification service
@@ -65,10 +60,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Add the "status" REST API route
-	err = service.AddRoute("/status", functions.GetStatus, "GET", "OPTIONS")
+	notificationClient := service.NotificationClient()
+	if notificationClient == nil {
+		lc.Error("error notification service missing from client's configuration")
+		os.Exit(1)
+	}
+	boardStatus.NotificationClient = notificationClient
+
+	boardStatus.MaxTemperatureThreshold = boardStatus.Configuration.MaxTemperatureThreshold
+	boardStatus.MinTemperatureThreshold = boardStatus.Configuration.MinTemperatureThreshold
+
+	// Create the function pipeline to run when an event is read on the device channels
+	err = service.SetFunctionsPipeline(
+		transforms.NewFilterFor([]string{boardStatus.Configuration.DeviceName}).FilterByDeviceName,
+		boardStatus.CheckControllerBoardStatus,
+	)
+
 	if err != nil {
-		lc.Errorf("Error adding route: %s", err.Error())
+		lc.Errorf("SDK initialization failed: %s", err.Error())
+		os.Exit(1)
+	}
+
+	controller := routes.NewController(lc, service, &boardStatus)
+	err = controller.AddAllRoutes()
+	if err != nil {
+		lc.Errorf("failed to add all Routes: %s", err.Error())
 		os.Exit(1)
 	}
 

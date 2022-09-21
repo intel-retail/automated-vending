@@ -5,7 +5,6 @@ package functions
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -17,11 +16,6 @@ import (
 // SubscribeToNotificationService configures an email notification and submits
 // it to the EdgeX notification service
 func (boardStatus CheckBoardStatus) SubscribeToNotificationService() error {
-	subscriptionClient := boardStatus.Service.SubscriptionClient()
-	if subscriptionClient == nil {
-		return errors.New("error notification service missing from client's configuration")
-	}
-
 	dto := dtos.Subscription{
 		Id:   uuid.NewString(),
 		Name: boardStatus.Configuration.NotificationName,
@@ -41,7 +35,7 @@ func (boardStatus CheckBoardStatus) SubscribeToNotificationService() error {
 		AdminState: boardStatus.Configuration.SubscriptionAdminState,
 	}
 	reqs := []requests.AddSubscriptionRequest{requests.NewAddSubscriptionRequest(dto)}
-	_, err := subscriptionClient.Add(context.Background(), reqs)
+	_, err := boardStatus.SubscriptionClient.Add(context.Background(), reqs)
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to the EdgeX notification service: %s", err.Error())
 	}
@@ -50,11 +44,6 @@ func (boardStatus CheckBoardStatus) SubscribeToNotificationService() error {
 }
 
 func (boardStatus CheckBoardStatus) SendNotification(message string) error {
-	notificationClient := boardStatus.Service.NotificationClient()
-	if notificationClient == nil {
-		return errors.New("error notification service missing from client's configuration")
-	}
-
 	dto := dtos.NewNotification(boardStatus.Configuration.NotificationLabels,
 		boardStatus.Configuration.NotificationCategory,
 		message,
@@ -63,7 +52,7 @@ func (boardStatus CheckBoardStatus) SendNotification(message string) error {
 	)
 
 	req := requests.NewAddNotificationRequest(dto)
-	_, err := notificationClient.SendNotification(context.Background(), []requests.AddNotificationRequest{req})
+	_, err := boardStatus.NotificationClient.SendNotification(context.Background(), []requests.AddNotificationRequest{req})
 	if err != nil {
 		return fmt.Errorf("failed to send the notification: %s", err.Error())
 	}
