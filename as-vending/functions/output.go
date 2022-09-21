@@ -104,7 +104,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 
 						lc.Info("Sending SKU delta to ledger service")
 						// send SKU delta to ledger service and get back current ledger information
-						resp, err := sendHttpRequest(lc, http.MethodPost, vendingState.Configuration.LedgerService, outputBytes)
+						resp, err := sendHTTPRequest(lc, http.MethodPost, vendingState.Configuration.LedgerService, outputBytes)
 						if err != nil {
 							lc.Errorf("Ledger service failed: %s", err.Error())
 							return false, err
@@ -134,7 +134,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 					}
 
 					lc.Info("Sending SKU delta to inventory service")
-					inventoryResp, err := sendHttpRequest(lc, http.MethodPost, vendingState.Configuration.InventoryService, outputBytes)
+					inventoryResp, err := sendHTTPRequest(lc, http.MethodPost, vendingState.Configuration.InventoryService, outputBytes)
 					if err != nil {
 						return false, err
 					}
@@ -155,7 +155,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 					}
 
 					lc.Info("Sending audit log entry to inventory service")
-					auditResp, err := sendHttpRequest(lc, http.MethodPost, vendingState.Configuration.InventoryAuditLogService, outputBytes)
+					auditResp, err := sendHTTPRequest(lc, http.MethodPost, vendingState.Configuration.InventoryAuditLogService, outputBytes)
 					if err != nil {
 						return false, err
 					}
@@ -368,7 +368,7 @@ func (vendingState *VendingState) getCardAuthInfo(lc logger.LoggingClient, authE
 	// First, reset it, then populate it at the end of the function
 	vendingState.CurrentUserData = OutputData{}
 
-	resp, err := sendHttpRequest(lc, http.MethodGet, authEndpoint+"/"+cardID, []byte(""))
+	resp, err := sendHTTPRequest(lc, http.MethodGet, authEndpoint+"/"+cardID, []byte(""))
 	if err != nil {
 		lc.Infof("Unauthorized card: %s", cardID)
 		return
@@ -466,8 +466,8 @@ func (vendingState *VendingState) SendCommand(lc logger.LoggingClient, actionNam
 	return nil
 }
 
-// sendHttpRequest will make an http request to an EdgeX command endpoint
-func sendHttpRequest(lc logger.LoggingClient, method string, commandURL string, inputBytes []byte) (*http.Response, error) {
+// sendHTTPRequest will make an http request to an EdgeX command endpoint
+func sendHTTPRequest(lc logger.LoggingClient, method string, commandURL string, inputBytes []byte) (*http.Response, error) { //revive
 
 	lc.Debugf("sending command to edgex endpoint: %v", commandURL)
 

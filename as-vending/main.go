@@ -81,8 +81,8 @@ func main() {
 	}
 	// create the function pipeline to run when an event is read on the device channels
 	err = service.SetFunctionsPipeline(
-		transforms.NewFilterFor(controller.GetVendingState().Configuration.DeviceNames).FilterByDeviceName,
-		controller.GetVendingState().DeviceHelper,
+		transforms.NewFilterFor(vendingState.Configuration.DeviceNames).FilterByDeviceName,
+		vendingState.DeviceHelper,
 	)
 	if err != nil {
 		lc.Errorf("SDK initialization failed: %s", err.Error())

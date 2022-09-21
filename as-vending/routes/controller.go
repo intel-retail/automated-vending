@@ -29,9 +29,6 @@ func NewController(lc logger.LoggingClient, service interfaces.ApplicationServic
 		vendingState: vendingState,
 	}
 }
-func (c *Controller) GetVendingState() *functions.VendingState {
-	return &c.vendingState
-}
 
 func (c *Controller) AddAllRoutes() error {
 	var err error
