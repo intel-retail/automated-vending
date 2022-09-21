@@ -4,11 +4,8 @@
 package functions
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -24,82 +21,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
 	err := m.Run()
 	os.Exit(err)
-}
-
-// TestGetMaintenanceMode tests the HTTP GET endpoint '/maintenanceMode' to
-// verify that it reports the correct value of MaintenanceMode in its instance
-// of VendingState.
-func TestGetMaintenanceMode(t *testing.T) {
-	maintModeTrue := MaintenanceMode{
-		MaintenanceMode: true,
-	}
-	maintModeFalse := MaintenanceMode{
-		MaintenanceMode: false,
-	}
-	t.Run("TestGetMaintenanceMode MaintenanceMode=True", func(t *testing.T) {
-		var vendingState VendingState
-		var maintModeAPIResponse MaintenanceMode
-
-		// set the vendingState's MaintenanceMode boolean accordingly
-		vendingState.MaintenanceMode = true
-
-		req := httptest.NewRequest("GET", "/maintenanceMode", nil)
-		w := httptest.NewRecorder()
-
-		// run the actual function in question
-		vendingState.GetMaintenanceMode(w, req)
-
-		// parse the response
-		resp := w.Result()
-		_, err := utilities.ParseJSONHTTPResponseContent(resp.Body, &maintModeAPIResponse)
-		require.NoError(t, err)
-
-		defer resp.Body.Close()
-		assert.Equal(t, maintModeAPIResponse, maintModeTrue, "Received a maintenance mode response that was different than anticipated")
-	})
-	t.Run("TestGetMaintenanceMode MaintenanceMode=False", func(t *testing.T) {
-		var vendingState VendingState
-		var maintModeAPIResponse MaintenanceMode
-
-		// set the vendingState's MaintenanceMode boolean accordingly
-		vendingState.MaintenanceMode = false
-
-		req := httptest.NewRequest("GET", "/maintenanceMode", nil)
-		w := httptest.NewRecorder()
-
-		// run the actual function in question
-		vendingState.GetMaintenanceMode(w, req)
-
-		// parse the response
-		resp := w.Result()
-		_, err := utilities.ParseJSONHTTPResponseContent(resp.Body, &maintModeAPIResponse)
-		require.NoError(t, err)
-
-		defer resp.Body.Close()
-		assert.Equal(t, maintModeAPIResponse, maintModeFalse, "Received a maintenance mode response that was different than anticipated")
-	})
-	t.Run("TestGetMaintenanceMode OPTIONS", func(t *testing.T) {
-		var vendingState VendingState
-
-		req := httptest.NewRequest("OPTIONS", "/maintenanceMode", nil)
-		w := httptest.NewRecorder()
-
-		vendingState.GetMaintenanceMode(w, req)
-
-		// parse the response
-		resp := w.Result()
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		require.NoError(t, err, "Parsing response body threw error")
-		assert.Equal(t, string(body), "", "Response body was not an empty string, expected it to be empty for a pre-flight CORS OPTIONS response")
-		assert.Equal(t, resp.Status, "200 OK", "OPTIONS request did not return 200")
-	})
 }
 
 func TestCheckInferenceStatus(t *testing.T) {
@@ -116,7 +42,6 @@ func TestCheckInferenceStatus(t *testing.T) {
 	for _, tc := range testCases {
 
 		t.Run(tc.TestCaseName, func(t *testing.T) {
-
 			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.statusCode)
 				_, err := w.Write([]byte{})
@@ -133,7 +58,6 @@ func TestCheckInferenceStatus(t *testing.T) {
 			vendingstate := VendingState{
 				CommandClient: mockCommandClient,
 			}
-
 			assert.Equal(t, tc.Expected, vendingstate.checkInferenceStatus(logger.NewMockClient(), testServer.URL, "test-device"), "Expected value to match output")
 		})
 	}
@@ -152,7 +76,6 @@ func TestGetCardAuthInfo(t *testing.T) {
 	}
 
 	var vendingState VendingState
-
 	for _, tc := range testCases {
 
 		t.Run(tc.TestCaseName, func(t *testing.T) {
@@ -171,24 +94,6 @@ func TestGetCardAuthInfo(t *testing.T) {
 			assert.Equal(t, tc.Expected, vendingState.CurrentUserData.CardID, "Expected value to match output")
 		})
 	}
-}
-
-func TestResetDoorLock(t *testing.T) {
-	stopChannel := make(chan int)
-	var vendingState VendingState
-	vendingState.ThreadStopChannel = stopChannel
-
-	request, _ := http.NewRequest("POST", "", nil)
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(vendingState.ResetDoorLock)
-	handler.ServeHTTP(recorder, request)
-
-	assert.Equal(t, false, vendingState.MaintenanceMode, "MaintanceMode should be false")
-	assert.Equal(t, false, vendingState.CVWorkflowStarted, "CVWorkflowStarted should be false")
-	assert.Equal(t, false, vendingState.DoorClosed, "DoorClosed should be false")
-	assert.Equal(t, false, vendingState.DoorClosedDuringCVWorkflow, "DoorClosedDuringCVWorkflow should be false")
-	assert.Equal(t, false, vendingState.DoorOpenedDuringCVWorkflow, "DoorOpenedDuringCVWorkflow should be false")
-	assert.Equal(t, false, vendingState.InferenceDataReceived, "InferenceDataReceived should be false")
 }
 
 func TestDisplayLedger(t *testing.T) {
@@ -214,32 +119,6 @@ func TestDisplayLedger(t *testing.T) {
 	}
 	err := vendingState.displayLedger(logger.NewMockClient(), "test-device", ledger)
 	assert.NoError(t, err)
-}
-
-// TODO: BoardStatus handler needs to return proper http status code for unit tests
-func TestBoardStatus(t *testing.T) {
-	doorOpenStopChannel := make(chan int)
-	doorCloseStopChannel := make(chan int)
-
-	vendingState := VendingState{
-		DoorClosed:                     false,
-		CVWorkflowStarted:              true,
-		DoorOpenWaitThreadStopChannel:  doorOpenStopChannel,
-		DoorCloseWaitThreadStopChannel: doorCloseStopChannel,
-		Configuration:                  new(ServiceConfiguration),
-	}
-	boardStatus := ControllerBoardStatus{
-		MaxTemperatureStatus: true,
-		MinTemperatureStatus: true,
-		DoorClosed:           true,
-	}
-
-	b, _ := json.Marshal(boardStatus)
-
-	request, _ := http.NewRequest("POST", "", bytes.NewBuffer(b))
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(vendingState.BoardStatus)
-	handler.ServeHTTP(recorder, request)
 }
 
 func TestHandleMqttDeviceReading(t *testing.T) {

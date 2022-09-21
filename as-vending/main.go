@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"as-vending/functions"
+	"as-vending/routes"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/transforms"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -73,21 +73,16 @@ func main() {
 	vendingState.InferenceDataReceived = false
 	vendingState.InferenceWaitThreadStopChannel = inferenceStopChannel
 
-	var err error
-
-	err = service.AddRoute("/boardStatus", vendingState.BoardStatus, "POST")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/resetDoorLock", vendingState.ResetDoorLock, "POST")
-	errorAddRouteHandler(lc, err)
-
-	err = service.AddRoute("/maintenanceMode", vendingState.GetMaintenanceMode, "GET", "OPTIONS")
-	errorAddRouteHandler(lc, err)
-
+	controller := routes.NewController(lc, service, vendingState)
+	err := controller.AddAllRoutes()
+	if err != nil {
+		lc.Errorf("failed to add all Routes: %s", err.Error())
+		os.Exit(1)
+	}
 	// create the function pipeline to run when an event is read on the device channels
 	err = service.SetFunctionsPipeline(
-		transforms.NewFilterFor(vendingState.Configuration.DeviceNames).FilterByDeviceName,
-		vendingState.DeviceHelper,
+		transforms.NewFilterFor(controller.GetVendingState().Configuration.DeviceNames).FilterByDeviceName,
+		controller.GetVendingState().DeviceHelper,
 	)
 	if err != nil {
 		lc.Errorf("SDK initialization failed: %s", err.Error())
@@ -104,11 +99,4 @@ func main() {
 	// do any required cleanup here
 
 	os.Exit(0)
-}
-
-func errorAddRouteHandler(lc logger.LoggingClient, err error) {
-	if err != nil {
-		lc.Errorf("Error adding route: %s", err.Error())
-		os.Exit(1)
-	}
 }

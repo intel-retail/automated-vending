@@ -10,6 +10,7 @@ require (
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0
 	github.com/intel-iot-devkit/automated-checkout-utilities v1.0.0
 	github.com/stretchr/testify v1.8.0
+	gotest.tools v2.2.0+incompatible
 )
 
 require (
@@ -34,6 +35,7 @@ require (
 	github.com/go-redis/redis/v7 v7.3.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gomodule/redigo v1.8.8 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
@@ -56,6 +58,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/pebbe/zmq4 v1.2.7 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/spiffe/go-spiffe/v2 v2.0.0 // indirect
