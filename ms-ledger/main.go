@@ -43,12 +43,12 @@ func main() {
 
 	ledgerFileName, err := service.GetAppSetting("LedgerFileName")
 	if err != nil {
-		lc.Errorf("failed load ApplicationSettings: %s", err.Error())
+		lc.Errorf("failed load LedgerFileName from ApplicationSettings: %s", err.Error())
 		os.Exit(1)
 	}
 
 	if len(ledgerFileName) == 0 {
-		lc.Error("InventoryEndpoint is not set in ApplicationSettings")
+		lc.Error("LedgerFileName configuration setting is empty")
 		os.Exit(1)
 	}
 

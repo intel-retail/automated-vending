@@ -15,7 +15,6 @@ import (
 )
 
 const(
-	// LedgerFileName is the filename for ledger.json file
 	LedgerFileName = "ledger.json"
 )
 
