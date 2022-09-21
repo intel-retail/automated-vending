@@ -6,6 +6,7 @@ package functions
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sort"
 	"strconv"
 	"time"
@@ -194,7 +195,7 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 	// react accordingly
 	if controllerBoardStatus.MinTemperatureStatus || controllerBoardStatus.MaxTemperatureStatus {
 		lc.Info("Pushing controller board status to central vending service due to a temperature threshold being exceeded")
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, RESTPost, controllerBoardStatus)
+		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, controllerBoardStatus)
 		if err != nil {
 			return fmt.Errorf("Encountered error sending the controller board's status to the central vending endpoint: %v", err.Error())
 		}
@@ -238,7 +239,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 
 		// Set the door closed state and make sure MinTemp and MaxTemp status
 		// are false to avoid triggering a false temperature event
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, RESTPost, ControllerBoardStatus{
+		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, ControllerBoardStatus{
 			DoorClosed:           doorClosed,
 			MinTemperatureStatus: false,
 			MaxTemperatureStatus: false,
@@ -249,7 +250,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 
 		// Prepare a message to be sent to the MQTT bus. Depending on the state
 		// of the door, this message may trigger a CV inference
-		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.MQTTEndpoint, RESTPut, VendingDoorStatus{
+		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.MQTTEndpoint, http.MethodPut, VendingDoorStatus{
 			VendingDoorStatus: strconv.FormatBool(doorClosed),
 		})
 		if err != nil {
