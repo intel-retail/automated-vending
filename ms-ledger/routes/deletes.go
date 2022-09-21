@@ -4,6 +4,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,8 +19,9 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 		//Get all ledgers for all accounts
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
-			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
+			errMsg := fmt.Sprintf("failed to retrieve all ledgers for accounts: %v", err.Error())
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+			c.lc.Error(errMsg)
 			return
 		}
 
@@ -28,16 +30,18 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 		tidstr := vars["tid"]
 		tid, tiderr := strconv.ParseInt(tidstr, 10, 64)
 		if tiderr != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "transactionID contains bad data", true)
-			c.lc.Errorf("transactionID contains bad data %s", tiderr.Error())
+			errMsg := "transactionID contains bad data"
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
+			c.lc.Error("%s: %s", errMsg, tiderr.Error())
 			return
 		}
 
 		accountIDstr := vars["accountid"]
 		accountID, accountIDerr := strconv.Atoi(accountIDstr)
 		if accountIDerr != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "accountID contains bad data", true)
-			c.lc.Errorf("accountID contains bad data %s", accountIDerr.Error())
+			errMsg := "accountID contains bad data"
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
+			c.lc.Error("%s: %s", errMsg, accountIDerr.Error())
 			return
 		}
 
@@ -51,8 +55,9 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 
 							err := utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
 							if err != nil {
-								utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to update ledger with deleted transaction", true)
-								c.lc.Errorf("Failed to update ledger with deleted transaction %s", err.Error())
+								errMsg := "Failed to update ledger with deleted transaction"
+								utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+								c.lc.Errorf("%s: %s", errMsg, err.Error())
 								return
 							}
 							utilities.WriteStringHTTPResponse(writer, req, http.StatusOK, "Deleted ledger "+tidstr, false)
@@ -60,13 +65,16 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 							return
 						}
 					}
-					utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find Transaction "+strconv.FormatInt(tid, 10), true)
-					c.lc.Errorf("Could not find Transaction %s", strconv.FormatInt(tid, 10))
+					errMsg := fmt.Sprintf("Could not find Transaction %v", strconv.FormatInt(tid, 10))
+					utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
+					c.lc.Errorf(errMsg)
 					return
 				}
 			}
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Could not find account "+strconv.Itoa(accountID), true)
-			c.lc.Errorf("Could not find account %s", strconv.Itoa(accountID))
+
+			errMsg := fmt.Sprintf("Could not find account %v", strconv.Itoa(accountID))
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
+			c.lc.Errorf(errMsg)
 			return
 		}
 	})

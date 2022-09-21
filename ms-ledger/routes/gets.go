@@ -4,6 +4,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -17,8 +18,9 @@ func (c *Controller) LedgerAccountGet(writer http.ResponseWriter, req *http.Requ
 		//Get all ledgers for all accounts
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
-			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
+			errMsg := fmt.Sprintf("Failed to retrieve all ledgers for accounts %v", err.Error())
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+			c.lc.Error(errMsg)
 			return
 		}
 
@@ -27,8 +29,9 @@ func (c *Controller) LedgerAccountGet(writer http.ResponseWriter, req *http.Requ
 		accountIDstr := vars["accountid"]
 		accountID, err := strconv.Atoi(accountIDstr)
 		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "AccountID is invalid "+err.Error(), true)
-			c.lc.Errorf("AccountID is invalid %s", err.Error())
+			errMsg := fmt.Sprintf("AccountID is invalid %v", err.Error())
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
+			c.lc.Error(errMsg)
 			return
 		}
 
@@ -37,8 +40,9 @@ func (c *Controller) LedgerAccountGet(writer http.ResponseWriter, req *http.Requ
 				if accountID == account.AccountID {
 					accountLedger, err := utilities.GetAsJSON(account)
 					if err != nil {
-						utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve account ledger "+err.Error(), true)
-						c.lc.Errorf("Failed to retrieve account ledger %s", err.Error())
+						errMsg := fmt.Sprintf("Failed to retrieve account ledger %v", err.Error())
+						utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+						c.lc.Error(errMsg)
 						return
 					}
 					utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, accountLedger, false)
@@ -46,8 +50,9 @@ func (c *Controller) LedgerAccountGet(writer http.ResponseWriter, req *http.Requ
 					return
 				}
 			}
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "AccountID not found in ledger", false)
-			c.lc.Errorf("AccountID %s not found in ledger", accountID)
+			errMsg := fmt.Sprintf("AccountID %v not found in ledger", accountID)
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, false)
+			c.lc.Error(errMsg)
 			return
 		}
 	})
@@ -60,8 +65,9 @@ func (c *Controller) AllAccountsGet(writer http.ResponseWriter, req *http.Reques
 		// Get the list of accounts with all ledgers
 		accountLedgers, err := c.GetAllLedgers()
 		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all ledgers for accounts "+err.Error(), true)
-			c.lc.Errorf("Failed to retrieve all ledgers for accounts %s", err.Error())
+			errMsg := fmt.Sprintf("Failed to retrieve all ledgers for accounts %v", err.Error())
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+			c.lc.Error(errMsg)
 			return
 		}
 
@@ -69,8 +75,9 @@ func (c *Controller) AllAccountsGet(writer http.ResponseWriter, req *http.Reques
 		// and writing it back out. Simply marshaling it will validate its structure
 		accountLedgersJSON, err := utilities.GetAsJSON(accountLedgers)
 		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to unmarshal accountLedgers", true)
-			c.lc.Errorf("Failed to unmarshal accountLedgers %s", err.Error())
+			errMsg := "Failed to unmarshal accountLedgers"
+			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+			c.lc.Errorf("%s: %s", errMsg, err.Error())
 			return
 		}
 		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, accountLedgersJSON, false)
