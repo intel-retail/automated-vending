@@ -84,7 +84,7 @@ func TestGetMaintenanceMode(t *testing.T) {
 		// set the vendingState's MaintenanceMode boolean accordingly
 		c.vendingState.MaintenanceMode = true
 
-		req := httptest.NewRequest("GET", "/maintenanceMode", nil)
+		req := httptest.NewRequest(http.MethodGet, "/maintenanceMode", nil)
 		w := httptest.NewRecorder()
 
 		// run the actual function in question
@@ -105,7 +105,7 @@ func TestGetMaintenanceMode(t *testing.T) {
 		// set the vendingState's MaintenanceMode boolean accordingly
 		c.vendingState.MaintenanceMode = false
 
-		req := httptest.NewRequest("GET", "/maintenanceMode", nil)
+		req := httptest.NewRequest(http.MethodGet, "/maintenanceMode", nil)
 		w := httptest.NewRecorder()
 
 		// run the actual function in question
@@ -142,7 +142,7 @@ func TestResetDoorLock(t *testing.T) {
 	var vendingState functions.VendingState
 	vendingState.ThreadStopChannel = stopChannel
 	c := NewController(logger.NewMockClient(), nil, vendingState)
-	request, _ := http.NewRequest("POST", "", nil)
+	request, _ := http.NewRequest(http.MethodPost, "", nil)
 	recorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(c.ResetDoorLock)
 	handler.ServeHTTP(recorder, request)
@@ -175,7 +175,7 @@ func TestBoardStatus(t *testing.T) {
 
 	b, _ := json.Marshal(boardStatus)
 	c := NewController(logger.NewMockClient(), nil, vendingState)
-	request, _ := http.NewRequest("POST", "", bytes.NewBuffer(b))
+	request, _ := http.NewRequest(http.MethodPost, "", bytes.NewBuffer(b))
 	recorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(c.BoardStatus)
 	handler.ServeHTTP(recorder, request)

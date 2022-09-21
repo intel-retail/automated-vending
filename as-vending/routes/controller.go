@@ -65,9 +65,10 @@ func (c *Controller) GetMaintenanceMode(writer http.ResponseWriter, req *http.Re
 }
 
 func (c *Controller) errorAddRouteHandler(err error) error {
+	errorMsg := "error adding route: %s"
 	if err != nil {
-		c.lc.Errorf("error adding route: %s", err.Error())
-		return fmt.Errorf("error adding route: %s", err.Error())
+		c.lc.Errorf(errorMsg, err.Error())
+		return fmt.Errorf(errorMsg, err.Error())
 	}
 	return nil
 }
