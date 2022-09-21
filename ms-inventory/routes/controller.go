@@ -12,16 +12,20 @@ import (
 )
 
 type Controller struct {
-	lc             logger.LoggingClient
-	service        interfaces.ApplicationService
-	inventoryItems Products
-	auditLog       AuditLog
+	lc                logger.LoggingClient
+	service           interfaces.ApplicationService
+	inventoryItems    Products
+	auditLog          AuditLog
+	auditLogFileName  string
+	inventoryFileName string
 }
 
-func NewController(lc logger.LoggingClient, service interfaces.ApplicationService) Controller {
+func NewController(lc logger.LoggingClient, service interfaces.ApplicationService, auditLogFileName string, inventoryFileName string) Controller {
 	return Controller{
-		lc:      lc,
-		service: service,
+		lc:                lc,
+		service:           service,
+		inventoryFileName: inventoryFileName,
+		auditLogFileName:  auditLogFileName,
 	}
 }
 

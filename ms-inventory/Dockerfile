@@ -35,10 +35,10 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
 RUN apk --no-cache add zeromq
 COPY --from=builder /usr/local/bin/ms-inventory/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ms-inventory/main /ms-inventory
-COPY --from=builder /usr/local/bin/ms-inventory/inventory.json /inventory.json
-COPY --from=builder /usr/local/bin/ms-inventory/auditlog.json /auditlog.json
+COPY --from=builder /usr/local/bin/ms-inventory/inventory.json /tmp/inventory.json
+COPY --from=builder /usr/local/bin/ms-inventory/auditlog.json /tmp/auditlog.json
 
-RUN chmod 640 /inventory.json /auditlog.json && \
-  chown 2000 /inventory.json /auditlog.json
+RUN chmod 640 /tmp/inventory.json /tmp/auditlog.json && \
+  chown 2000 /tmp/inventory.json /tmp/auditlog.json
 
 CMD [ "/ms-inventory", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s"]
