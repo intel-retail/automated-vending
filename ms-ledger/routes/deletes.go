@@ -53,7 +53,7 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 						if tid == ledger.TransactionID {
 							accountLedgers.Data[accountIndex].Ledgers = append(account.Ledgers[:ledgerIndex], account.Ledgers[ledgerIndex+1:]...)
 
-							err := utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+							err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 							if err != nil {
 								errMsg := "Failed to update ledger with deleted transaction"
 								utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)

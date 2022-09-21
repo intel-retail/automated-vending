@@ -72,6 +72,9 @@ services:
       edgex-network: {}
     ports:
     - 127.0.0.1:48093:48093/tcp
+    read_only: true
+    volumes:
+      - ledger:/tmp/
     restart: always
     ipc: none
     security_opt:
@@ -232,3 +235,5 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
 version: '3.7'
+volumes:
+  ledger: {}

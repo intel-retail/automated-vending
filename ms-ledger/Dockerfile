@@ -35,9 +35,9 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
 RUN apk --no-cache add zeromq
 COPY --from=builder /usr/local/bin/ms-ledger/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ms-ledger/main /ms-ledger
-COPY --from=builder /usr/local/bin/ms-ledger/ledger.json /ledger.json
+COPY --from=builder /usr/local/bin/ms-ledger/ledger.json /tmp/ledger.json
 
-RUN chmod 640 /ledger.json && \
-  chown 2000 /ledger.json
+RUN chmod 640 /tmp/ledger.json && \
+  chown 2000 /tmp/ledger.json
 
 CMD [ "/ms-ledger", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s" ]

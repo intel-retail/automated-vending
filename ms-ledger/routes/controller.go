@@ -14,13 +14,15 @@ type Controller struct {
 	lc                logger.LoggingClient
 	service           interfaces.ApplicationService
 	inventoryEndpoint string
+	ledgerFileName    string
 }
 
-func NewController(lc logger.LoggingClient, service interfaces.ApplicationService, inventoryEndpoint string) Controller {
+func NewController(lc logger.LoggingClient, service interfaces.ApplicationService, inventoryEndpoint string, ledgerFileName string) Controller {
 	return Controller{
 		lc:                lc,
 		service:           service,
 		inventoryEndpoint: inventoryEndpoint,
+		ledgerFileName:    ledgerFileName,
 	}
 }
 
