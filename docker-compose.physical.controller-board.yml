@@ -17,5 +17,9 @@ services:
     devices:
       - /dev/ttyACM0:/dev/ttyACM0
     environment:
-      Driver_VirtualControllerBoard: "false"
+      DRIVERCONFIG_VID: "2341"
+      DRIVERCONFIG_PID: "0037"
+      DRIVERCONFIG_DISPLAYTIMEOUT: "10s"
+      DRIVERCONFIG_LOCKTIMEOUT: "30s"
+      DRIVERCONFIG_VIRTUALCONTROLLERBOARD: "false"
 ...

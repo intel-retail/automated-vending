@@ -48,7 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	lc.Infof("Running the application functions for %s devices...", vendingState.Configuration.DeviceNames)
+	lc.Infof("Running the application functions for %s and %s devices", vendingState.Configuration.CardReaderDeviceName, vendingState.Configuration.MQTTDeviceName)
 
 	// create stop channels for each of the wait threads
 	stopChannel := make(chan int)
@@ -86,7 +86,7 @@ func main() {
 
 	// create the function pipeline to run when an event is read on the device channels
 	err = service.SetFunctionsPipeline(
-		transforms.NewFilterFor(vendingState.Configuration.DeviceNames).FilterByDeviceName,
+		transforms.NewFilterFor([]string{vendingState.Configuration.CardReaderDeviceName, vendingState.Configuration.MQTTDeviceName}).FilterByDeviceName,
 		vendingState.DeviceHelper,
 	)
 	if err != nil {

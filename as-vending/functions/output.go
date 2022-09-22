@@ -22,7 +22,7 @@ import (
 
 const (
 	InferenceMQTTDevice = "Inference-MQTT-device"
-	DsCardReader        = "ds-card-reader"
+	DsCardReader        = "card-reader"
 )
 
 // DeviceHelper is an EdgeX function that is passed into the EdgeX SDK's function pipeline.
@@ -122,7 +122,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 						}
 
 						// Display Ledger Total on LCD
-						if displayErr := vendingState.displayLedger(lc, eventReading.DeviceName, currentLedger); displayErr != nil {
+						if displayErr := vendingState.displayLedger(lc, vendingState.Configuration.ControllerBoardDeviceName, currentLedger); displayErr != nil {
 							return false, displayErr
 						}
 
@@ -205,7 +205,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 
 		// check to see if inference is running and set maintenance mode accordingly
 		if !vendingState.MaintenanceMode {
-			vendingState.MaintenanceMode = !vendingState.checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeatCmd, event.DeviceName)
+			vendingState.MaintenanceMode = !vendingState.checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeatCmd, vendingState.Configuration.MQTTDeviceName)
 		}
 
 		for _, eventReading := range event.Readings {
@@ -225,7 +225,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 						// display "hello" on row 2
 						settings := make(map[string]string)
 						settings["displayRow2"] = "hello"
-						err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardDisplayRow2Cmd, settings)
+						err := vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardDisplayRow2Cmd, settings)
 						if err != nil {
 							return false, err
 						}
@@ -233,7 +233,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 						settings = make(map[string]string)
 						settings["displayRow3"] = eventReading.Value
 						// display the card number on row 3
-						err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardDisplayRow3Cmd, settings)
+						err = vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardDisplayRow3Cmd, settings)
 						if err != nil {
 							return false, err
 						}
@@ -241,7 +241,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 						settings = make(map[string]string)
 						settings["lock1"] = "true"
 						// unlock
-						err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardLock1Cmd, settings)
+						err = vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardLock1Cmd, settings)
 						if err != nil {
 							return false, err
 						}
@@ -287,7 +287,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 						settings := make(map[string]string)
 						settings["displayRow1"] = "Out of Order"
 						// display out of order when door waiting state is set to false
-						err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardDisplayRow1Cmd, settings)
+						err := vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardDisplayRow1Cmd, settings)
 						if err != nil {
 							return false, err
 						}
@@ -305,7 +305,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					// display text "Maintenance Mode" in row 2
 					settings := make(map[string]string)
 					settings["displayRow2"] = "Maintenance Mode"
-					err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardDisplayRow2Cmd, settings)
+					err := vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardDisplayRow2Cmd, settings)
 					if err != nil {
 						return false, err
 					}
@@ -313,7 +313,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					// display any reading value in row 3
 					settings = make(map[string]string)
 					settings["displayRow3"] = eventReading.Value
-					err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardDisplayRow3Cmd, settings)
+					err = vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardDisplayRow3Cmd, settings)
 					if err != nil {
 						return false, err
 					}
@@ -321,7 +321,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 					// send lock command
 					settings = make(map[string]string)
 					settings["lock1"] = "true"
-					err = vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardLock1Cmd, settings)
+					err = vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardLock1Cmd, settings)
 					if err != nil {
 						return false, err
 					}
@@ -343,7 +343,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 				// display "Unauthorized" on display row 2
 				settings := make(map[string]string)
 				settings["displayRow2"] = "Unauthorized"
-				err := vendingState.SendCommand(lc, http.MethodPut, eventReading.DeviceName, vendingState.Configuration.ControllerBoardDisplayRow2Cmd, settings)
+				err := vendingState.SendCommand(lc, http.MethodPut, vendingState.Configuration.ControllerBoardDeviceName, vendingState.Configuration.ControllerBoardDisplayRow2Cmd, settings)
 				if err != nil {
 					return false, err
 				}

@@ -24,7 +24,7 @@ const (
 	maximum = "maximum"
 	// ControllerBoardDeviceServiceDeviceName is the name of the EdgeX device
 	// corresponding to our upstream event source.
-	ControllerBoardDeviceServiceDeviceName = "ds-controller-board"
+	ControllerBoardDeviceServiceDeviceName = "controller-board"
 )
 
 // CheckControllerBoardStatus is an EdgeX function that is passed into the EdgeX SDK's function pipeline.

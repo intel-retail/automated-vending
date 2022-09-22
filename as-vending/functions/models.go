@@ -38,7 +38,9 @@ type ServiceConfiguration struct {
 	ControllerBoardDisplayRow3Cmd  string
 	ControllerBoardLock1Cmd        string
 	ControllerBoardLock2Cmd        string
-	DeviceNames                    []string
+	CardReaderDeviceName           string
+	MQTTDeviceName                 string
+	ControllerBoardDeviceName      string
 	DoorCloseStateTimeout          time.Duration
 	DoorOpenStateTimeout           time.Duration
 	InferenceDoorStatusCmd         string

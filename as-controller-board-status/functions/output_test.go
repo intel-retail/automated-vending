@@ -94,7 +94,7 @@ func TestGetStatus(t *testing.T) {
 func getCommonApplicationSettings() map[string]string {
 	return map[string]string{
 		AverageTemperatureMeasurementDuration:     "-15s",
-		DeviceName:                                "ds-controller-board",
+		DeviceName:                                "controller-board",
 		MaxTemperatureThreshold:                   temp51s,
 		MinTemperatureThreshold:                   temp49s,
 		MQTTEndpoint:                              "http://localhost:48082/api/v2/device/name/Inference-MQTT-device/command/vendingDoorStatus",
@@ -116,7 +116,7 @@ func getCommonApplicationSettings() map[string]string {
 func getCommonApplicationSettingsTyped() *ControllerBoardStatusAppSettings {
 	return &ControllerBoardStatusAppSettings{
 		AverageTemperatureMeasurementDuration:     time.Second * -15,
-		DeviceName:                                "ds-controller-board",
+		DeviceName:                                "controller-board",
 		MaxTemperatureThreshold:                   temp51,
 		MinTemperatureThreshold:                   temp49,
 		MQTTEndpoint:                              "http://localhost:48082/api/v2/device/name/Inference-MQTT-device/command/vendingDoorStatus",
