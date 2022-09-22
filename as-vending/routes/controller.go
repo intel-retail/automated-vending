@@ -55,10 +55,8 @@ func (c *Controller) AddAllRoutes() error {
 // GetMaintenanceMode will return a JSON response containing the boolean state
 // of the vendingState's maintenance mode.
 func (c *Controller) GetMaintenanceMode(writer http.ResponseWriter, req *http.Request) {
-	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
-		mm, _ := utilities.GetAsJSON(functions.MaintenanceMode{MaintenanceMode: c.vendingState.MaintenanceMode})
-		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, mm, false)
-	})
+	mm, _ := utilities.GetAsJSON(functions.MaintenanceMode{MaintenanceMode: c.vendingState.MaintenanceMode})
+	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, mm, false)
 }
 
 func (c *Controller) errorAddRouteHandler(err error) error {

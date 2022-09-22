@@ -46,8 +46,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	controller := routes.NewController(lc, service, auditLogFileName,inventoryFileName)
-	err := controller.AddAllRoutes()
+	controller := routes.NewController(lc, service, auditLogFileName, inventoryFileName)
+	err = controller.AddAllRoutes()
 	if err != nil {
 		lc.Errorf("failed to add all Routes: %s", err.Error())
 		os.Exit(1)
