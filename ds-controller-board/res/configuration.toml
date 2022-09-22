@@ -82,8 +82,8 @@ PublishTopicPrefix = "edgex/events/device" # /<device-profile-name>/<device-name
 
 [DriverConfig]
   DeviceName = "controller-board"
-  VID = "2341"
-  PID = "0037"
+  VID = "0000"
+  PID = "0000"
   DisplayTimeout = "10s"
   LockTimeout = "30s"
   VirtualControllerBoard = true

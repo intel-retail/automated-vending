@@ -51,9 +51,9 @@ Type = "consul"
 
 [DriverConfig]
   DeviceName = "card-reader"
-  DeviceSearchPath = "/dev/input/event*"
-  VID = 65535 # 0xFFFF
-  PID = 53    # 0x0035
+  DeviceSearchPath = ""
+  VID = 0 # 0xFFFF
+  PID = 0    # 0x0035
   SimulateDevice = true
 
 [Device]
