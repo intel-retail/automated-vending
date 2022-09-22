@@ -31,13 +31,13 @@ func main() {
 	}
 
 	if len(inventoryFileName) == 0 {
-		lc.Error("LedgerFileName configuration setting is empty")
+		lc.Error("InventoryFileName configuration setting is empty")
 		os.Exit(1)
 	}
 
 	auditLogFileName, err := service.GetAppSetting("AuditLogFileName")
 	if err != nil {
-		lc.Errorf("failed load LedgerFileName from ApplicationSettings: %s", err.Error())
+		lc.Errorf("failed load AuditLogFileName from ApplicationSettings: %s", err.Error())
 		os.Exit(1)
 	}
 
