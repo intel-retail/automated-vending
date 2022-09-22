@@ -97,7 +97,7 @@ func TestController_GetStatus(t *testing.T) {
 				boardStatus: &boardStatus,
 			}
 
-			c.boardStatus.SetControllerBoardStatus(tt.controllerBoardStatus)
+			c.boardStatus.ControllerBoardStatus = &tt.controllerBoardStatus
 
 			c.GetStatus(w, req)
 			resp := w.Result()

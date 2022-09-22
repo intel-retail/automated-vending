@@ -67,6 +67,7 @@ type CheckBoardStatus struct {
 	Configuration           *ControllerBoardStatusAppSettings
 	SubscriptionClient      interfaces.SubscriptionClient
 	NotificationClient      interfaces.NotificationClient
+	ControllerBoardStatus   *ControllerBoardStatus
 }
 
 // VendingDoorStatus is a string representation of a boolean whose state corresponds
