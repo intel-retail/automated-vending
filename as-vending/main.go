@@ -21,7 +21,7 @@ const (
 	serviceKey = "as-vending"
 )
 
-type myApp struct {
+type vendingAppService struct {
 	service       interfaces.ApplicationService
 	lc            logger.LoggingClient
 	serviceConfig *config.ServiceConfig
@@ -29,12 +29,12 @@ type myApp struct {
 }
 
 func main() {
-	app := myApp{}
+	app := vendingAppService{}
 	code := app.CreateAndRunAppService(serviceKey, pkg.NewAppService)
 	os.Exit(code)
 }
 
-func (app *myApp) CreateAndRunAppService(serviceKey string, newServiceFactory func(string) (interfaces.ApplicationService, bool)) int {
+func (app *vendingAppService) CreateAndRunAppService(serviceKey string, newServiceFactory func(string) (interfaces.ApplicationService, bool)) int {
 	var ok bool
 	app.service, ok = newServiceFactory(serviceKey)
 	if !ok {
@@ -45,17 +45,17 @@ func (app *myApp) CreateAndRunAppService(serviceKey string, newServiceFactory fu
 
 	// retrieve the required configurations
 	app.serviceConfig = &config.ServiceConfig{}
-	if err := app.service.LoadCustomConfig(app.serviceConfig, "AppCustom"); err != nil {
-		app.lc.Errorf("failed load custom configuration: %s", err.Error())
+	if err := app.service.LoadCustomConfig(app.serviceConfig, "Vending"); err != nil {
+		app.lc.Errorf("failed load custom Vending configuration: %s", err.Error())
 		return 1
 	}
 
-	if err := app.serviceConfig.AppCustom.Validate(); err != nil {
-		app.lc.Errorf("failed to validate configuration: %v", err)
+	if err := app.serviceConfig.Vending.Validate(); err != nil {
+		app.lc.Errorf("failed to validate Vending configuration: %v", err)
 		return 1
 	}
 
-	app.vendingState.Configuration = &app.serviceConfig.AppCustom
+	app.vendingState.Configuration = &app.serviceConfig.Vending
 	// parse configuration durations to a time.Duration object
 	if err := app.vendingState.ParseDurationFromConfig(); err != nil {
 		app.lc.Errorf("failed to parse configuration: %v", err)

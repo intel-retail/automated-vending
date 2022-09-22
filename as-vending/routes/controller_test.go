@@ -166,7 +166,7 @@ func TestBoardStatus(t *testing.T) {
 		CVWorkflowStarted:              true,
 		DoorOpenWaitThreadStopChannel:  doorOpenStopChannel,
 		DoorCloseWaitThreadStopChannel: doorCloseStopChannel,
-		Configuration:                  new(config.AppCustomConfig),
+		Configuration:                  new(config.VendingConfig),
 	}
 	boardStatus := functions.ControllerBoardStatus{
 		MaxTemperatureStatus: true,

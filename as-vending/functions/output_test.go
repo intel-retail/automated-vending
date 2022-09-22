@@ -107,7 +107,7 @@ func TestDisplayLedger(t *testing.T) {
 	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
 
 	vendingState := VendingState{
-		Configuration: &config.AppCustomConfig{
+		Configuration: &config.VendingConfig{
 			LCDRowLength:                   20,
 			ControllerBoardDisplayResetCmd: "displayReset",
 			ControllerBoardDisplayRow1Cmd:  "diplayrow1",
@@ -191,7 +191,7 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 				InferenceWaitThreadStopChannel: inferenceStopChannel,
 				ThreadStopChannel:              stopChannel,
 				CurrentUserData:                OutputData{RoleID: 1},
-				Configuration: &config.AppCustomConfig{
+				Configuration: &config.VendingConfig{
 					InventoryService:               testServer.URL,
 					InventoryAuditLogService:       testServer.URL,
 					ControllerBoardDisplayResetCmd: "displayreset",
@@ -268,7 +268,7 @@ func TestVerifyDoorAccess(t *testing.T) {
 				CurrentUserData:                OutputData{RoleID: 1},
 				CVWorkflowStarted:              false,
 				MaintenanceMode:                tc.MaintenanceMode,
-				Configuration: &config.AppCustomConfig{
+				Configuration: &config.VendingConfig{
 					InferenceHeartbeatCmd:         "inferenceHeartbeat",
 					ControllerBoardDisplayRow1Cmd: "displayrow1",
 					ControllerBoardDisplayRow2Cmd: "displayrow2",

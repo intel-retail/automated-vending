@@ -5,10 +5,10 @@ import (
 )
 
 type ServiceConfig struct {
-	AppCustom AppCustomConfig
+	Vending VendingConfig
 }
 
-type AppCustomConfig struct {
+type VendingConfig struct {
 	AuthenticationEndpoint         string
 	ControllerBoardDisplayResetCmd string
 	ControllerBoardDisplayRow0Cmd  string
@@ -43,7 +43,7 @@ func (c *ServiceConfig) UpdateFromRaw(rawConfig interface{}) bool {
 }
 
 // Validate ensures your custom configuration has proper values.
-func (ac *AppCustomConfig) Validate() error {
+func (ac *VendingConfig) Validate() error {
 	if len(ac.AuthenticationEndpoint) == 0 {
 		return fmt.Errorf("configuration AuthenticationEndpoint is empty")
 	}
