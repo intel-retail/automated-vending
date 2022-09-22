@@ -27,7 +27,7 @@ type VendingState struct {
 	DoorCloseWaitThreadStopChannel chan int   `json:"doorCloseWaitThreadStopChannel"`
 	InferenceDataReceived          bool       `json:"inferenceDataReceived"` // inference event
 	InferenceWaitThreadStopChannel chan int   `json:"inferenceWaitThreadStopChannel"`
-	Configuration                  *config.AppCustomConfig
+	Configuration                  *config.VendingConfig
 	CommandClient                  clientInterfaces.CommandClient
 	DoorCloseStateTimeout          time.Duration
 	DoorOpenStateTimeout           time.Duration

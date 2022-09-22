@@ -57,7 +57,7 @@ Type="edgex-messagebus"
   Host = "localhost"
   Port = 59882
 
-[AppCustom]
+[Vending]
   AuthenticationEndpoint = "http://localhost:48096/authentication"
   ControllerBoardDisplayResetCmd = "displayReset"
   ControllerBoardDisplayRow0Cmd = "displayRow0"
