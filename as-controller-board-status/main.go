@@ -48,9 +48,10 @@ func main() {
 	}
 
 	boardStatus := functions.CheckBoardStatus{
-		DoorClosed:         true, // Set default door state to closed
-		Configuration:      config,
-		SubscriptionClient: subscriptionClient,
+		DoorClosed:            true, // Set default door state to closed
+		Configuration:         config,
+		SubscriptionClient:    subscriptionClient,
+		ControllerBoardStatus: new(functions.ControllerBoardStatus),
 	}
 
 	err = boardStatus.SubscribeToNotificationService()

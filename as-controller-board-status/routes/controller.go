@@ -41,7 +41,7 @@ func (c *Controller) AddAllRoutes() error {
 // service to inquire about the status of the upstream Automated Checkout hardware interface(s).
 func (c *Controller) GetStatus(writer http.ResponseWriter, req *http.Request) {
 	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
-		controllerBoardStatusJSON, err := utilities.GetAsJSON(c.boardStatus.GetControllerBoardStatus())
+		controllerBoardStatusJSON, err := utilities.GetAsJSON(c.boardStatus.ControllerBoardStatus)
 		if err != nil {
 			errMsg := "Failed to serialize the controller board's current state"
 			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
