@@ -70,7 +70,7 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 			if len(eventReading.Value) < 1 {
 				return false, fmt.Errorf("event reading was empty")
 			}
-			switch eventReading.DeviceName {
+			switch eventReading.ResourceName {
 			case "inferenceSkuDelta":
 				{
 					fmt.Println("Inference Started")

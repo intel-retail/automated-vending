@@ -43,7 +43,7 @@ func GetCommonSuccessConfig() ControllerBoardStatusAppSettings {
 		DeviceName:                                "controller-board",
 		MaxTemperatureThreshold:                   83.0,
 		MinTemperatureThreshold:                   10.0,
-		MQTTEndpoint:                              "http://localhost:48082/api/v2/device/name/Inference-MQTT-device/command/vendingDoorStatus",
+		MQTTEndpoint:                              "http://localhost:48082/api/v2/device/name/Inference-MQTT-device/vendingDoorStatus",
 		NotificationCategory:                      "HW_HEALTH",
 		NotificationEmailAddresses:                []string{"test@site.com", "test@site.com"},
 		NotificationLabels:                        []string{"HW_HEALTH"},
