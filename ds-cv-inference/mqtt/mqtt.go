@@ -143,7 +143,7 @@ func SendDeltaData(client MQTT.Client, delta []byte) {
 	cmdSKUDelta := "inferenceSkuDelta"
 
 	edgeXMessage := make(map[string]string)
-	edgeXMessage["name"] = "Inference-MQTT-device"
+	edgeXMessage["name"] = "Inference-device"
 	edgeXMessage["cmd"] = cmdSKUDelta
 	edgeXMessage["method"] = "get"
 	edgeXMessage[cmdSKUDelta] = string(delta)

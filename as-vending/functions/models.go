@@ -39,7 +39,7 @@ type ServiceConfiguration struct {
 	ControllerBoardLock1Cmd        string
 	ControllerBoardLock2Cmd        string
 	CardReaderDeviceName           string
-	MQTTDeviceName                 string
+	InferenceDeviceName            string
 	ControllerBoardDeviceName      string
 	DoorCloseStateTimeout          time.Duration
 	DoorOpenStateTimeout           time.Duration

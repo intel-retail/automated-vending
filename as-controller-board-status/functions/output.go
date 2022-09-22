@@ -251,7 +251,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 
 		// Prepare a message to be sent to the MQTT bus. Depending on the state
 		// of the door, this message may trigger a CV inference
-		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.MQTTEndpoint, RESTPut, VendingDoorStatus{
+		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.DoorStatusCommandEndpoint, RESTPut, VendingDoorStatus{
 			VendingDoorStatus: strconv.FormatBool(doorClosed),
 		})
 		if err != nil {

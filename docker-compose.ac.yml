@@ -218,7 +218,7 @@ services:
       TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
       REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: as-controller-board-status
-      APPLICATIONSETTINGS_MQTTENDPOINT: "http://edgex-core-command:59882/api/v2/device/name/Inference-MQTT-device/inferenceDoorStatus"
+      APPLICATIONSETTINGS_DOORSTATUSCOMMANDENDPOINT: "http://edgex-core-command:59882/api/v2/device/name/Inference-device/inferenceDoorStatus"
       APPLICATIONSETTINGS_VENDINGENDPOINT: "http://as-vending:48099/boardStatus"
       APPLICATIONSETTINGS_MAXTEMPERATURETHRESHOLD: "83"
       APPLICATIONSETTINGS_MINTEMPERATURETHRESHOLD: "10"

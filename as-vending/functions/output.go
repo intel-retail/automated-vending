@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	InferenceMQTTDevice = "Inference-MQTT-device"
+	InferenceMQTTDevice = "Inference-device"
 	DsCardReader        = "card-reader"
 )
 
@@ -205,7 +205,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 
 		// check to see if inference is running and set maintenance mode accordingly
 		if !vendingState.MaintenanceMode {
-			vendingState.MaintenanceMode = !vendingState.checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeatCmd, vendingState.Configuration.MQTTDeviceName)
+			vendingState.MaintenanceMode = !vendingState.checkInferenceStatus(lc, vendingState.Configuration.InferenceHeartbeatCmd, vendingState.Configuration.InferenceDeviceName)
 		}
 
 		for _, eventReading := range event.Readings {

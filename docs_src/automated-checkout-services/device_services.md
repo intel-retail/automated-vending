@@ -277,7 +277,7 @@ The Automated Checkout architecture uses three MQTT topics:
 
 ---
 
-#### `GET`: `http://localhost:48098/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat`
+#### `GET`: `http://localhost:48098/api/v1/device/name/Inference-device/command/inferenceHeartbeat`
 
 The `GET` call to the EdgeX MQTT device service's `inferenceHearbeat` command will act as a health-check for the Automated Checkout cv inference service. It must return `200 OK` upon swiping an RFID card in order for the vending workflow to begin. If it does not, the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service will enter maintenance mode.
 
@@ -286,25 +286,25 @@ Simple usage example:
 Through EdgeX command API:
 
 ```bash
-curl -X GET http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat
+curl -X GET http://localhost:48082/api/v1/device/name/Inference-device/command/inferenceHeartbeat
 ```
 
 To MQTT device service itself:
 
 ```bash
-curl -X GET http://localhost:48100/api/v1/device/name/Inference-MQTT-device/inferenceHeartbeat
+curl -X GET http://localhost:48100/api/v1/device/name/Inference-device/inferenceHeartbeat
 ```
 
 Sample response, `200 OK`:
 
 ```json
 {
-    "device": "Inference-MQTT-device",
+    "device": "Inference-device",
     "origin": 1579637607912,
     "readings": [
         {
             "origin": 1579637607911,
-            "device": "Inference-MQTT-device",
+            "device": "Inference-device",
             "name": "inferenceHeartbeat",
             "value": "inferencePong"
         }
@@ -314,7 +314,7 @@ Sample response, `200 OK`:
 
 ---
 
-#### `PUT`: `http://localhost:48100/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus`
+#### `PUT`: `http://localhost:48100/api/v1/device/name/Inference-device/command/inferenceDoorStatus`
 
 The `PUT` call to the EdgeX MQTT device service's `inferenceDoorStatus` command will cause the cv inference service to consume the message, and if the JSON `PUT` key `inferenceDoorStatus` has the string value `"true"`, an inference attempt will begin. The service will subsequently respond with a message containing the inventory delta (aka SKU delta).
 
@@ -323,13 +323,13 @@ Simple usage example:
 Through EdgeX command API:
 
 ```bash
-curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus
+curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:48082/api/v1/device/name/Inference-device/command/inferenceDoorStatus
 ```
 
 To MQTT device service itself:
 
 ```bash
-curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:48100/api/v1/device/name/Inference-MQTT-device/inferenceDoorStatus
+curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:48100/api/v1/device/name/Inference-device/inferenceDoorStatus
 ```
 
 !!! success

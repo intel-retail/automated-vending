@@ -16,7 +16,7 @@ type ControllerBoardStatusAppSettings struct {
 	DeviceName                                string
 	MaxTemperatureThreshold                   float64
 	MinTemperatureThreshold                   float64
-	MQTTEndpoint                              string
+	DoorStatusCommandEndpoint                 string
 	NotificationCategory                      string
 	NotificationEmailAddresses                []string
 	NotificationLabels                        []string
