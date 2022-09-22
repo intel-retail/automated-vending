@@ -9,20 +9,16 @@ import (
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
-// AuditLogFileName is the name of the file that will store the audit log
-var AuditLogFileName = "auditlog.json"
-
-// InventoryFileName is the name of the file that will store the inventory
-var InventoryFileName = "inventory.json"
-
 // DeleteAllQueryString is a string used across this module to enable
 // CRUD operations on "all" items in inventory or audit log
-const DeleteAllQueryString = "all"
+const (
+	DeleteAllQueryString = "all"
+)
 
 // GetInventoryItems returns a list of InventoryItems by reading the inventory
 // JSON file
 func (c *Controller) GetInventoryItems() (inventoryItems Products, err error) {
-	err = utilities.LoadFromJSONFile(InventoryFileName, &inventoryItems)
+	err = utilities.LoadFromJSONFile(c.inventoryFileName, &inventoryItems)
 	if err != nil {
 		c.lc.Errorf("Failed to load inventory JSON file: %s", err.Error())
 		return inventoryItems, errors.New(
@@ -53,7 +49,7 @@ func (c *Controller) GetInventoryItemBySKU(SKU string) (inventoryItem Product, i
 // GetAuditLog returns a list of audit log entries by reading from the
 // audit log JSON file
 func (c *Controller) GetAuditLog() (auditLog AuditLog, err error) {
-	err = utilities.LoadFromJSONFile(AuditLogFileName, &auditLog)
+	err = utilities.LoadFromJSONFile(c.auditLogFileName, &auditLog)
 	if err != nil {
 		c.lc.Errorf("Failed to load audit log JSON file: %s", err.Error())
 		return auditLog, errors.New(
@@ -84,13 +80,13 @@ func (c *Controller) GetAuditLogEntryByID(auditEntryID string) (auditLogEntry Au
 // DeleteInventory will reset the content of the inventory JSON file
 func (c *Controller) DeleteInventory() error {
 	c.lc.Debug("Inventory JSON content reset")
-	return c.WriteJSON(InventoryFileName, Products{Data: []Product{}})
+	return c.WriteJSON(c.inventoryFileName, Products{Data: []Product{}})
 }
 
 // DeleteAuditLog will reset the content of the audit log JSON file
 func (c *Controller) DeleteAuditLog() error {
 	c.lc.Debug("Audit Log JSON content reset")
-	return c.WriteJSON(AuditLogFileName, AuditLog{Data: []AuditLogEntry{}})
+	return c.WriteJSON(c.auditLogFileName, AuditLog{Data: []AuditLogEntry{}})
 }
 
 // WriteJSON is a shorthand for writing an interface to JSON
@@ -101,14 +97,14 @@ func (c *Controller) WriteJSON(fileName string, content interface{}) error {
 
 // WriteInventory is a shorthand for writing the inventory quickly
 func (c *Controller) WriteInventory() error {
-	c.lc.Debugf("Wrote: %s to Inventory: %s", c.inventoryItems, InventoryFileName)
-	return c.WriteJSON(InventoryFileName, c.inventoryItems)
+	c.lc.Debugf("Wrote: %s to Inventory: %s", c.inventoryItems, c.inventoryFileName)
+	return c.WriteJSON(c.inventoryFileName, c.inventoryItems)
 }
 
 // WriteAuditLog is a shorthand for writing the audit log quickly
 func (c *Controller) WriteAuditLog() error {
-	c.lc.Debugf("Wrote: %s to Inventory: %s", c.auditLog, AuditLogFileName)
-	return c.WriteJSON(AuditLogFileName, c.auditLog)
+	c.lc.Debugf("Wrote: %s to Inventory: %s", c.auditLog, c.auditLogFileName)
+	return c.WriteJSON(c.auditLogFileName, c.auditLog)
 }
 
 // DeleteInventoryItem deletes an inventory item matching the

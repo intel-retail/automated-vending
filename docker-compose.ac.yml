@@ -47,6 +47,9 @@ services:
       edgex-network: {}
     ports:
     - 48095:48095/tcp
+    read_only: true
+    volumes:
+      - inventory:/tmp/
     restart: always
     ipc: none
     security_opt:
@@ -237,3 +240,5 @@ services:
 version: '3.7'
 volumes:
   ledger: {}
+  inventory: {}
+

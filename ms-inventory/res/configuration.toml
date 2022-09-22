@@ -23,3 +23,6 @@ Type = 'consul'
 Type="http"
 
 [ApplicationSettings]
+AuditLogFileName = "/tmp/auditlog.json"
+InventoryFileName = "/tmp/inventory.json"
+
