@@ -457,15 +457,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#get-httplocalhost48098apiv1devicenameInference-devicecommandinferenceheartbeat" class="md-nav__link">
-    GET: http://localhost:48098/api/v1/device/name/Inference-device/command/inferenceHeartbeat
+  <a href="#get-httplocalhost48098apiv1devicenameinference-mqtt-devicecommandinferenceheartbeat" class="md-nav__link">
+    GET: http://localhost:48098/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#put-httplocalhost48100apiv1devicenameInference-devicecommandinferencedoorstatus" class="md-nav__link">
-    PUT: http://localhost:48100/api/v1/device/name/Inference-device/command/inferenceDoorStatus
+  <a href="#put-httplocalhost48100apiv1devicenameinference-mqtt-devicecommandinferencedoorstatus" class="md-nav__link">
+    PUT: http://localhost:48100/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus
   </a>
   
 </li>
@@ -785,15 +785,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#get-httplocalhost48098apiv1devicenameInference-devicecommandinferenceheartbeat" class="md-nav__link">
-    GET: http://localhost:48098/api/v1/device/name/Inference-device/command/inferenceHeartbeat
+  <a href="#get-httplocalhost48098apiv1devicenameinference-mqtt-devicecommandinferenceheartbeat" class="md-nav__link">
+    GET: http://localhost:48098/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#put-httplocalhost48100apiv1devicenameInference-devicecommandinferencedoorstatus" class="md-nav__link">
-    PUT: http://localhost:48100/api/v1/device/name/Inference-device/command/inferenceDoorStatus
+  <a href="#put-httplocalhost48100apiv1devicenameinference-mqtt-devicecommandinferencedoorstatus" class="md-nav__link">
+    PUT: http://localhost:48100/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus
   </a>
   
 </li>
@@ -1064,27 +1064,27 @@ The openVINO product detection model is intended for demo purposes. For producti
 </table>
 <h3 id="cv-inference-apis">CV inference APIs</h3>
 <hr />
-<h4 id="get-httplocalhost48098apiv1devicenameInference-devicecommandinferenceheartbeat"><code>GET</code>: <code>http://localhost:48098/api/v1/device/name/Inference-device/command/inferenceHeartbeat</code></h4>
+<h4 id="get-httplocalhost48098apiv1devicenameinference-mqtt-devicecommandinferenceheartbeat"><code>GET</code>: <code>http://localhost:48098/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat</code></h4>
 <p>The <code>GET</code> call to the EdgeX MQTT device service's <code>inferenceHearbeat</code> command will act as a health-check for the Automated Checkout cv inference service. It must return <code>200 OK</code> upon swiping an RFID card in order for the vending workflow to begin. If it does not, the <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending"><code>as-vending</code></a> service will enter maintenance mode.</p>
 <p>Simple usage example:</p>
 <p>Through EdgeX command API:</p>
-<div class="codehilite"><pre><span></span><code>curl -X GET http://localhost:48082/api/v1/device/name/Inference-device/command/inferenceHeartbeat
+<div class="codehilite"><pre><span></span><code>curl -X GET http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat
 </code></pre></div>
 
 
 <p>To MQTT device service itself:</p>
-<div class="codehilite"><pre><span></span><code>curl -X GET http://localhost:48100/api/v1/device/name/Inference-device/inferenceHeartbeat
+<div class="codehilite"><pre><span></span><code>curl -X GET http://localhost:48100/api/v1/device/name/Inference-MQTT-device/inferenceHeartbeat
 </code></pre></div>
 
 
 <p>Sample response, <code>200 OK</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="p">{</span>
-    <span class="nt">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;Inference-device&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;Inference-MQTT-device&quot;</span><span class="p">,</span>
     <span class="nt">&quot;origin&quot;</span><span class="p">:</span> <span class="mi">1579637607912</span><span class="p">,</span>
     <span class="nt">&quot;readings&quot;</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">{</span>
             <span class="nt">&quot;origin&quot;</span><span class="p">:</span> <span class="mi">1579637607911</span><span class="p">,</span>
-            <span class="nt">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;Inference-device&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;Inference-MQTT-device&quot;</span><span class="p">,</span>
             <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;inferenceHeartbeat&quot;</span><span class="p">,</span>
             <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;inferencePong&quot;</span>
         <span class="p">}</span>
@@ -1094,16 +1094,16 @@ The openVINO product detection model is intended for demo purposes. For producti
 
 
 <hr />
-<h4 id="put-httplocalhost48100apiv1devicenameInference-devicecommandinferencedoorstatus"><code>PUT</code>: <code>http://localhost:48100/api/v1/device/name/Inference-device/command/inferenceDoorStatus</code></h4>
+<h4 id="put-httplocalhost48100apiv1devicenameinference-mqtt-devicecommandinferencedoorstatus"><code>PUT</code>: <code>http://localhost:48100/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus</code></h4>
 <p>The <code>PUT</code> call to the EdgeX MQTT device service's <code>inferenceDoorStatus</code> command will cause the cv inference service to consume the message, and if the JSON <code>PUT</code> key <code>inferenceDoorStatus</code> has the string value <code>"true"</code>, an inference attempt will begin. The service will subsequently respond with a message containing the inventory delta (aka SKU delta).</p>
 <p>Simple usage example:</p>
 <p>Through EdgeX command API:</p>
-<div class="codehilite"><pre><span></span><code>curl -X PUT -d <span class="s1">&#39;{&quot;inferenceDoorStatus&quot;:&quot;true&quot;}&#39;</span> http://localhost:48082/api/v1/device/name/Inference-device/command/inferenceDoorStatus
+<div class="codehilite"><pre><span></span><code>curl -X PUT -d <span class="s1">&#39;{&quot;inferenceDoorStatus&quot;:&quot;true&quot;}&#39;</span> http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus
 </code></pre></div>
 
 
 <p>To MQTT device service itself:</p>
-<div class="codehilite"><pre><span></span><code>curl -X PUT -d <span class="s1">&#39;{&quot;inferenceDoorStatus&quot;:&quot;true&quot;}&#39;</span> http://localhost:48100/api/v1/device/name/Inference-device/inferenceDoorStatus
+<div class="codehilite"><pre><span></span><code>curl -X PUT -d <span class="s1">&#39;{&quot;inferenceDoorStatus&quot;:&quot;true&quot;}&#39;</span> http://localhost:48100/api/v1/device/name/Inference-MQTT-device/inferenceDoorStatus
 </code></pre></div>
 
 
