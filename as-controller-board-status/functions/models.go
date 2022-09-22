@@ -6,7 +6,7 @@ package functions
 import (
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
 )
 
 // ControllerBoardStatusAppSettings is a data structure that holds the
@@ -65,7 +65,8 @@ type CheckBoardStatus struct {
 	Measurements            []TempMeasurement // used to store temperature readings over time.
 	LastNotified            time.Time         // used to store last time a notification was sent out so we don't spam the maintenance person
 	Configuration           *ControllerBoardStatusAppSettings
-	Service                 interfaces.ApplicationService
+	SubscriptionClient      interfaces.SubscriptionClient
+	NotificationClient      interfaces.NotificationClient
 }
 
 // VendingDoorStatus is a string representation of a boolean whose state corresponds

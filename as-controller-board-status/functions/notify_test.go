@@ -10,60 +10,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
 	edgex_errors "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
-
-type testTableBuildSubscriptionMessageStruct struct {
-	TestCaseName string
-	BoardStatus  CheckBoardStatus
-	Output       map[string]interface{}
-}
-
-func prepBuildSubscriptionMessage() []testTableBuildSubscriptionMessageStruct {
-	commonSuccessConfig := GetCommonSuccessConfig()
-
-	mockAppService := &mocks.ApplicationService{}
-	mockSubscriptionClient := &client_mocks.SubscriptionClient{}
-	mockSubscriptionClient.On("Add", mock.Anything, mock.Anything).Return(nil, nil)
-	mockAppService.On("SubscriptionClient").Return(mockSubscriptionClient)
-	return []testTableBuildSubscriptionMessageStruct{
-		{
-			TestCaseName: "Success",
-			BoardStatus: CheckBoardStatus{
-				Configuration: &commonSuccessConfig,
-				Service:       mockAppService,
-			},
-			Output: map[string]interface{}{
-				"Name":     commonSuccessConfig.NotificationName,
-				"receiver": commonSuccessConfig.NotificationReceiver,
-				"subscribedCategories": []string{
-					commonSuccessConfig.NotificationCategory,
-				},
-				"subscribedLabels": []string{
-					commonSuccessConfig.NotificationCategory,
-				},
-				"channels": []map[string]interface{}{
-					{
-						"type":          "EMAIL",
-						"mailAddresses": commonSuccessConfig.NotificationEmailAddresses,
-					},
-				},
-			},
-		},
-	}
-}
-
-type testTablePostSubscriptionToAPIStruct struct {
-	TestCaseName        string
-	BoardStatus         CheckBoardStatus
-	SubscriptionMessage map[string]interface{}
-	Output              error
-	HTTPTestServer      *httptest.Server
-}
 
 type testTableSubscribeToNotificationServiceStruct struct {
 	TestCaseName   string
@@ -86,23 +37,19 @@ func prepSubscribeToNotificationServiceTest() ([]testTableSubscribeToNotificatio
 	successConfig := GetCommonSuccessConfig()
 	failureConfig := GetCommonSuccessConfig()
 
-	mockAppService := &mocks.ApplicationService{}
 	mockSubscriptionClient := &client_mocks.SubscriptionClient{}
 	mockSubscriptionClient.On("Add", mock.Anything, mock.Anything).Return(nil, nil)
-	mockAppService.On("SubscriptionClient").Return(mockSubscriptionClient)
 
-	mockAppServiceFailed := &mocks.ApplicationService{}
 	mockSubscriptionClientFailed := &client_mocks.SubscriptionClient{}
 	mockSubscriptionClientFailed.On("Add", mock.Anything, mock.Anything).Return(nil, edgex_errors.NewCommonEdgeXWrapper(errors.New("test failed")))
-	mockAppServiceFailed.On("SubscriptionClient").Return(mockSubscriptionClientFailed)
 
 	boardStatusSuccess := CheckBoardStatus{
-		Configuration: &successConfig,
-		Service:       mockAppService,
+		Configuration:      &successConfig,
+		SubscriptionClient: mockSubscriptionClient,
 	}
 	boardStatusFailure := CheckBoardStatus{
-		Configuration: &failureConfig,
-		Service:       mockAppServiceFailed,
+		Configuration:      &failureConfig,
+		SubscriptionClient: mockSubscriptionClientFailed,
 	}
 
 	output = append(output,
@@ -148,15 +95,13 @@ func TestSubscribeToNotificationService(t *testing.T) {
 // TestSendNotification validates that the edge cases that aren't handled
 // elsewhere are covered
 func TestSendNotification(t *testing.T) {
-	mockAppService := &mocks.ApplicationService{}
 	mockNotificationClient := &client_mocks.NotificationClient{}
 	mockNotificationClient.On("SendNotification", mock.Anything, mock.Anything).Return(nil, edgex_errors.NewCommonEdgeXWrapper(errors.New("test failed")))
-	mockAppService.On("NotificationClient").Return(mockNotificationClient)
 
 	configSuccess := GetCommonSuccessConfig()
 	boardStatus := CheckBoardStatus{
-		Configuration: &configSuccess,
-		Service:       mockAppService,
+		Configuration:      &configSuccess,
+		NotificationClient: mockNotificationClient,
 	}
 
 	err := boardStatus.SendNotification("test notification")

@@ -14,7 +14,6 @@ import (
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 var controllerBoardStatus = ControllerBoardStatus{}
@@ -196,7 +195,7 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 	// react accordingly
 	if controllerBoardStatus.MinTemperatureStatus || controllerBoardStatus.MaxTemperatureStatus {
 		lc.Info("Pushing controller board status to central vending service due to a temperature threshold being exceeded")
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, RESTPost, controllerBoardStatus)
+		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, controllerBoardStatus)
 		if err != nil {
 			return fmt.Errorf("Encountered error sending the controller board's status to the central vending endpoint: %v", err.Error())
 		}
@@ -236,11 +235,11 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 	if boardStatus.DoorClosed != doorClosed {
 		// Set the boardStatus's DoorClosed value to the new value
 		boardStatus.DoorClosed = doorClosed
-		lc.Info(fmt.Sprintf("The door closed status has changed to: %v", doorClosed))
+		lc.Infof("The door closed status has changed to: %t", doorClosed)
 
 		// Set the door closed state and make sure MinTemp and MaxTemp status
 		// are false to avoid triggering a false temperature event
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, RESTPost, ControllerBoardStatus{
+		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, ControllerBoardStatus{
 			DoorClosed:           doorClosed,
 			MinTemperatureStatus: false,
 			MaxTemperatureStatus: false,
@@ -251,7 +250,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 
 		// Prepare a message to be sent to the MQTT bus. Depending on the state
 		// of the door, this message may trigger a CV inference
-		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.MQTTEndpoint, RESTPut, VendingDoorStatus{
+		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.MQTTEndpoint, http.MethodPut, VendingDoorStatus{
 			VendingDoorStatus: strconv.FormatBool(doorClosed),
 		})
 		if err != nil {
@@ -262,16 +261,11 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 	return nil
 }
 
-// GetStatus is a REST API endpoint that enables a web UI or some other downstream
-// service to inquire about the status of the upstream Automated Checkout hardware interface(s).
-func GetStatus(writer http.ResponseWriter, req *http.Request) {
-	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
-		controllerBoardStatusJSON, err := utilities.GetAsJSON(controllerBoardStatus)
-		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to serialize the controller board's current state.", true)
-			return
-		}
+func (boardStatus *CheckBoardStatus) GetControllerBoardStatus() ControllerBoardStatus {
+	return controllerBoardStatus
+}
 
-		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, controllerBoardStatusJSON, false)
-	})
+// for testing purpose
+func (boardStatus *CheckBoardStatus) SetControllerBoardStatus(controllerBoardStatusInput ControllerBoardStatus) {
+	controllerBoardStatus = controllerBoardStatusInput
 }
