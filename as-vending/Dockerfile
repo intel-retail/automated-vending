@@ -36,4 +36,4 @@ RUN apk --no-cache add zeromq
 COPY --from=builder /usr/local/bin/as-vending/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/as-vending/main /as-vending
 
-CMD [ "/as-vending", "-cp=consul.http://edgex-core-consul:8500", "-r"]
+CMD [ "/as-vending", "-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]

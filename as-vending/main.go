@@ -5,50 +5,70 @@ package main
 
 import (
 	"os"
+	"strings"
 
+	"as-vending/config"
 	"as-vending/functions"
 	"as-vending/routes"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/transforms"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 const (
 	serviceKey = "as-vending"
 )
 
+type myApp struct {
+	service       interfaces.ApplicationService
+	lc            logger.LoggingClient
+	serviceConfig *config.ServiceConfig
+	vendingState  functions.VendingState
+}
+
 func main() {
-	service, ok := pkg.NewAppService(serviceKey)
+	app := myApp{}
+	code := app.CreateAndRunAppService(serviceKey, pkg.NewAppService)
+	os.Exit(code)
+}
+
+func (app *myApp) CreateAndRunAppService(serviceKey string, newServiceFactory func(string) (interfaces.ApplicationService, bool)) int {
+	var ok bool
+	app.service, ok = newServiceFactory(serviceKey)
 	if !ok {
-		os.Exit(1)
+		return 1
 	}
 
-	lc := service.LoggingClient()
+	app.lc = app.service.LoggingClient()
 
-	// get the application settings from configuration.toml
-	appSettings := service.ApplicationSettings()
-	if appSettings == nil {
-		lc.Error("No application settings found")
-		os.Exit(1)
+	// retrieve the required configurations
+	app.serviceConfig = &config.ServiceConfig{}
+	if err := app.service.LoadCustomConfig(app.serviceConfig, "AppCustom"); err != nil {
+		app.lc.Errorf("failed load custom configuration: %s", err.Error())
+		return 1
 	}
 
-	var vendingState functions.VendingState
-	vendingState.Configuration = new(functions.ServiceConfiguration)
-	vendingState.CommandClient = service.CommandClient()
-	if vendingState.CommandClient == nil {
-		lc.Error("Error command service missing from client's configuration")
-		os.Exit(1)
+	if err := app.serviceConfig.AppCustom.Validate(); err != nil {
+		app.lc.Errorf("failed to validate configuration: %v", err)
+		return 1
 	}
 
-	// retrieve & parse the required application settings into a proper
-	// configuration struct
-	if err := utilities.MarshalSettings(appSettings, vendingState.Configuration, true); err != nil {
-		lc.Errorf("Application settings could not be processed: %v", err.Error())
-		os.Exit(1)
+	app.vendingState.Configuration = &app.serviceConfig.AppCustom
+	// parse configuration durations to a time.Duration object
+	if err := app.vendingState.ParseDurationFromConfig(); err != nil {
+		app.lc.Errorf("failed to parse configuration: %v", err)
+		return 1
 	}
 
-	lc.Infof("Running the application functions for %s devices...", vendingState.Configuration.DeviceNames)
+	app.vendingState.CommandClient = app.service.CommandClient()
+	if app.vendingState.CommandClient == nil {
+		app.lc.Error("Error command service missing from client's configuration")
+		return 1
+	}
+
+	app.lc.Infof("running the application functions for %s devices...", app.vendingState.Configuration.DeviceNames)
 
 	// create stop channels for each of the wait threads
 	stopChannel := make(chan int)
@@ -57,46 +77,48 @@ func main() {
 	inferenceStopChannel := make(chan int)
 
 	// Set default values for vending state
-	vendingState.CVWorkflowStarted = false
-	vendingState.MaintenanceMode = false
-	vendingState.CurrentUserData = functions.OutputData{}
-	vendingState.DoorClosed = true
+	app.vendingState.CVWorkflowStarted = false
+	app.vendingState.MaintenanceMode = false
+	app.vendingState.CurrentUserData = functions.OutputData{}
+	app.vendingState.DoorClosed = true
 	// global stop channel for threads
-	vendingState.ThreadStopChannel = stopChannel
+	app.vendingState.ThreadStopChannel = stopChannel
 	// open event thread
-	vendingState.DoorOpenedDuringCVWorkflow = false
-	vendingState.DoorOpenWaitThreadStopChannel = doorOpenStopChannel
+	app.vendingState.DoorOpenedDuringCVWorkflow = false
+	app.vendingState.DoorOpenWaitThreadStopChannel = doorOpenStopChannel
 	// close event thread
-	vendingState.DoorClosedDuringCVWorkflow = false
-	vendingState.DoorCloseWaitThreadStopChannel = doorCloseStopChannel
+	app.vendingState.DoorClosedDuringCVWorkflow = false
+	app.vendingState.DoorCloseWaitThreadStopChannel = doorCloseStopChannel
 	// inference thread
-	vendingState.InferenceDataReceived = false
-	vendingState.InferenceWaitThreadStopChannel = inferenceStopChannel
+	app.vendingState.InferenceDataReceived = false
+	app.vendingState.InferenceWaitThreadStopChannel = inferenceStopChannel
 
-	controller := routes.NewController(lc, service, vendingState)
+	controller := routes.NewController(app.lc, app.service, app.vendingState)
 	err := controller.AddAllRoutes()
 	if err != nil {
-		lc.Errorf("failed to add all Routes: %s", err.Error())
-		os.Exit(1)
+		app.lc.Errorf("failed to add all Routes: %s", err.Error())
+		return 1
 	}
+
+	deviceNames := strings.Split(app.vendingState.Configuration.DeviceNames, ",")
 	// create the function pipeline to run when an event is read on the device channels
-	err = service.SetFunctionsPipeline(
-		transforms.NewFilterFor(vendingState.Configuration.DeviceNames).FilterByDeviceName,
-		vendingState.DeviceHelper,
+	err = app.service.SetFunctionsPipeline(
+		transforms.NewFilterFor(deviceNames).FilterByDeviceName,
+		app.vendingState.DeviceHelper,
 	)
 	if err != nil {
-		lc.Errorf("SDK initialization failed: %s", err.Error())
-		os.Exit(1)
+		app.lc.Errorf("SDK initialization failed: %s", err.Error())
+		return 1
 	}
 
 	// tell the SDK to "start" and begin listening for events to trigger the pipeline.
-	err = service.MakeItRun()
+	err = app.service.MakeItRun()
 	if err != nil {
-		lc.Errorf("MakeItRun returned error: %s", err.Error())
-		os.Exit(1)
+		app.lc.Errorf("MakeItRun returned error: %s", err.Error())
+		return 1
 	}
 
 	// do any required cleanup here
 
-	os.Exit(0)
+	return 0
 }

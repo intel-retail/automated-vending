@@ -256,7 +256,7 @@ func (vendingState *VendingState) VerifyDoorAccess(lc logger.LoggingClient, even
 						go func() {
 							for {
 								select {
-								case <-time.After(vendingState.Configuration.DoorOpenStateTimeout):
+								case <-time.After(vendingState.DoorOpenStateTimeout):
 									if !vendingState.DoorOpenedDuringCVWorkflow {
 										lc.Info("door wasn't opened so we reset")
 										vendingState.CVWorkflowStarted = false
