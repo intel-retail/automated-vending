@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	AuditLogFileName = "auditlog.json"
+	InventoryFileName = "inventory.json"
+)
+
 func getDefaultProductsList() Products {
 	return Products{
 		Data: []Product{{

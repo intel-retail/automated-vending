@@ -113,7 +113,7 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 		testTableRESTCommandJSONStruct{
 			TestCaseName:    "Success GET",
 			Config:          edgexconfig,
-			InputRESTMethod: RESTGet,
+			InputRESTMethod: http.MethodGet,
 			InputInterface:  "",
 			HTTPTestServer:  testServerStatusOK,
 			Output:          nil,
@@ -123,7 +123,7 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 		testTableRESTCommandJSONStruct{
 			TestCaseName:    "Success POST",
 			Config:          edgexconfig,
-			InputRESTMethod: RESTPost,
+			InputRESTMethod: http.MethodPost,
 			InputInterface:  "simple test string",
 			HTTPTestServer:  testServerStatusOK,
 			Output:          nil,
@@ -132,7 +132,7 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 		testTableRESTCommandJSONStruct{
 			TestCaseName:    "Success PUT",
 			Config:          edgexconfig,
-			InputRESTMethod: RESTPut,
+			InputRESTMethod: http.MethodPut,
 			InputInterface:  "simple test string",
 			HTTPTestServer:  testServerStatusOK,
 			Output:          nil,
@@ -141,30 +141,30 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 		testTableRESTCommandJSONStruct{
 			TestCaseName:    "Unsuccessful GET due to undesired status code",
 			Config:          edgexconfig,
-			InputRESTMethod: RESTGet,
+			InputRESTMethod: http.MethodGet,
 			InputInterface:  "",
 			HTTPTestServer:  testServer500,
-			Output:          fmt.Errorf("Did not receive an HTTP 200 status OK response from %v, instead got a response code of %v, and the response body was: %v", testServer500.URL, http.StatusInternalServerError, "test response body"),
+			Output:          fmt.Errorf("did not receive an HTTP 200 status OK response from %v, instead got a response code of %v, and the response body was: %v", testServer500.URL, http.StatusInternalServerError, "test response body"),
 		})
 	output = append(output,
 		testTableRESTCommandJSONStruct{
 			TestCaseName:    "Unsuccessful GET due to connection closure",
 			Config:          edgexconfig,
-			InputRESTMethod: RESTGet,
+			InputRESTMethod: http.MethodGet,
 			InputInterface:  "",
 			HTTPTestServer:  testServerThrowError,
-			Output:          fmt.Errorf("Failed to submit REST %v request due to error: %v \"%v\": %v", RESTGet, "Get", testServerThrowError.URL, "EOF"),
+			Output:          fmt.Errorf("failed to submit REST %v request due to error: %v \"%v\": %v", http.MethodGet, "Get", testServerThrowError.URL, "EOF"),
 		})
 	output = append(output,
 		testTableRESTCommandJSONStruct{
 			TestCaseName:    "Unsuccessful GET due to unserializable JSON input",
 			Config:          edgexconfig,
-			InputRESTMethod: RESTGet,
+			InputRESTMethod: http.MethodGet,
 			InputInterface: map[string](chan bool){
 				"test": make(chan bool),
 			},
 			HTTPTestServer: testServerStatusOK,
-			Output:         fmt.Errorf("Failed to serialize the input interface as JSON: Failed to marshal into JSON string: json: unsupported type: chan bool"),
+			Output:         fmt.Errorf("failed to serialize the input interface as JSON: Failed to marshal into JSON string: json: unsupported type: chan bool"),
 		})
 	output = append(output,
 		testTableRESTCommandJSONStruct{
@@ -173,7 +173,7 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 			InputRESTMethod: invalidRestMethod,
 			InputInterface:  "",
 			HTTPTestServer:  testServerStatusOK,
-			Output:          fmt.Errorf("Failed to build the REST %v request for the URL %v due to error: net/http: invalid method \"%v\"", invalidRestMethod, testServerStatusOK.URL, invalidRestMethod), // https://github.com/golang/go/blob/7d2473dc81c659fba3f3b83bc6e93ca5fe37a898/src/net/http/request.go#L846
+			Output:          fmt.Errorf("failed to build the REST %v request for the URL %v due to error: net/http: invalid method \"%v\"", invalidRestMethod, testServerStatusOK.URL, invalidRestMethod), // https://github.com/golang/go/blob/7d2473dc81c659fba3f3b83bc6e93ca5fe37a898/src/net/http/request.go#L846
 		})
 	return output, []*httptest.Server{
 		testServerStatusOK,
