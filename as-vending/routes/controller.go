@@ -157,10 +157,10 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 				// Wait for door closed event. If the door isn't closed within the timeout
 				// then leave the workflow, remove the user data, and enter maintenance mode
 				go func() {
-					fmt.Println("Door Opened: wait for ", c.vendingState.Configuration.DoorCloseStateTimeout, " seconds")
+					fmt.Println("Door Opened: wait for ", c.vendingState.DoorCloseStateTimeout, " seconds")
 					for {
 						select {
-						case <-time.After(c.vendingState.Configuration.DoorCloseStateTimeout):
+						case <-time.After(c.vendingState.DoorCloseStateTimeout):
 							{
 								if !c.vendingState.DoorClosedDuringCVWorkflow {
 									fmt.Println("Door Opened: Failed")
@@ -191,10 +191,10 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 				// Wait for the inference data to be received. If we don't receive any inference data with the timeout
 				// then leave the workflow, remove the user data, and enter maintenance mode
 				go func() {
-					fmt.Println("Door Closed: wait for ", c.vendingState.Configuration.InferenceTimeout, " seconds")
+					fmt.Println("Door Closed: wait for ", c.vendingState.InferenceTimeout, " seconds")
 					for {
 						select {
-						case <-time.After(c.vendingState.Configuration.InferenceTimeout):
+						case <-time.After(c.vendingState.InferenceTimeout):
 							{
 								if !c.vendingState.InferenceDataReceived {
 									fmt.Println("Door Closed: Failed")

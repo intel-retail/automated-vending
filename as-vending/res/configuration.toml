@@ -57,7 +57,7 @@ Type="edgex-messagebus"
   Host = "localhost"
   Port = 59882
 
-[ApplicationSettings]
+[AppCustom]
   AuthenticationEndpoint = "http://localhost:48096/authentication"
   ControllerBoardDisplayResetCmd = "displayReset"
   ControllerBoardDisplayRow0Cmd = "displayRow0"
@@ -69,12 +69,12 @@ Type="edgex-messagebus"
   CardReaderDeviceName   = "card-reader"
   InferenceDeviceName = "Inference-device"
   ControllerBoardDeviceName = "controller-board"
-  DoorCloseStateTimeout = "20s"
-  DoorOpenStateTimeout = "15s"
+  DoorCloseStateTimeoutDuration = "20s"
+  DoorOpenStateTimeoutDuration = "15s"
   InferenceDoorStatusCmd = "inferenceDoorStatus"
   InferenceHeartbeatCmd = "inferenceHeartbeat"
-  InferenceTimeout = "20s"
+  InferenceTimeoutDuration = "20s"
   InventoryAuditLogService = "http://localhost:48095/auditlog"
   InventoryService = "http://localhost:48095/inventory/delta"
-  LCDRowLength = "19"
+  LCDRowLength = 19
   LedgerService = "http://localhost:48093/ledger"
