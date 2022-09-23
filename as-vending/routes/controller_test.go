@@ -4,6 +4,7 @@
 package routes
 
 import (
+	"as-vending/config"
 	"as-vending/functions"
 	"bytes"
 	"encoding/json"
@@ -165,7 +166,7 @@ func TestBoardStatus(t *testing.T) {
 		CVWorkflowStarted:              true,
 		DoorOpenWaitThreadStopChannel:  doorOpenStopChannel,
 		DoorCloseWaitThreadStopChannel: doorCloseStopChannel,
-		Configuration:                  new(functions.ServiceConfiguration),
+		Configuration:                  new(config.VendingConfig),
 	}
 	boardStatus := functions.ControllerBoardStatus{
 		MaxTemperatureStatus: true,

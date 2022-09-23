@@ -4,6 +4,8 @@
 package functions
 
 import (
+	"as-vending/config"
+	"fmt"
 	"time"
 
 	clientInterfaces "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
@@ -25,31 +27,11 @@ type VendingState struct {
 	DoorCloseWaitThreadStopChannel chan int   `json:"doorCloseWaitThreadStopChannel"`
 	InferenceDataReceived          bool       `json:"inferenceDataReceived"` // inference event
 	InferenceWaitThreadStopChannel chan int   `json:"inferenceWaitThreadStopChannel"`
-	Configuration                  *ServiceConfiguration
+	Configuration                  *config.VendingConfig
 	CommandClient                  clientInterfaces.CommandClient
-}
-
-type ServiceConfiguration struct {
-	AuthenticationEndpoint         string
-	ControllerBoardDisplayResetCmd string
-	ControllerBoardDisplayRow0Cmd  string
-	ControllerBoardDisplayRow1Cmd  string
-	ControllerBoardDisplayRow2Cmd  string
-	ControllerBoardDisplayRow3Cmd  string
-	ControllerBoardLock1Cmd        string
-	ControllerBoardLock2Cmd        string
-	CardReaderDeviceName           string
-	InferenceDeviceName            string
-	ControllerBoardDeviceName      string
 	DoorCloseStateTimeout          time.Duration
 	DoorOpenStateTimeout           time.Duration
-	InferenceDoorStatusCmd         string
-	InferenceHeartbeatCmd          string
 	InferenceTimeout               time.Duration
-	InventoryAuditLogService       string
-	InventoryService               string
-	LCDRowLength                   int
-	LedgerService                  string
 }
 
 // MaintenanceMode is a simple structure used to return the state of
@@ -128,4 +110,23 @@ type AuditLogEntry struct {
 	InventoryDelta []deltaSKU `json:"inventoryDelta"`
 	CreatedAt      int64      `json:"createdAt,string"`
 	AuditEntryID   string     `json:"auditEntryId"`
+}
+
+func (vs *VendingState) ParseDurationFromConfig() error {
+	var err error
+	vs.DoorCloseStateTimeout, err = time.ParseDuration(vs.Configuration.DoorCloseStateTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("failed to parse DoorCloseStateTimeoutDuration configuration: %v", err)
+	}
+
+	vs.DoorOpenStateTimeout, err = time.ParseDuration(vs.Configuration.DoorOpenStateTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("failed to parse DoorOpenStateTimeoutDuration configuration: %v", err)
+	}
+
+	vs.InferenceTimeout, err = time.ParseDuration(vs.Configuration.InferenceTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("failed to parse InferenceTimeoutDuration configuration: %v", err)
+	}
+	return nil
 }
