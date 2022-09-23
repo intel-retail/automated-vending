@@ -78,6 +78,18 @@ func (ac *VendingConfig) Validate() error {
 		return fmt.Errorf("configuration ControllerBoardLock2Cmd is empty")
 	}
 
+	if len(ac.CardReaderDeviceName) == 0 {
+		return fmt.Errorf("configuration CardReaderDeviceName is empty")
+	}
+
+	if len(ac.InferenceDeviceName) == 0 {
+		return fmt.Errorf("configuration InferenceDeviceName is empty")
+	}
+
+	if len(ac.ControllerBoardDeviceName) == 0 {
+		return fmt.Errorf("configuration ControllerBoardDeviceName is empty")
+	}
+
 	if len(ac.DoorCloseStateTimeoutDuration) == 0 {
 		return fmt.Errorf("configuration DoorCloseStateTimeoutDuration is empty")
 	}
