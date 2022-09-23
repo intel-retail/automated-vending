@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -20,9 +21,10 @@ func TestInventoryGet(t *testing.T) {
 	// Product slice
 	products := getDefaultProductsList()
 	c := Controller{
-		lc:             logger.NewMockClient(),
-		service:        nil,
-		inventoryItems: products,
+		lc:                logger.NewMockClient(),
+		service:           nil,
+		inventoryItems:    products,
+		inventoryFileName: InventoryFileName,
 	}
 	tests := []struct {
 		Name               string
@@ -40,12 +42,15 @@ func TestInventoryGet(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
-				err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
+				err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteInventory()
 				require.NoError(t, err)
 			}
+			defer func() {
+				_ = os.Remove(c.inventoryFileName)
+			}()
 
 			req := httptest.NewRequest("GET", "http://localhost:48096/inventory", nil)
 			w := httptest.NewRecorder()
@@ -63,9 +68,10 @@ func TestInventoryItemGet(t *testing.T) {
 	// Product slice
 	products := getDefaultProductsList()
 	c := Controller{
-		lc:             logger.NewMockClient(),
-		service:        nil,
-		inventoryItems: products,
+		lc:                logger.NewMockClient(),
+		service:           nil,
+		inventoryItems:    products,
+		inventoryFileName: InventoryFileName,
 	}
 	tests := []struct {
 		Name               string
@@ -88,12 +94,15 @@ func TestInventoryItemGet(t *testing.T) {
 
 			if currentTest.WriteInventory {
 				if currentTest.BadInventory {
-					err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
+					err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 					require.NoError(t, err)
 				} else {
 					err := c.WriteInventory()
 					require.NoError(t, err)
 				}
+				defer func() {
+					_ = os.Remove(c.inventoryFileName)
+				}()
 			}
 
 			req := httptest.NewRequest("GET", "http://localhost:48096/inventory/"+test.URLPath, nil)
@@ -115,13 +124,14 @@ func TestAuditLogGetAll(t *testing.T) {
 
 	audits := getDefaultAuditsList()
 	c := Controller{
-		lc:       logger.NewMockClient(),
-		service:  nil,
-		auditLog: audits,
+		lc:               logger.NewMockClient(),
+		service:          nil,
+		auditLog:         audits,
+		auditLogFileName: AuditLogFileName,
 	}
 	tests := []struct {
 		Name               string
-		BadInventory       bool
+		BadAuditLog        bool
 		ExpectedStatusCode int
 	}{
 		{"AuditLogGetAll", false, http.StatusOK},
@@ -134,13 +144,16 @@ func TestAuditLogGetAll(t *testing.T) {
 			err := c.DeleteAuditLog()
 			require.NoError(t, err)
 
-			if currentTest.BadInventory {
-				err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
+			if currentTest.BadAuditLog {
+				err := ioutil.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteAuditLog()
 				require.NoError(t, err)
 			}
+			defer func() {
+				_ = os.Remove(c.auditLogFileName)
+			}()
 
 			req := httptest.NewRequest("GET", "http://localhost:48096/auditlog", nil)
 			w := httptest.NewRecorder()
@@ -159,9 +172,10 @@ func TestAuditLogGetEntry(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
 	c := Controller{
-		lc:       logger.NewMockClient(),
-		service:  nil,
-		auditLog: audits,
+		lc:               logger.NewMockClient(),
+		service:          nil,
+		auditLog:         audits,
+		auditLogFileName: AuditLogFileName,
 	}
 	err := c.WriteAuditLog()
 	require.NoError(t, err)
@@ -187,12 +201,15 @@ func TestAuditLogGetEntry(t *testing.T) {
 
 			if currentTest.WriteAuditLog {
 				if currentTest.BadAuditLog {
-					err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
+					err := ioutil.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
 					require.NoError(t, err)
 				} else {
 					err := c.WriteAuditLog()
 					require.NoError(t, err)
 				}
+				defer func() {
+					_ = os.Remove(c.auditLogFileName)
+				}()
 			}
 
 			req := httptest.NewRequest("GET", "http://localhost:48096/auditlog/"+test.URLPath, nil)

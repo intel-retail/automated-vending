@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -20,9 +21,10 @@ func TestInventoryPost(t *testing.T) {
 
 	products := getDefaultProductsList()
 	c := Controller{
-		lc:             logger.NewMockClient(),
-		service:        nil,
-		inventoryItems: products,
+		lc:                logger.NewMockClient(),
+		service:           nil,
+		inventoryItems:    products,
+		inventoryFileName: InventoryFileName,
 	}
 
 	tests := []struct {
@@ -49,12 +51,15 @@ func TestInventoryPost(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
-				err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
+				err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteInventory()
 				require.NoError(t, err)
 			}
+			defer func() {
+				_ = os.Remove(c.inventoryFileName)
+			}()
 
 			req := httptest.NewRequest("POST", "http://localhost:48096/inventory", bytes.NewBuffer([]byte(currentTest.ProductUpdateString)))
 			w := httptest.NewRecorder()
@@ -86,9 +91,10 @@ func TestAuditLogPost(t *testing.T) {
 	// Audit slice
 	audits := getDefaultAuditsList()
 	c := Controller{
-		lc:       logger.NewMockClient(),
-		service:  nil,
-		auditLog: audits,
+		lc:               logger.NewMockClient(),
+		service:          nil,
+		auditLog:         audits,
+		auditLogFileName: AuditLogFileName,
 	}
 	tests := []struct {
 		Name               string
@@ -110,12 +116,15 @@ func TestAuditLogPost(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadAuditLog {
-				err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
+				err := ioutil.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteAuditLog()
 				require.NoError(t, err)
 			}
+			defer func() {
+				_ = os.Remove(c.auditLogFileName)
+			}()
 
 			req := httptest.NewRequest("POST", "http://localhost:48096/auditlog", bytes.NewBuffer([]byte(currentTest.AuditLogUpdate)))
 			w := httptest.NewRecorder()
@@ -177,9 +186,10 @@ func TestDeltaInventorySKUPost(t *testing.T) {
 			UpdatedAt:          1567787309,
 		}}}
 	c := Controller{
-		lc:             logger.NewMockClient(),
-		service:        nil,
-		inventoryItems: products,
+		lc:                logger.NewMockClient(),
+		service:           nil,
+		inventoryItems:    products,
+		inventoryFileName: InventoryFileName,
 	}
 
 	tests := []struct {
@@ -202,12 +212,15 @@ func TestDeltaInventorySKUPost(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
-				err := ioutil.WriteFile(InventoryFileName, []byte("invalid json test"), 0644)
+				err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteInventory()
 				require.NoError(t, err)
 			}
+			defer func() {
+				_ = os.Remove(c.inventoryFileName)
+			}()
 
 			req := httptest.NewRequest("POST", "http://localhost:48096/inventory/delta", bytes.NewBuffer([]byte(currentTest.DeltaUpdateString)))
 			w := httptest.NewRecorder()
