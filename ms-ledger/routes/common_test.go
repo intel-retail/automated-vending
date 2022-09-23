@@ -70,10 +70,10 @@ func TestGetAllLedgers(t *testing.T) {
 
 	// Write the ledger
 	err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+	require.NoError(err)
 	defer func() {
 		os.Remove(c.ledgerFileName)
 	}()
-	require.NoError(err)
 
 	// run GetAllLedgers and get the result as JSON
 	actualAccountLedgers, err := c.GetAllLedgers()
@@ -105,10 +105,10 @@ func TestDeleteAllLedgers(t *testing.T) {
 
 	// Write the ledger
 	err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+	require.NoError(err)
 	defer func() {
 		os.Remove(c.ledgerFileName)
 	}()
-	require.NoError(err)
 
 	// Delete Ledger
 	err = c.DeleteAllLedgers()

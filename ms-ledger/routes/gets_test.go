@@ -56,10 +56,10 @@ func TestAllAccountsGet(t *testing.T) {
 			} else {
 				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
+			require.NoError(err)
 			defer func() {
 				os.Remove(c.ledgerFileName)
 			}()
-			require.NoError(err)
 
 			req := httptest.NewRequest("GET", "http://localhost:48093/ledger", nil)
 			w := httptest.NewRecorder()
@@ -111,10 +111,10 @@ func TestLedgerAccountGet(t *testing.T) {
 			} else {
 				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
+			require.NoError(err)
 			defer func() {
 				os.Remove(c.ledgerFileName)
 			}()
-			require.NoError(err)
 
 			req := httptest.NewRequest("GET", "http://localhost:48093/ledger/"+test.AccountID, nil)
 			w := httptest.NewRecorder()

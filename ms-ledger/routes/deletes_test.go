@@ -70,10 +70,10 @@ func TestLedgerDelete(t *testing.T) {
 			} else {
 				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
+			require.NoError(err)
 			defer func() {
 				os.Remove(c.ledgerFileName)
 			}()
-			require.NoError(err)
 
 			req := httptest.NewRequest("DELETE", "http://localhost:48093/ledger", bytes.NewBuffer([]byte(currentTest.AccountID+"/"+currentTest.TransactionID)))
 			w := httptest.NewRecorder()

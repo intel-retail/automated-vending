@@ -113,10 +113,10 @@ func TestLedgerAddTransaction(t *testing.T) {
 			} else {
 				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
+			require.NoError(err)
 			defer func() {
 				os.Remove(c.ledgerFileName)
 			}()
-			require.NoError(err)
 
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger", bytes.NewBuffer([]byte(currentTest.UpdateLedger)))
 			w := httptest.NewRecorder()
@@ -224,10 +224,10 @@ func TestSetPaymentStatus(t *testing.T) {
 			} else {
 				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
+			require.NoError(err)
 			defer func() {
 				os.Remove(c.ledgerFileName)
 			}()
-			require.NoError(err)
 
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger/ledgerPaymentUpdate", bytes.NewBuffer([]byte(currentTest.PaymentInfo)))
 			w := httptest.NewRecorder()
