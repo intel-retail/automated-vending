@@ -40,16 +40,14 @@ func (c *Controller) AddAllRoutes() error {
 // GetStatus is a REST API endpoint that enables a web UI or some other downstream
 // service to inquire about the status of the upstream Automated Checkout hardware interface(s).
 func (c *Controller) GetStatus(writer http.ResponseWriter, req *http.Request) {
-	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
-		controllerBoardStatusJSON, err := utilities.GetAsJSON(c.boardStatus.ControllerBoardStatus)
-		if err != nil {
-			errMsg := "Failed to serialize the controller board's current state"
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
-			c.lc.Errorf("%s: %s", errMsg, err.Error())
-			return
-		}
+	controllerBoardStatusJSON, err := utilities.GetAsJSON(c.boardStatus.ControllerBoardStatus)
+	if err != nil {
+		errMsg := "Failed to serialize the controller board's current state"
+		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+		c.lc.Errorf("%s: %s", errMsg, err.Error())
+		return
+	}
 
-		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, controllerBoardStatusJSON, false)
-		c.lc.Info("GetStatus successfully!")
-	})
+	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, controllerBoardStatusJSON, false)
+	c.lc.Info("GetStatus successfully!")
 }
