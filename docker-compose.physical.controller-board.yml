@@ -17,5 +17,7 @@ services:
     devices:
       - /dev/ttyACM0:/dev/ttyACM0
     environment:
-      Driver_VirtualControllerBoard: "false"
+      DRIVERCONFIG_VIRTUALCONTROLLERBOARD: "false"
+      DRIVERCONFIG_VID: "2341"
+      DRIVERCONFIG_PID: "0037"
 ...

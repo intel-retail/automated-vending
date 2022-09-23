@@ -3,7 +3,7 @@
 # Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-name: "Inference-MQTT-Device-Profile"
+name: "Inference-device-Profile"
 manufacturer: "Inference"
 model: "MQTT-2"
 description: "Inference CV Module over MQTT device profile"

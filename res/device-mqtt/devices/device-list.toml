@@ -3,8 +3,8 @@
 
 # Pre-define Devices
 [[DeviceList]]
-  Name = "Inference-MQTT-device"
-  ProfileName = "Inference-MQTT-Device-Profile"
+  Name = "Inference-device"
+  ProfileName = "Inference-device-Profile"
   Description = "Inference CV Module over MQTT"
   Labels = [ "MQTT", "Inference" ]
   [DeviceList.Protocols]
