@@ -22,7 +22,7 @@ func (boardStatus CheckBoardStatus) SubscribeToNotificationService() error {
 		Channels: []dtos.Address{
 			{
 				Type:         "EMAIL",
-				EmailAddress: dtos.EmailAddress{Recipients: boardStatus.Configuration.NotificationEmailAddresses},
+				EmailAddress: dtos.EmailAddress{Recipients: boardStatus.notificationEmailAddresses},
 			},
 		},
 		Receiver: boardStatus.Configuration.NotificationReceiver,
@@ -44,7 +44,7 @@ func (boardStatus CheckBoardStatus) SubscribeToNotificationService() error {
 }
 
 func (boardStatus CheckBoardStatus) SendNotification(message string) error {
-	dto := dtos.NewNotification(boardStatus.Configuration.NotificationLabels,
+	dto := dtos.NewNotification(boardStatus.notificationLabels,
 		boardStatus.Configuration.NotificationCategory,
 		message,
 		boardStatus.Configuration.NotificationSender,

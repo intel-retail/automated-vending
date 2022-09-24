@@ -20,7 +20,7 @@ const (
 // RESTCommandJSON submits a REST API call a specified restURL using the
 // specified restMethod, and will serialize the inputInterface into JSON
 // and submit it as part of the outbound REST request.
-func (edgexconfig *ControllerBoardStatusAppSettings) RESTCommandJSON(restURL string, restMethod string, inputInterface interface{}) (err error) {
+func (boardStatus *CheckBoardStatus) RESTCommandJSON(restURL string, restMethod string, inputInterface interface{}) (err error) {
 	// Serialize the inputInterface
 	inputInterfaceJSON, err := utilities.GetAsJSON(inputInterface)
 	if err != nil {
@@ -33,7 +33,7 @@ func (edgexconfig *ControllerBoardStatusAppSettings) RESTCommandJSON(restURL str
 		return fmt.Errorf("failed to build the REST %v request for the URL %v due to error: %v", restMethod, restURL, err.Error())
 	}
 	client := &http.Client{
-		Timeout: edgexconfig.RESTCommandTimeout,
+		Timeout: boardStatus.restCommandTimeout,
 	}
 
 	resp, err := client.Do(req)

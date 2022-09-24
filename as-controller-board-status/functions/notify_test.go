@@ -44,11 +44,11 @@ func prepSubscribeToNotificationServiceTest() ([]testTableSubscribeToNotificatio
 	mockSubscriptionClientFailed.On("Add", mock.Anything, mock.Anything).Return(nil, edgex_errors.NewCommonEdgeXWrapper(errors.New("test failed")))
 
 	boardStatusSuccess := CheckBoardStatus{
-		Configuration:      &successConfig,
+		Configuration:      successConfig,
 		SubscriptionClient: mockSubscriptionClient,
 	}
 	boardStatusFailure := CheckBoardStatus{
-		Configuration:      &failureConfig,
+		Configuration:      failureConfig,
 		SubscriptionClient: mockSubscriptionClientFailed,
 	}
 
@@ -100,7 +100,7 @@ func TestSendNotification(t *testing.T) {
 
 	configSuccess := GetCommonSuccessConfig()
 	boardStatus := CheckBoardStatus{
-		Configuration:      &configSuccess,
+		Configuration:      configSuccess,
 		NotificationClient: mockNotificationClient,
 	}
 

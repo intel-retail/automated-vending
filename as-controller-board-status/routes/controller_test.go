@@ -4,6 +4,7 @@
 package routes
 
 import (
+	"as-controller-board-status/config"
 	"as-controller-board-status/functions"
 	"encoding/json"
 	"fmt"
@@ -69,7 +70,7 @@ func TestController_GetStatus(t *testing.T) {
 
 	boardStatus := functions.CheckBoardStatus{
 		DoorClosed:    true, // Set default door state to closed
-		Configuration: new(functions.ControllerBoardStatusAppSettings),
+		Configuration: &config.ControllerBoardStatusConfig{},
 	}
 
 	tests := []struct {

@@ -87,7 +87,7 @@ func (boardStatus *CheckBoardStatus) processTemperatureMeasurements(temperature 
 	// EdgeX
 	boardStatus.Measurements = append(boardStatus.Measurements, newMeasurement)
 
-	avgTemp, cutIndex := AvgTemp(boardStatus.Measurements, boardStatus.Configuration.AverageTemperatureMeasurementDuration)
+	avgTemp, cutIndex := AvgTemp(boardStatus.Measurements, boardStatus.averageTemperatureMeasurement)
 
 	// Only keep track of the measurements used to calculate the latest average
 	// temperature
@@ -177,7 +177,7 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 
 	// Take note of whether or not we've sent a notification within a duration
 	// not allowable by the user's configuration
-	notificationSentRecently := (boardStatus.Configuration.NotificationThrottleDuration > time.Since(boardStatus.LastNotified))
+	notificationSentRecently := (boardStatus.notificationThrottle > time.Since(boardStatus.LastNotified))
 
 	// Send a notification if the temperature has exceeded thresholds,
 	// and if we have not sent a notification recently
@@ -193,7 +193,7 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 	// react accordingly
 	if boardStatus.ControllerBoardStatus.MinTemperatureStatus || boardStatus.ControllerBoardStatus.MaxTemperatureStatus {
 		lc.Info("Pushing controller board status to central vending service due to a temperature threshold being exceeded")
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, boardStatus.ControllerBoardStatus)
+		err := boardStatus.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, boardStatus.ControllerBoardStatus)
 		if err != nil {
 			return fmt.Errorf("Encountered error sending the controller board's status to the central vending endpoint: %v", err.Error())
 		}
@@ -237,7 +237,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 
 		// Set the door closed state and make sure MinTemp and MaxTemp status
 		// are false to avoid triggering a false temperature event
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, ControllerBoardStatus{
+		err := boardStatus.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, ControllerBoardStatus{
 			DoorClosed:           doorClosed,
 			MinTemperatureStatus: false,
 			MaxTemperatureStatus: false,
@@ -248,7 +248,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 
 		// Prepare a message to be sent to the MQTT bus. Depending on the state
 		// of the door, this message may trigger a CV inference
-		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.MQTTEndpoint, http.MethodPut, VendingDoorStatus{
+		err = boardStatus.RESTCommandJSON(boardStatus.Configuration.DoorStatusCommandEndpoint, http.MethodPut, VendingDoorStatus{
 			VendingDoorStatus: strconv.FormatBool(doorClosed),
 		})
 		if err != nil {
