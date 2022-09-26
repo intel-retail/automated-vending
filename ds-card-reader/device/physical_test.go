@@ -73,7 +73,7 @@ func TestInitializeCardReader(t *testing.T) {
 	require := require.New(t)
 
 	// create a few essential variables for facilitating tests
-	lc := logger.NewClient(physicalCardReaderDeviceServiceName, false, physicalLogFile, "DEBUG")
+	lc := logger.NewMockClient()
 	expectedAsyncCh := make(chan<- *dsModels.AsyncValues, 16)
 	var notExpectedCardReader CardReader
 
@@ -326,7 +326,7 @@ func TestStatus(t *testing.T) {
 	// use community-recommended shorthand (known name clash)
 	assert := assert.New(t)
 
-	lc := logger.NewClient(physicalCardReaderDeviceServiceName, false, physicalLogFile, "DEBUG")
+	lc := logger.NewMockClient()
 
 	// build tests
 	tests := []struct {
@@ -375,7 +375,7 @@ func TestProcessDevReadEvents(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	lc := logger.NewClient(physicalCardReaderDeviceServiceName, false, physicalLogFile, "DEBUG")
+	lc := logger.NewMockClient()
 
 	tests := []struct {
 		Name                         string

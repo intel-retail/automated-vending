@@ -34,6 +34,9 @@ func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.Config == nil {
 		drv.svc = service.RunningService()
+		if drv.svc == nil {
+			return fmt.Errorf("custom card reader driver service is nil: %v", err)
+		}
 
 		drv.Config = &device.ServiceConfig{}
 
