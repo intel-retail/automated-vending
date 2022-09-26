@@ -65,39 +65,6 @@ func doesLogFileContainString(input string) (bool, error) {
 	return false, nil
 }
 
-// TestInitializeCardReader validates that the InitializeCardReader
-// and the physical functions work as expected for a physical card reader
-func TestInitializeCardReader(t *testing.T) {
-	// use community-recommended shorthand (known name clash)
-	assert := assert.New(t)
-	require := require.New(t)
-
-	// create a few essential variables for facilitating tests
-	lc := logger.NewMockClient()
-	expectedAsyncCh := make(chan<- *dsModels.AsyncValues, 16)
-	var notExpectedCardReader CardReader
-
-	// run the function
-	cardReader, err := InitializeCardReader(
-		lc,
-		expectedAsyncCh,
-		physicalDeviceSearchPath,
-		physicalDeviceName,
-		physicalVID,
-		physicalPID,
-		false,
-		true,
-	)
-
-	// perform assertions
-	require.NoError(err)
-	assert.NotEqual(notExpectedCardReader, cardReader)
-
-	// release the device so that other testing routines can use it
-	err = cardReader.Release()
-	require.NoError(err)
-}
-
 // TestGrabCardReader validates that the GrabCardReader function handles
 // acquiring (or failing to acquire) a lock on the input event device
 func TestGrabCardReader(t *testing.T) {
