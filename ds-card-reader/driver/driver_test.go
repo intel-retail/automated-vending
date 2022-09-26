@@ -320,7 +320,6 @@ func TestCardReaderDriver_Initialize(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "valid case",
 			drv: &CardReaderDriver{
