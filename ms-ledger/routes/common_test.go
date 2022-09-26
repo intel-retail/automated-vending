@@ -4,6 +4,7 @@
 package routes
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -14,8 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const(
-	LedgerFileName = "ledger.json"
+const (
+	LedgerFileName = "test-ledger.json"
 )
 
 func getDefaultAccountLedgers() Accounts {
@@ -61,14 +62,18 @@ func TestGetAllLedgers(t *testing.T) {
 		lc:                logger.NewMockClient(),
 		service:           nil,
 		inventoryEndpoint: "test.com",
+		ledgerFileName:    LedgerFileName,
 	}
 	require := require.New(t)
 	// Accounts slice
 	accountLedgers := getDefaultAccountLedgers()
 
 	// Write the ledger
-	err := utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+	err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 	require.NoError(err)
+	defer func() {
+		os.Remove(c.ledgerFileName)
+	}()
 
 	// run GetAllLedgers and get the result as JSON
 	actualAccountLedgers, err := c.GetAllLedgers()
@@ -89,6 +94,7 @@ func TestDeleteAllLedgers(t *testing.T) {
 		lc:                logger.NewMockClient(),
 		service:           mockAppService,
 		inventoryEndpoint: "test.com",
+		ledgerFileName:    LedgerFileName,
 	}
 
 	require := require.New(t)
@@ -98,8 +104,11 @@ func TestDeleteAllLedgers(t *testing.T) {
 	expectedLedger := Accounts{Data: []Account{}}
 
 	// Write the ledger
-	err := utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+	err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 	require.NoError(err)
+	defer func() {
+		os.Remove(c.ledgerFileName)
+	}()
 
 	// Delete Ledger
 	err = c.DeleteAllLedgers()

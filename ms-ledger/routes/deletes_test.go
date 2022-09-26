@@ -5,11 +5,13 @@ package routes
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -58,16 +60,20 @@ func TestLedgerDelete(t *testing.T) {
 				lc:                logger.NewMockClient(),
 				service:           mockAppService,
 				inventoryEndpoint: "test.com",
+				ledgerFileName:    LedgerFileName,
 			}
 			err := c.DeleteAllLedgers()
 			require.NoError(err)
 
 			if currentTest.InvalidLedger {
-				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
+				err = ioutil.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
 			} else {
-				err = utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
 			require.NoError(err)
+			defer func() {
+				os.Remove(c.ledgerFileName)
+			}()
 
 			req := httptest.NewRequest("DELETE", "http://localhost:48093/ledger", bytes.NewBuffer([]byte(currentTest.AccountID+"/"+currentTest.TransactionID)))
 			w := httptest.NewRecorder()

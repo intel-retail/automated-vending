@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -103,15 +104,19 @@ func TestLedgerAddTransaction(t *testing.T) {
 				lc:                logger.NewMockClient(),
 				service:           mockAppService,
 				inventoryEndpoint: inventoryServer.URL,
+				ledgerFileName:    LedgerFileName,
 			}
 			err := c.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
-				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
+				err = ioutil.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
 			} else {
-				err = utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
 			require.NoError(err)
+			defer func() {
+				os.Remove(c.ledgerFileName)
+			}()
 
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger", bytes.NewBuffer([]byte(currentTest.UpdateLedger)))
 			w := httptest.NewRecorder()
@@ -158,6 +163,7 @@ func TestGetInventoryItemInfo(t *testing.T) {
 				lc:                logger.NewMockClient(),
 				service:           mockAppService,
 				inventoryEndpoint: currentTest.InventoryEndpoint,
+				ledgerFileName:    LedgerFileName,
 			}
 			if currentTest.MissingAppSetting {
 				badInventoryEndpoint := ""
@@ -209,15 +215,19 @@ func TestSetPaymentStatus(t *testing.T) {
 				lc:                logger.NewMockClient(),
 				service:           mockAppService,
 				inventoryEndpoint: "test.com",
+				ledgerFileName:    LedgerFileName,
 			}
 			err := c.DeleteAllLedgers()
 			require.NoError(err)
 			if currentTest.InvalidLedger {
-				err = ioutil.WriteFile(LedgerFileName, []byte("invalid json test"), 0644)
+				err = ioutil.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
 			} else {
-				err = utilities.WriteToJSONFile(LedgerFileName, &accountLedgers, 0644)
+				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
 			}
 			require.NoError(err)
+			defer func() {
+				os.Remove(c.ledgerFileName)
+			}()
 
 			req := httptest.NewRequest("POST", "http://localhost:48093/ledger/ledgerPaymentUpdate", bytes.NewBuffer([]byte(currentTest.PaymentInfo)))
 			w := httptest.NewRecorder()
