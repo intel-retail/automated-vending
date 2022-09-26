@@ -24,7 +24,6 @@ type boardStatusAppService struct {
 	lc            logger.LoggingClient
 	serviceConfig *config.ServiceConfig
 	boardStatus   functions.CheckBoardStatus
-	// subscriptionClient interfaces.SubscriptionClient
 }
 
 func main() {
@@ -41,13 +40,6 @@ func (app *boardStatusAppService) CreateAndRunAppService(serviceKey string, newS
 	}
 
 	app.lc = app.service.LoggingClient()
-
-	// Get the application's settings from the configuration.toml file
-	// appSettings := service.ApplicationSettings()
-	// if appSettings == nil {
-	// 	lc.Error("No application settings found")
-	// 	os.Exit(1)
-	// }
 
 	subscriptionClient := app.service.SubscriptionClient()
 	if subscriptionClient == nil {

@@ -6,6 +6,7 @@ package functions
 import (
 	"as-controller-board-status/config"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
@@ -89,25 +90,25 @@ type VendingDoorStatus struct {
 
 func (checkBoardStatus *CheckBoardStatus) ParseStringConfigurations() error {
 	var err error
-	checkBoardStatus.notificationEmailAddresses = config.ParseStringSlice(checkBoardStatus.Configuration.NotificationEmailAddresses)
-	checkBoardStatus.notificationLabels = config.ParseStringSlice(checkBoardStatus.Configuration.NotificationLabels)
+	checkBoardStatus.notificationEmailAddresses = strings.Split(checkBoardStatus.Configuration.NotificationEmailAddresses,",")
+	checkBoardStatus.notificationLabels = strings.Split(checkBoardStatus.Configuration.NotificationLabels,",")
 
-	checkBoardStatus.averageTemperatureMeasurement, err = config.ParseDurationString(checkBoardStatus.Configuration.AverageTemperatureMeasurementDuration) 
+	checkBoardStatus.averageTemperatureMeasurement, err = time.ParseDuration(checkBoardStatus.Configuration.AverageTemperatureMeasurementDuration) 
 	if err != nil {
 		return fmt.Errorf("AverageTemperatureMeasurementDuration failed to be parsed: %v", err)
 	}
 
-	checkBoardStatus.notificationSubscriptionRESTRetryInterval, err = config.ParseDurationString(checkBoardStatus.Configuration.NotificationSubscriptionRESTRetryIntervalDuration) 
+	checkBoardStatus.notificationSubscriptionRESTRetryInterval, err = time.ParseDuration(checkBoardStatus.Configuration.NotificationSubscriptionRESTRetryIntervalDuration) 
 	if err != nil {
 		return fmt.Errorf("NotificationSubscriptionRESTRetryIntervalDuration failed to be parsed: %v", err)
 	}
 
-	checkBoardStatus.notificationThrottle, err = config.ParseDurationString(checkBoardStatus.Configuration.NotificationThrottleDuration) 
+	checkBoardStatus.notificationThrottle, err = time.ParseDuration(checkBoardStatus.Configuration.NotificationThrottleDuration) 
 	if err != nil {
 		return fmt.Errorf("NotificationThrottleDuration failed to be parsed: %v", err)
 	}
 
-	checkBoardStatus.restCommandTimeout, err = config.ParseDurationString(checkBoardStatus.Configuration.RESTCommandTimeoutDuration) 
+	checkBoardStatus.restCommandTimeout, err = time.ParseDuration(checkBoardStatus.Configuration.RESTCommandTimeoutDuration) 
 	if err != nil {
 		return fmt.Errorf("RESTCommandTimeoutDuration failed to be parsed: %v", err)
 	}
