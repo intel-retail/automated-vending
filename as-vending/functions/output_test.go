@@ -123,26 +123,38 @@ func TestDisplayLedger(t *testing.T) {
 }
 
 func TestHandleMqttDeviceReading(t *testing.T) {
-	testCases := []struct {
-		TestCaseName string
-		statusCode   int
-		Expected     error
-	}{
-		{"Successful case", http.StatusOK, nil},
-		{"Internal error case", http.StatusInternalServerError, fmt.Errorf("error sending command: received status code: 500 Internal Server Error")},
-		{"Bad request case", http.StatusBadRequest, fmt.Errorf("error sending command: received status code: 400 Bad Request")},
-	}
-
-	event := dtos.Event{
+	baseEvent := dtos.Event{
 		DeviceName: InferenceMQTTDevice,
 		Readings: []dtos.BaseReading{
 			{
-				DeviceName: "inferenceSkuDelta",
+				ResourceName: "inferenceSkuDelta",
 				SimpleReading: dtos.SimpleReading{
 					Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
 				},
 			},
 		},
+	}
+	testCases := []struct {
+		TestCaseName string
+		statusCode   int
+		Expected     error
+		event        dtos.Event
+		expectedErr  string
+	}{
+		{"Successful case", http.StatusOK, nil, baseEvent, ""},
+		{"Internal error case", http.StatusInternalServerError, fmt.Errorf("error sending command: received status code: 500 Internal Server Error"), baseEvent, ""},
+		{"Bad request case", http.StatusBadRequest, fmt.Errorf("error sending command: received status code: 400 Bad Request"), baseEvent, ""},
+		{"Default ResourceName", http.StatusBadRequest, fmt.Errorf("error sending command: received status code: 400 Bad Request"), dtos.Event{
+			DeviceName: InferenceMQTTDevice,
+			Readings: []dtos.BaseReading{
+				{
+					ResourceName: "default",
+					SimpleReading: dtos.SimpleReading{
+						Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
+					},
+				},
+			},
+		}, ""},
 	}
 
 	mockCommandClient := &client_mocks.CommandClient{}
@@ -202,7 +214,7 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 				CommandClient: mockCommandClient,
 			}
 
-			_, err := vendingState.HandleMqttDeviceReading(logger.NewMockClient(), event)
+			_, err := vendingState.HandleMqttDeviceReading(logger.NewMockClient(), tc.event)
 
 			e, ok := err.(error)
 			if ok {
@@ -214,15 +226,47 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 }
 
 func TestVerifyDoorAccess(t *testing.T) {
+	baseEvent := dtos.Event{
+		DeviceName: "card-reader",
+		Readings: []dtos.BaseReading{
+			{
+				DeviceName: "card-reader",
+				SimpleReading: dtos.SimpleReading{
+					Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
+				},
+			},
+		},
+	}
+
 	testCases := []struct {
 		TestCaseName    string
 		StatusCode      int
 		MaintenanceMode bool
 		RoleID          int
+		event           dtos.Event
+		expectedErr     string
 	}{
-		{"Successful case", http.StatusOK, false, 1},
-		{"MaintanceMode on", http.StatusOK, true, 1},
-		{"Role 3", http.StatusOK, false, 3},
+		{"Successful case", http.StatusOK, false, 1, baseEvent, ""},
+		{"MaintanceMode on", http.StatusOK, true, 1, baseEvent, ""},
+		{"Role 3", http.StatusOK, false, 3, baseEvent, ""},
+		{"No Event", http.StatusOK, false, 3, dtos.Event{
+			DeviceName: "card-reader",
+			Readings: []dtos.BaseReading{
+				{
+					DeviceName:    "card-reader",
+					SimpleReading: dtos.SimpleReading{},
+				},
+			},
+		}, "event reading was empty, devicename: card-reader, resourcename: "},
+		{"default", http.StatusOK, false, 4, dtos.Event{
+			DeviceName: "card-reader",
+			Readings: []dtos.BaseReading{
+				{
+					DeviceName:    "card-reader",
+					SimpleReading: dtos.SimpleReading{Value: `[{"SKU": "HXI86WHU", "delta": -2}]`},
+				},
+			},
+		}, ""},
 	}
 
 	// VendingState initialization
@@ -237,18 +281,6 @@ func TestVerifyDoorAccess(t *testing.T) {
 
 	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
 	mockCommandClient.On("IssueGetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&eventResp, nil)
-
-	event := dtos.Event{
-		DeviceName: "ds-card-reader",
-		Readings: []dtos.BaseReading{
-			{
-				DeviceName: "ds-card-reader",
-				SimpleReading: dtos.SimpleReading{
-					Value: `[{"SKU": "HXI86WHU", "delta": -2}]`,
-				},
-			},
-		},
-	}
 
 	for _, tc := range testCases {
 
@@ -280,10 +312,11 @@ func TestVerifyDoorAccess(t *testing.T) {
 				CommandClient: mockCommandClient,
 			}
 
-			_, err := vendingState.VerifyDoorAccess(logger.NewMockClient(), event)
-
+			resp, err := vendingState.VerifyDoorAccess(logger.NewMockClient(), tc.event)
 			e, ok := err.(error)
-			if ok {
+			if !resp {
+				assert.Equal(t, fmt.Errorf(tc.expectedErr), err)
+			} else if ok {
 				assert.NoError(t, e)
 			}
 		})
