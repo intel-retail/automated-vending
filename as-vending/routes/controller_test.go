@@ -133,7 +133,7 @@ func TestResetDoorLock(t *testing.T) {
 
 	assert.Equal(t, false, c.vendingState.MaintenanceMode, "MaintanceMode should be false")
 	assert.Equal(t, false, c.vendingState.CVWorkflowStarted, "CVWorkflowStarted should be false")
-	assert.Equal(t, false, c.vendingState.DoorClosed, "DoorClosed should be false")
+	assert.Equal(t, true, c.vendingState.DoorClosed, "DoorClosed should be false")
 	assert.Equal(t, false, c.vendingState.DoorClosedDuringCVWorkflow, "DoorClosedDuringCVWorkflow should be false")
 	assert.Equal(t, false, c.vendingState.DoorOpenedDuringCVWorkflow, "DoorOpenedDuringCVWorkflow should be false")
 	assert.Equal(t, false, c.vendingState.InferenceDataReceived, "InferenceDataReceived should be false")
@@ -189,6 +189,12 @@ func TestController_BoardStatus(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			handler := http.HandlerFunc(c.BoardStatus)
 			handler.ServeHTTP(recorder, request)
+			if tt.fields.vendingState.DoorClosedDuringCVWorkflow {
+				close(doorOpenStopChannel)
+			}
+			if tt.fields.vendingState.DoorOpenedDuringCVWorkflow {
+				close(doorCloseStopChannel)
+			}
 		})
 	}
 }

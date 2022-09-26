@@ -79,7 +79,7 @@ func (c *Controller) ResetDoorLock(writer http.ResponseWriter, req *http.Request
 
 	c.vendingState.MaintenanceMode = false
 	c.vendingState.CVWorkflowStarted = false
-	c.vendingState.DoorClosed = false
+	c.vendingState.DoorClosed = true
 	c.vendingState.DoorClosedDuringCVWorkflow = false
 	c.vendingState.DoorOpenedDuringCVWorkflow = false
 	c.vendingState.InferenceDataReceived = false
