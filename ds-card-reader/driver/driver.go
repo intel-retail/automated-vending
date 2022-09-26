@@ -4,6 +4,7 @@
 package driver
 
 import (
+	"errors"
 	"fmt"
 
 	common "ds-card-reader/common"
@@ -35,7 +36,7 @@ func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- 
 	if drv.Config == nil {
 		drv.svc = service.RunningService()
 		if drv.svc == nil {
-			return fmt.Errorf("custom card reader driver service is nil: %v", err)
+			return errors.New("custom card reader driver service is nil")
 		}
 
 		drv.Config = &device.ServiceConfig{}
