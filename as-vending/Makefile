@@ -34,7 +34,7 @@ stop:
 	docker rm -f $(MICROSERVICE):latest
 
 test: lint
-	go test -test.v -cover ./...
+	go test -test.v -cover -count=1 -race ./... 
 
 testHTML:
 	go test -coverprofile=test_coverage.out ./... && \

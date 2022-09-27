@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestController_AddAllRoutes(t *testing.T) {
+func TestControllerAddAllRoutes(t *testing.T) {
 
 	tests := []struct {
 		name         string
@@ -120,22 +119,6 @@ func TestGetMaintenanceMode(t *testing.T) {
 		defer resp.Body.Close()
 		assert.Equal(t, maintModeAPIResponse, maintModeFalse, "Received a maintenance mode response that was different than anticipated")
 	})
-	t.Run("TestGetMaintenanceMode OPTIONS", func(t *testing.T) {
-		var vendingState functions.VendingState
-
-		req := httptest.NewRequest("OPTIONS", "/maintenanceMode", nil)
-		w := httptest.NewRecorder()
-		c := NewController(logger.NewMockClient(), nil, vendingState)
-		c.GetMaintenanceMode(w, req)
-
-		// parse the response
-		resp := w.Result()
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		require.NoError(t, err, "Parsing response body threw error")
-		assert.Equal(t, string(body), "", "Response body was not an empty string, expected it to be empty for a pre-flight CORS OPTIONS response")
-		assert.Equal(t, resp.Status, "200 OK", "OPTIONS request did not return 200")
-	})
 }
 
 func TestResetDoorLock(t *testing.T) {
@@ -150,34 +133,68 @@ func TestResetDoorLock(t *testing.T) {
 
 	assert.Equal(t, false, c.vendingState.MaintenanceMode, "MaintanceMode should be false")
 	assert.Equal(t, false, c.vendingState.CVWorkflowStarted, "CVWorkflowStarted should be false")
-	assert.Equal(t, false, c.vendingState.DoorClosed, "DoorClosed should be false")
+	assert.Equal(t, true, c.vendingState.DoorClosed, "DoorClosed should be false")
 	assert.Equal(t, false, c.vendingState.DoorClosedDuringCVWorkflow, "DoorClosedDuringCVWorkflow should be false")
 	assert.Equal(t, false, c.vendingState.DoorOpenedDuringCVWorkflow, "DoorOpenedDuringCVWorkflow should be false")
 	assert.Equal(t, false, c.vendingState.InferenceDataReceived, "InferenceDataReceived should be false")
 }
 
-// TODO: BoardStatus handler needs to return proper http status code for unit tests
-func TestBoardStatus(t *testing.T) {
-	doorOpenStopChannel := make(chan int)
-	doorCloseStopChannel := make(chan int)
+func TestController_BoardStatus(t *testing.T) {
 
-	vendingState := functions.VendingState{
-		DoorClosed:                     false,
-		CVWorkflowStarted:              true,
-		DoorOpenWaitThreadStopChannel:  doorOpenStopChannel,
-		DoorCloseWaitThreadStopChannel: doorCloseStopChannel,
-		Configuration:                  new(config.VendingConfig),
+	type fields struct {
+		vendingState functions.VendingState
+		boardStatus  functions.ControllerBoardStatus
 	}
-	boardStatus := functions.ControllerBoardStatus{
-		MaxTemperatureStatus: true,
-		MinTemperatureStatus: true,
-		DoorClosed:           true,
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{"Board Status Open", fields{
+			vendingState: functions.VendingState{
+				DoorClosed:        false,
+				CVWorkflowStarted: true,
+				Configuration:     new(config.VendingConfig),
+			},
+			boardStatus: functions.ControllerBoardStatus{
+				MaxTemperatureStatus: true,
+				MinTemperatureStatus: true,
+				DoorClosed:           true,
+			},
+		},
+		},
+		{"Board Status Closed", fields{
+			vendingState: functions.VendingState{
+				DoorClosed:        true,
+				CVWorkflowStarted: true,
+				Configuration:     new(config.VendingConfig),
+			},
+			boardStatus: functions.ControllerBoardStatus{
+				MaxTemperatureStatus: true,
+				MinTemperatureStatus: true,
+				DoorClosed:           false,
+			},
+		},
+		},
 	}
 
-	b, _ := json.Marshal(boardStatus)
-	c := NewController(logger.NewMockClient(), nil, vendingState)
-	request, _ := http.NewRequest(http.MethodPost, "", bytes.NewBuffer(b))
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(c.BoardStatus)
-	handler.ServeHTTP(recorder, request)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doorOpenStopChannel := make(chan int)
+			doorCloseStopChannel := make(chan int)
+			tt.fields.vendingState.DoorOpenWaitThreadStopChannel = doorOpenStopChannel
+			tt.fields.vendingState.DoorCloseWaitThreadStopChannel = doorCloseStopChannel
+			b, _ := json.Marshal(tt.fields.boardStatus)
+			c := NewController(logger.NewMockClient(), nil, tt.fields.vendingState)
+			request, _ := http.NewRequest(http.MethodPost, "", bytes.NewBuffer(b))
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(c.BoardStatus)
+			handler.ServeHTTP(recorder, request)
+			if tt.fields.vendingState.DoorClosedDuringCVWorkflow {
+				close(doorOpenStopChannel)
+			}
+			if tt.fields.vendingState.DoorOpenedDuringCVWorkflow {
+				close(doorCloseStopChannel)
+			}
+		})
+	}
 }
