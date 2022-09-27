@@ -51,36 +51,6 @@ func getDefaultDriverConfig() *device.ServiceConfig {
 	}
 }
 
-// TestInitialize validates that the device service interacts with the driver
-// as expected. Due to the way that the EdgeX device service relies on a
-// the singleton function "sdk.NewService()", we have to put most tests in
-// a specific order and parallelizing them might cause the SDK to yield
-// bad results
-func TestInitialize(t *testing.T) {
-	// use community-recommended shorthand (known name clash)
-	assert := assert.New(t)
-
-	driver := CardReaderDriver{}
-	lc := logger.NewMockClient()
-
-	// create an empty logging client/card reader device to compare against
-	var emptyLogger logger.LoggingClient
-	var emptyCardReaderDevice device.CardReader
-
-	driver.Config = getDefaultDriverConfig()
-
-	err := driver.Initialize(
-		lc,
-		make(chan *dsModels.AsyncValues, 16),
-		make(chan []dsModels.DiscoveredDevice, 16),
-	)
-
-	require.NoError(t, err)
-	assert.NotEqual(emptyLogger, driver.LoggingClient)
-	assert.Equal(getDefaultDriverConfig(), driver.Config)
-	assert.NotEqual(emptyCardReaderDevice, driver.CardReader)
-}
-
 // TestStop validates that the driver Stop function is implemented without
 // throwing any errors
 func TestStop(t *testing.T) {
@@ -334,6 +304,75 @@ func TestHandleWriteCommands(t *testing.T) {
 
 			// perform assertions
 			require.Equal(test.expectedError, err)
+		})
+	}
+}
+
+func TestCardReaderDriver_Initialize(t *testing.T) {
+	type args struct {
+		lc       logger.LoggingClient
+		asyncCh  chan<- *dsModels.AsyncValues
+		deviceCh chan<- []dsModels.DiscoveredDevice
+	}
+	tests := []struct {
+		name    string
+		drv     *CardReaderDriver
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "valid case",
+			drv: &CardReaderDriver{
+				LoggingClient: logger.NewMockClient(),
+				CardReader:    nil,
+				Config:        getDefaultDriverConfig(),
+			},
+			args: args{
+				lc:       logger.NewMockClient(),
+				asyncCh:  make(chan *dsModels.AsyncValues, 16),
+				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
+			wantErr: false,
+		},
+		{
+			name: "nil configuration",
+			drv: &CardReaderDriver{
+				LoggingClient: logger.NewMockClient(),
+				CardReader:    nil,
+				Config:        nil,
+			},
+			args: args{
+				lc:       logger.NewMockClient(),
+				asyncCh:  make(chan *dsModels.AsyncValues, 16),
+				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
+			wantErr: true,
+		},
+		{
+			name: "invalid configuration info",
+			drv: &CardReaderDriver{
+				LoggingClient: logger.NewMockClient(),
+				CardReader:    nil,
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName:       "invalid",
+						DeviceSearchPath: "/dev/input/event*",
+						VID:              0,
+						PID:              0,
+						SimulateDevice:   false,
+					},
+				},
+			},
+			args: args{
+				lc:       logger.NewMockClient(),
+				asyncCh:  make(chan *dsModels.AsyncValues, 16),
+				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.drv.Initialize(tt.args.lc, tt.args.asyncCh, tt.args.deviceCh); (err != nil) != tt.wantErr {
+				t.Errorf("CardReaderDriver.Initialize() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }

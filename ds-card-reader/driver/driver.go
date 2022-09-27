@@ -4,6 +4,7 @@
 package driver
 
 import (
+	"errors"
 	"fmt"
 
 	common "ds-card-reader/common"
@@ -34,6 +35,9 @@ func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.Config == nil {
 		drv.svc = service.RunningService()
+		if drv.svc == nil {
+			return errors.New("custom card reader driver service is nil")
+		}
 
 		drv.Config = &device.ServiceConfig{}
 
