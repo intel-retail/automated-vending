@@ -62,7 +62,12 @@ func TestInitializeCardReader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotCardReader, err := InitializeCardReader(tt.lc, tt.asyncCh, tt.deviceSearchPath, tt.deviceName, tt.vid, tt.pid, tt.simulateDevice, tt.mockDevice)
-			require.Equal((err != nil), tt.wantErr)
+			if tt.wantErr {
+				require.Error(err)
+				return
+			}
+
+			require.NoError(err)
 
 			IsAEmptyCardReader := reflect.DeepEqual(gotCardReader, emptyCardReader)
 			require.Equal(IsAEmptyCardReader, tt.wantErr)
