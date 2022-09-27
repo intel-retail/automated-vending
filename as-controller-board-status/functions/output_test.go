@@ -4,6 +4,7 @@
 package functions
 
 import (
+	"as-controller-board-status/config"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -21,25 +22,25 @@ import (
 
 var now = time.Now()
 
-func getCommonApplicationSettingsTyped() *ControllerBoardStatusAppSettings {
-	return &ControllerBoardStatusAppSettings{
-		AverageTemperatureMeasurementDuration:     time.Second * -15,
-		DeviceName:                                "controller-board",
-		MaxTemperatureThreshold:                   temp51,
-		MinTemperatureThreshold:                   temp49,
-		DoorStatusCommandEndpoint:                 "http://localhost:48082/api/v2/device/name/Inference-device/vendingDoorStatus",
-		NotificationCategory:                      "HW_HEALTH",
-		NotificationEmailAddresses:                []string{"test@site.com", "test@site.com"},
-		NotificationLabels:                        []string{"HW_HEALTH"},
-		NotificationReceiver:                      "System Administrator",
-		NotificationSender:                        "Automated Checkout Maintenance Notification",
-		NotificationSeverity:                      "CRITICAL",
-		NotificationName:                          "maintenance-notification",
-		NotificationSubscriptionMaxRESTRetries:    10,
-		NotificationSubscriptionRESTRetryInterval: time.Second * 10,
-		NotificationThrottleDuration:              time.Minute * 1,
-		RESTCommandTimeout:                        time.Second * 15,
-		VendingEndpoint:                           "http://localhost:48099/boardStatus",
+func getCommonApplicationSettingsTyped() *config.ControllerBoardStatusConfig {
+	return &config.ControllerBoardStatusConfig{
+		AverageTemperatureMeasurementDuration:             "-15s",
+		DeviceName:                                        "controller-board",
+		MaxTemperatureThreshold:                           temp51,
+		MinTemperatureThreshold:                           temp49,
+		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v2/device/name/Inference-device/vendingDoorStatus",
+		NotificationCategory:                              "HW_HEALTH",
+		NotificationEmailAddresses:                        "test@site.com,test@site.com",
+		NotificationLabels:                                "HW_HEALTH",
+		NotificationReceiver:                              "System Administrator",
+		NotificationSender:                                "Automated Checkout Maintenance Notification",
+		NotificationSeverity:                              "CRITICAL",
+		NotificationName:                                  "maintenance-notification",
+		NotificationSubscriptionMaxRESTRetries:            10,
+		NotificationSubscriptionRESTRetryIntervalDuration: "10s",
+		NotificationThrottleDuration:                      "1m",
+		RESTCommandTimeoutDuration:                        "15s",
+		VendingEndpoint:                                   "http://localhost:48099/boardStatus",
 	}
 }
 
@@ -327,12 +328,12 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
 					LastNotified:       time.Now().Add(time.Minute * -3),
-					Configuration:      configBadMQTTEndpoint,
+					Configuration:      configBadDoorStatusCommandEndpoint,
 					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
-				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the MQTT device service: Failed to submit REST PUT request due to error: %v \\\"%v\\\": %v", "Put", configBadMQTTEndpoint.MQTTEndpoint, "EOF"),
+				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the MQTT device service: Failed to submit REST PUT request due to error: %v \\\"%v\\\": %v", "Put", configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint, "EOF"),
 				ShouldLastNotifiedBeDifferent: false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},

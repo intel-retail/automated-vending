@@ -60,11 +60,11 @@ Type="edgex-messagebus"
   Host = "localhost"
   Port = 59860
 
-[ApplicationSettings]
+[ControllerBoardStatus]
   AverageTemperatureMeasurementDuration = "-15s"
   DeviceName = "controller-board"
-  MaxTemperatureThreshold = "83"
-  MinTemperatureThreshold = "10"
+  MaxTemperatureThreshold = 83.0
+  MinTemperatureThreshold = 10.0
   DoorStatusCommandEndpoint = "http://localhost:59882/api/v2/device/name/Inference-device/inferenceDoorStatus"
   NotificationCategory = "HW_HEALTH"
   NotificationEmailAddresses = "your-email@site.com"
@@ -73,9 +73,9 @@ Type="edgex-messagebus"
   NotificationSender = "AutomatedCheckoutMaintenanceNotification"
   NotificationSeverity = "CRITICAL"
   NotificationName = "maintenance-notification"
-  NotificationSubscriptionMaxRESTRetries = "10"
-  NotificationSubscriptionRESTRetryInterval = "10s"
+  NotificationSubscriptionMaxRESTRetries = 10
+  NotificationSubscriptionRESTRetryIntervalDuration = "10s"
   NotificationThrottleDuration = "1m"
   SubscriptionAdminState = "UNLOCKED"
-  RESTCommandTimeout = "15s"
+  RESTCommandTimeoutDuration = "15s"
   VendingEndpoint = "http://localhost:59860/boardStatus"
