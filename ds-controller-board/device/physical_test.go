@@ -17,13 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	validVID = "2341"
-	validPID = "8037"
-	badVID   = "9999"
-	badPID   = "0000"
-)
-
 var defaultConfig = Config{
 	VirtualControllerBoard: false,
 	PID:                    validPID,

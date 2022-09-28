@@ -88,6 +88,18 @@ func TestServiceConfig_Validate(t *testing.T) {
 			want1:   0,
 			wantErr: true,
 		},
+		{
+			name: "invalid displaytimeout vaidation",
+			fields: fields{
+				DriverConfig: Config{
+					DisplayTimeout: "test",
+					LockTimeout:    "10es",
+				},
+			},
+			want:    0,
+			want1:   0,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
