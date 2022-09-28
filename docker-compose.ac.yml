@@ -185,10 +185,10 @@ services:
       SERVICE_HOST: as-vending
       TRIGGER_EDGEXMESSAGEBUS_PUBLISHHOST_HOST: mqtt-broker
       TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
-      APPLICATIONSETTINGS_AUTHENTICATIONENDPOINT: http://ms-authentication:48096/authentication
-      APPLICATIONSETTINGS_INVENTORYAUDITLOGSERVICE: http://ms-inventory:48095/auditlog
-      APPLICATIONSETTINGS_INVENTORYSERVICE: http://ms-inventory:48095/inventory/delta
-      APPLICATIONSETTINGS_LEDGERSERVICE: http://ms-ledger:48093/ledger
+      VENDING_AUTHENTICATIONENDPOINT: http://ms-authentication:48096/authentication
+      VENDING_INVENTORYAUDITLOGSERVICE: http://ms-inventory:48095/auditlog
+      VENDING_INVENTORYSERVICE: http://ms-inventory:48095/inventory/delta
+      VENDING_LEDGERSERVICE: http://ms-ledger:48093/ledger
     hostname: as-vending
     networks:
       edgex-network: {}
@@ -221,10 +221,10 @@ services:
       TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
       REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: as-controller-board-status
-      APPLICATIONSETTINGS_DOORSTATUSCOMMANDENDPOINT: "http://edgex-core-command:59882/api/v2/device/name/Inference-device/inferenceDoorStatus"
-      APPLICATIONSETTINGS_VENDINGENDPOINT: "http://as-vending:48099/boardStatus"
-      APPLICATIONSETTINGS_MAXTEMPERATURETHRESHOLD: "83"
-      APPLICATIONSETTINGS_MINTEMPERATURETHRESHOLD: "10"
+      CONTROLLERBOARDSTATUS_DOORSTATUSCOMMANDENDPOINT: "http://edgex-core-command:59882/api/v2/device/name/Inference-device/inferenceDoorStatus"
+      CONTROLLERBOARDSTATUS_VENDINGENDPOINT: "http://as-vending:48099/boardStatus"
+      CONTROLLERBOARDSTATUS_MAXTEMPERATURETHRESHOLD: "83"
+      CONTROLLERBOARDSTATUS_MINTEMPERATURETHRESHOLD: "10"
     hostname: as-controller-board-status
     networks:
       edgex-network: {}
