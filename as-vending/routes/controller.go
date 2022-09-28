@@ -97,7 +97,7 @@ func (c *Controller) ResetDoorLock(writer http.ResponseWriter, req *http.Request
 
 	_, writeErr := writer.Write([]byte(returnval))
 	if writeErr != nil {
-		c.lc.Errorf("Failed to write item data back to caller\n")
+		c.lc.Errorf("Failed to write item data back to caller")
 	}
 
 }
@@ -111,13 +111,13 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 	body := make([]byte, req.ContentLength)
 	_, err := io.ReadFull(req.Body, body)
 	if err != nil {
-		c.lc.Errorf("Failed to read request data\n")
+		c.lc.Errorf("Failed to read request data")
 	}
 
 	// Unmarshal the string contents of request into a proper structure
 	var boardStatus functions.ControllerBoardStatus
 	if err := json.Unmarshal(body, &boardStatus); err != nil {
-		c.lc.Errorf("Failed to read request data\n")
+		c.lc.Errorf("Failed to read request data")
 	}
 	returnval := "Board status received but maintenance mode was not set"
 	status = http.StatusOK
@@ -221,6 +221,6 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 
 	_, writeErr := writer.Write([]byte(returnval))
 	if writeErr != nil {
-		c.lc.Error("Failed to write item data back to caller\n")
+		c.lc.Error("Failed to write item data back to caller")
 	}
 }
