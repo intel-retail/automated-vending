@@ -205,9 +205,15 @@ func TestControllerBoardDriver_Initialize(t *testing.T) {
 				lc:     tt.lc,
 				config: tt.config,
 			}
-			if err := drv.Initialize(tt.lc, make(chan *dsModels.AsyncValues), make(chan<- []dsModels.DiscoveredDevice)); (err != nil) != tt.wantErr {
-				t.Errorf("ControllerBoardDriver.Initialize() error = %v, wantErr %v", err, tt.wantErr)
+
+			err := drv.Initialize(tt.lc, make(chan *dsModels.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
+			if tt.wantErr {
+				require.Error(t, err)
+				return
 			}
+
+			require.NoError(t, err)
+
 		})
 	}
 }
@@ -288,16 +294,18 @@ func TestControllerBoardDriver_HandleReadCommands(t *testing.T) {
 			if tt.wantErr {
 				require.Error(err)
 				require.Nil(actual)
-			} else {
-				require.NoError(err)
-				require.NotNil(actual)
-				require.True(len(actual) > 0, "No results returned")
-				assert.Equal(t, tt.expectedType, actual[0].Type)
-
-				actualValue, err := actual[0].StringValue()
-				require.NoError(err)
-				assert.Equal(t, tt.expectedValue, actualValue)
+				return
 			}
+
+			require.NoError(err)
+			require.NotNil(actual)
+			require.True(len(actual) > 0, "No results returned")
+			assert.Equal(t, tt.expectedType, actual[0].Type)
+
+			actualValue, err := actual[0].StringValue()
+			require.NoError(err)
+			assert.Equal(t, tt.expectedValue, actualValue)
+
 		})
 	}
 }

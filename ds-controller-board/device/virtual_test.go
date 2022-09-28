@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,7 +57,7 @@ func TestVirtualWrite(t *testing.T) {
 func TestControllerBoardVirtual_Read(t *testing.T) {
 	tests := []struct {
 		name           string
-		AsyncCh        chan *dsModels.AsyncValues
+		AsyncCh        chan *models.AsyncValues
 		DevStatus      string
 		LoggingClient  logger.LoggingClient
 		L1             int
