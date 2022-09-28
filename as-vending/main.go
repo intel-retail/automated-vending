@@ -24,7 +24,7 @@ type vendingAppService struct {
 	service       interfaces.ApplicationService
 	lc            logger.LoggingClient
 	serviceConfig *config.ServiceConfig
-	vendingState  functions.VendingState
+	vendingState  *functions.VendingState
 }
 
 func main() {
@@ -41,6 +41,8 @@ func (app *vendingAppService) CreateAndRunAppService(serviceKey string, newServi
 	}
 
 	app.lc = app.service.LoggingClient()
+	newVendingState := functions.VendingState{}
+	app.vendingState = &newVendingState
 
 	// retrieve the required configurations
 	app.serviceConfig = &config.ServiceConfig{}
