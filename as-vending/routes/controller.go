@@ -19,10 +19,10 @@ import (
 type Controller struct {
 	lc           logger.LoggingClient
 	service      interfaces.ApplicationService
-	vendingState functions.VendingState
+	vendingState *functions.VendingState
 }
 
-func NewController(lc logger.LoggingClient, service interfaces.ApplicationService, vendingState functions.VendingState) Controller {
+func NewController(lc logger.LoggingClient, service interfaces.ApplicationService, vendingState *functions.VendingState) Controller {
 	return Controller{
 		lc:           lc,
 		service:      service,
