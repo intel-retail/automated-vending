@@ -84,20 +84,20 @@ func (c *Controller) ResetDoorLock(writer http.ResponseWriter, req *http.Request
 	c.vendingState.DoorOpenedDuringCVWorkflow = false
 	c.vendingState.InferenceDataReceived = false
 
-	fmt.Println("Maintenance card scanned")
-	fmt.Printf("workflow: %t", c.vendingState.CVWorkflowStarted)
-	fmt.Printf("maintenance mode: %t", c.vendingState.MaintenanceMode)
-	fmt.Printf("open: %t", c.vendingState.DoorOpenedDuringCVWorkflow)
-	fmt.Printf("closed: %t", c.vendingState.DoorClosedDuringCVWorkflow)
-	fmt.Printf("Inference: %t", c.vendingState.InferenceDataReceived)
-	fmt.Printf("door: %t", c.vendingState.DoorClosed)
+	c.lc.Infof("Maintenance card scanned")
+	c.lc.Debugf("workflow: %t", c.vendingState.CVWorkflowStarted)
+	c.lc.Debugf("maintenance mode: %t", c.vendingState.MaintenanceMode)
+	c.lc.Debugf("open: %t", c.vendingState.DoorOpenedDuringCVWorkflow)
+	c.lc.Debugf("closed: %t", c.vendingState.DoorClosedDuringCVWorkflow)
+	c.lc.Debugf("Inference: %t", c.vendingState.InferenceDataReceived)
+	c.lc.Debugf("door: %t", c.vendingState.DoorClosed)
 
 	// Write the HTTP status header
 	writer.WriteHeader(http.StatusOK)
 
 	_, writeErr := writer.Write([]byte(returnval))
 	if writeErr != nil {
-		fmt.Printf("Failed to write item data back to caller\n")
+		c.lc.Errorf("Failed to write item data back to caller")
 	}
 
 }
@@ -111,13 +111,13 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 	body := make([]byte, req.ContentLength)
 	_, err := io.ReadFull(req.Body, body)
 	if err != nil {
-		fmt.Printf("Failed to read request data\n")
+		c.lc.Errorf("Failed to read request data")
 	}
 
 	// Unmarshal the string contents of request into a proper structure
 	var boardStatus functions.ControllerBoardStatus
 	if err := json.Unmarshal(body, &boardStatus); err != nil {
-		fmt.Printf("Failed to read request data\n")
+		c.lc.Errorf("Failed to read request data")
 	}
 	returnval := "Board status received but maintenance mode was not set"
 	status = http.StatusOK
@@ -126,21 +126,21 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 	if boardStatus.MinTemperatureStatus {
 		returnval = string("Temperature status received and maintenance mode was set")
 		status = http.StatusOK
-		fmt.Println("Cooler temperature exceeds the minimum temperature threshold. The cooler needs maintenance.")
+		c.lc.Error("Cooler temperature exceeds the minimum temperature threshold. The cooler needs maintenance.")
 		c.vendingState.MaintenanceMode = true
 	}
 	// Check controller board MaxTemperatureStatus state. If it's true then a maximum temperature event has happened
 	if boardStatus.MaxTemperatureStatus {
 		returnval = string("Temperature status received and maintenance mode was set")
 		status = http.StatusOK
-		fmt.Println("Cooler temperature exceeds the maximum temperature threshold. The cooler needs maintenance.")
+		c.lc.Error("Cooler temperature exceeds the maximum temperature threshold. The cooler needs maintenance.")
 		c.vendingState.MaintenanceMode = true
 	}
 
 	// Check to see if the board closed state is different than the previous state. If it is we need to update the state and
 	// set the related properties.
 	if c.vendingState.DoorClosed != boardStatus.DoorClosed {
-		fmt.Println("Successfully updated the door event. Door closed:", boardStatus.DoorClosed)
+		c.lc.Errorf("Successfully updated the door event. Door closed: %v", boardStatus.DoorClosed)
 		returnval = string("Door closed change event was received ")
 		status = http.StatusOK //FIXME: This is an issue
 		c.vendingState.DoorClosed = boardStatus.DoorClosed
@@ -155,13 +155,13 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 				// Wait for door closed event. If the door isn't closed within the timeout
 				// then leave the workflow, remove the user data, and enter maintenance mode
 				go func() {
-					fmt.Println("Door Opened: wait for ", c.vendingState.DoorCloseStateTimeout, " seconds")
+					c.lc.Infof("Door Opened: wait for %v seconds", c.vendingState.DoorCloseStateTimeout)
 					for {
 						select {
 						case <-time.After(c.vendingState.DoorCloseStateTimeout):
 							{
 								if !c.vendingState.DoorClosedDuringCVWorkflow {
-									fmt.Println("Door Opened: Failed")
+									c.lc.Error("Door Opened: Failed")
 									c.vendingState.CVWorkflowStarted = false
 									c.vendingState.CurrentUserData = functions.OutputData{}
 									c.vendingState.MaintenanceMode = true
@@ -169,11 +169,11 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 								return
 							}
 						case <-c.vendingState.DoorCloseWaitThreadStopChannel:
-							fmt.Println("Stopped the door closed wait thread")
+							c.lc.Info("Stopped the door closed wait thread")
 							return
 
 						case <-c.vendingState.ThreadStopChannel:
-							fmt.Println("Globally stopped the door closed wait thread")
+							c.lc.Info("Globally stopped the door closed wait thread")
 							return
 						}
 					}
@@ -189,13 +189,13 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 				// Wait for the inference data to be received. If we don't receive any inference data with the timeout
 				// then leave the workflow, remove the user data, and enter maintenance mode
 				go func() {
-					fmt.Println("Door Closed: wait for ", c.vendingState.InferenceTimeout, " seconds")
+					c.lc.Infof("Door Closed: wait for %v seconds", c.vendingState.InferenceTimeout)
 					for {
 						select {
 						case <-time.After(c.vendingState.InferenceTimeout):
 							{
 								if !c.vendingState.InferenceDataReceived {
-									fmt.Println("Door Closed: Failed")
+									c.lc.Error("Door Closed: Failed")
 									c.vendingState.CVWorkflowStarted = false
 									c.vendingState.CurrentUserData = functions.OutputData{}
 									c.vendingState.MaintenanceMode = true
@@ -203,11 +203,11 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 								return
 							}
 						case <-c.vendingState.InferenceWaitThreadStopChannel:
-							fmt.Println("Stopped the inference wait thread")
+							c.lc.Info("Stopped the inference wait thread")
 							return
 
 						case <-c.vendingState.ThreadStopChannel:
-							fmt.Println("Globally stopped the inference wait thread")
+							c.lc.Info("Globally stopped the inference wait thread")
 							return
 						}
 					}
@@ -221,6 +221,6 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 
 	_, writeErr := writer.Write([]byte(returnval))
 	if writeErr != nil {
-		fmt.Printf("Failed to write item data back to caller\n")
+		c.lc.Error("Failed to write item data back to caller")
 	}
 }
