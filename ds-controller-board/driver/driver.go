@@ -58,7 +58,9 @@ func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh ch
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.config == nil {
 		drv.svc = service.RunningService()
-
+		if drv.svc == nil {
+			return errors.New("custom controller board driver service is null")
+		}
 		drv.config = &device.ServiceConfig{}
 
 		err := drv.svc.LoadCustomConfig(drv.config, "DriverConfig")
@@ -131,7 +133,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				return err
 			}
 		default:
-			return fmt.Errorf("unknown Command Type: '%d'", cmdType)
+			return fmt.Errorf("unknown Command Type: '%v'", cmdType)
 		}
 
 	case lock2:
@@ -150,7 +152,7 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 				return err
 			}
 		default:
-			return fmt.Errorf("unknown Command Type: '%d'", cmdType)
+			return fmt.Errorf("unknown Command Type: '%v'", cmdType)
 		}
 
 	case getStatus:

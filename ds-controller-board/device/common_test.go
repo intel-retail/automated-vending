@@ -13,6 +13,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	validVID = "2341"
+	validPID = "8037"
+	badVID   = "9999"
+	badPID   = "0000"
+)
+
 func TestParseStatus(t *testing.T) {
 	expected := StatusEvent{
 		Lock1Status: 1,

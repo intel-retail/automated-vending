@@ -7,17 +7,19 @@
 package driver
 
 import (
+	"ds-controller-board/device"
+	"ds-controller-board/device/mocks"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
-	"ds-controller-board/device"
-
-	"github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,77 +42,58 @@ func TestDisconnectDevice(t *testing.T) {
 	assert.Nil(t, actual)
 }
 
-func TestInitialize(t *testing.T) {
-	target := CreateControllerBoardDriver(t, true, false, "")
-	err := target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []models.DiscoveredDevice))
-	assert.NoError(t, err)
-}
-
-func TestHandleReadCommands(t *testing.T) {
-	// use community-recommended shorthand (known name clash)
-	assert := assert.New(t)
-	require := require.New(t)
-
-	expectedValue := "STATUS,L1,0,L2,0,D,0,T,78.58,H,19.54"
-	expectedType := edgexcommon.ValueTypeString
-
-	target := CreateControllerBoardDriver(t, true, true, expectedValue)
-
-	request := models.CommandRequest{
-		DeviceResourceName: "L1",
-		Attributes:         nil,
-		Type:               "",
-	}
-
-	actual, err := target.HandleReadCommands("ControllerBoard", nil, []models.CommandRequest{request})
-	require.NoError(err)
-	require.NotNil(actual)
-	require.True(len(actual) > 0, "No results returned")
-	assert.Equal(expectedType, actual[0].Type)
-
-	actualValue, err := actual[0].StringValue()
-	require.NoError(err)
-	assert.Equal(expectedValue, actualValue)
-}
-
 func TestHandleWriteCommands(t *testing.T) {
 	// use community-recommended shorthand (known name clash)
 	assert := assert.New(t)
 	require := require.New(t)
+	var cmdType interface{}
+
+	mocksControllerBoard := &mocks.ControllerBoard{}
+	mocksControllerBoard.On("Write", mock.Anything).Return(fmt.Errorf("failed"))
+	cmdType = "notbool"
+
+	var emptyControllerBoard device.ControllerBoard
 
 	testCases := []struct {
-		Name          string
-		Resource      string
-		CommandValue  interface{}
-		ExpectedError error
+		Name            string
+		Resource        string
+		CommandValue    interface{}
+		ExpectedError   error
+		controllerBoard device.ControllerBoard
+		paramValue      interface{}
 	}{
-		{Name: "HandleWriteCommands - lock1 with 1", Resource: lock1, CommandValue: true, ExpectedError: nil},
-		{Name: "HandleWriteCommands - lock2 with 1", Resource: lock2, CommandValue: true, ExpectedError: nil},
-		{Name: "HandleWriteCommands - lock1 with 0", Resource: lock1, CommandValue: false, ExpectedError: nil},
-		{Name: "HandleWriteCommands - lock2 with 0", Resource: lock2, CommandValue: false, ExpectedError: nil},
-		{Name: "HandleWriteCommands - getStatus", Resource: getStatus, CommandValue: nil, ExpectedError: nil},
-		{Name: "HandleWriteCommands - displayRow0", Resource: displayRow0, CommandValue: "Row 0", ExpectedError: nil},
-		{Name: "HandleWriteCommands - displayRow1", Resource: displayRow1, CommandValue: "Row 1", ExpectedError: nil},
-		{Name: "HandleWriteCommands - displayRow2", Resource: displayRow2, CommandValue: "Row 2", ExpectedError: nil},
-		{Name: "HandleWriteCommands - displayRow3", Resource: displayRow3, CommandValue: "Row 3", ExpectedError: nil},
-		{Name: "HandleWriteCommands - displayReset", Resource: displayReset, CommandValue: nil, ExpectedError: nil},
-		{Name: "HandleWriteCommands - setHumidity", Resource: setHumidity, CommandValue: "86", ExpectedError: nil},
-		{Name: "HandleWriteCommands - setTemperature", Resource: setTemperature, CommandValue: "102", ExpectedError: nil},
-		{Name: "HandleWriteCommands - setDoorClosed", Resource: setDoorClosed, CommandValue: "Yes", ExpectedError: nil},
-		{Name: "HandleWriteCommands - Unknown Command", Resource: "unknown", ExpectedError: fmt.Errorf("unknown command received: 'unknown'")},
+		{Name: "HandleWriteCommands - lock1 with 1", Resource: lock1, CommandValue: true, ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - lock2 with 1", Resource: lock2, CommandValue: true, ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - lock1 with 0", Resource: lock1, CommandValue: false, ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - lock2 with 0", Resource: lock2, CommandValue: false, ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - getStatus", Resource: getStatus, CommandValue: nil, ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - displayRow0", Resource: displayRow0, CommandValue: "Row 0", ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - displayRow1", Resource: displayRow1, CommandValue: "Row 1", ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - displayRow2", Resource: displayRow2, CommandValue: "Row 2", ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - displayRow3", Resource: displayRow3, CommandValue: "Row 3", ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - displayReset", Resource: displayReset, CommandValue: nil, ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - setHumidity", Resource: setHumidity, CommandValue: "86", ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - setTemperature", Resource: setTemperature, CommandValue: "102", ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - setDoorClosed", Resource: setDoorClosed, CommandValue: "Yes", ExpectedError: nil, controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands - Unknown Command", Resource: "unknown", ExpectedError: fmt.Errorf("unknown command received: 'unknown'"), controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands -error lock1", Resource: lock1, CommandValue: nil, ExpectedError: fmt.Errorf("unknown Command Type: '%v'", cmdType), paramValue: "notbool", controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands -error lock2", Resource: lock2, CommandValue: nil, ExpectedError: fmt.Errorf("unknown Command Type: '%v'", cmdType), paramValue: "notbool", controllerBoard: emptyControllerBoard},
+		{Name: "HandleWriteCommands -error mock", Resource: lock1, CommandValue: nil, ExpectedError: fmt.Errorf("unknown Command Type: '%v'", cmdType), paramValue: "notbool", controllerBoard: mocksControllerBoard},
+		{Name: "HandleWriteCommands -error mock", Resource: lock2, CommandValue: nil, ExpectedError: fmt.Errorf("unknown Command Type: '%v'", cmdType), paramValue: "notbool", controllerBoard: mocksControllerBoard},
+		{Name: "HandleWriteCommands -error mock", Resource: getStatus, CommandValue: nil, ExpectedError: fmt.Errorf("failed"), paramValue: "notbool", controllerBoard: mocksControllerBoard},
 	}
 
 	target := CreateControllerBoardDriver(t, true, true, "")
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			var params []*models.CommandValue
-			var commandValue *models.CommandValue
+			var params []*dsModels.CommandValue
+			var commandValue *dsModels.CommandValue
 			var err error
 
 			if testCase.CommandValue != nil {
 				if reflect.TypeOf(testCase.CommandValue).Kind() == reflect.String {
-					commandValue, err = models.NewCommandValueWithOrigin(
+					commandValue, err = dsModels.NewCommandValueWithOrigin(
 						testCase.Resource,
 						edgexcommon.ValueTypeString,
 						testCase.CommandValue.(string),
@@ -121,7 +104,7 @@ func TestHandleWriteCommands(t *testing.T) {
 				} else {
 					value, ok := testCase.CommandValue.(bool)
 					require.True(ok)
-					commandValue, err = models.NewCommandValueWithOrigin(
+					commandValue, err = dsModels.NewCommandValueWithOrigin(
 						testCase.Resource,
 						edgexcommon.ValueTypeBool,
 						value,
@@ -130,13 +113,16 @@ func TestHandleWriteCommands(t *testing.T) {
 					require.NoError(err)
 				}
 			} else {
-				commandValue = &models.CommandValue{
+				commandValue = &dsModels.CommandValue{
 					DeviceResourceName: testCase.Resource,
+					Value:              testCase.paramValue,
 				}
 			}
 
 			params = append(params, commandValue)
-
+			if !reflect.DeepEqual(testCase.controllerBoard, emptyControllerBoard) {
+				target.controllerBoard = testCase.controllerBoard
+			}
 			actualError := target.HandleWriteCommands("ControllerBoard", nil, nil, params)
 
 			if testCase.ExpectedError != nil {
@@ -164,7 +150,7 @@ func CreateControllerBoardDriver(t *testing.T, virtual bool, initialize bool, ex
 	}
 
 	if initialize {
-		err = target.Initialize(lc, make(chan *models.AsyncValues), make(chan<- []models.DiscoveredDevice))
+		err = target.Initialize(lc, make(chan *dsModels.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
 		require.NoError(err)
 
 		virtual, ok := target.controllerBoard.(*device.ControllerBoardVirtual)
@@ -173,4 +159,153 @@ func CreateControllerBoardDriver(t *testing.T, virtual bool, initialize bool, ex
 	}
 
 	return target
+}
+
+func TestControllerBoardDriver_Initialize(t *testing.T) {
+
+	mocklc := logger.NewMockClient()
+
+	tests := []struct {
+		name      string
+		isVirtual bool
+		config    *device.ServiceConfig
+		lc        logger.LoggingClient
+		wantErr   bool
+	}{
+		{
+			name: "valid virtual case",
+			config: &device.ServiceConfig{
+				DriverConfig: device.Config{
+					VirtualControllerBoard: true,
+				},
+			},
+			lc:      mocklc,
+			wantErr: false,
+		},
+		{
+			name:    "Invalid nil config",
+			config:  nil,
+			lc:      mocklc,
+			wantErr: true,
+		},
+		{
+			name: "Invalid non-virtual case",
+			config: &device.ServiceConfig{
+				DriverConfig: device.Config{
+					VirtualControllerBoard: false,
+				},
+			},
+			lc:      mocklc,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			drv := &ControllerBoardDriver{
+				lc:     tt.lc,
+				config: tt.config,
+			}
+
+			err := drv.Initialize(tt.lc, make(chan *dsModels.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+		})
+	}
+}
+
+func TestControllerBoardDriver_HandleReadCommands(t *testing.T) {
+	mocksControllerBoard := &mocks.ControllerBoard{}
+	mocksControllerBoard.On("Write", mock.Anything).Return(fmt.Errorf("failed"))
+
+	require := require.New(t)
+	tests := []struct {
+		name            string
+		deviceName      string
+		protocols       map[string]models.ProtocolProperties
+		reqs            dsModels.CommandRequest
+		lc              logger.LoggingClient
+		config          *device.ServiceConfig
+		controllerBoard device.ControllerBoard
+		wantErr         bool
+		expectedType    string
+		expectedValue   string
+	}{
+		{
+			name:       "valid case",
+			deviceName: "test-device",
+			protocols:  nil,
+			controllerBoard: &device.ControllerBoardVirtual{
+				AsyncCh:       make(chan *dsModels.AsyncValues),
+				DevStatus:     "STATUS,L1,0,L2,0,D,0,T,78.58,H,19.54",
+				LoggingClient: logger.NewMockClient(),
+				L1:            1,
+				L2:            1,
+				DoorClosed:    1,
+				Temperature:   78.00,
+				Humidity:      10,
+				DeviceName:    "test-device",
+			},
+			reqs: dsModels.CommandRequest{
+				DeviceResourceName: "L1",
+				Attributes:         nil,
+				Type:               "",
+			},
+			wantErr: false,
+			lc:      logger.NewMockClient(),
+			config: &device.ServiceConfig{
+				DriverConfig: device.Config{
+					VirtualControllerBoard: true,
+				},
+			},
+			expectedValue: "STATUS,L1,0,L2,0,D,0,T,78.58,H,19.54",
+			expectedType:  edgexcommon.ValueTypeString,
+		},
+		{
+			name:            "mock test",
+			deviceName:      "test-device",
+			protocols:       nil,
+			controllerBoard: mocksControllerBoard,
+			reqs: dsModels.CommandRequest{
+				DeviceResourceName: "L1",
+				Attributes:         nil,
+				Type:               "",
+			},
+			wantErr: true,
+			lc:      logger.NewMockClient(),
+			config: &device.ServiceConfig{
+				DriverConfig: device.Config{
+					VirtualControllerBoard: true,
+				},
+			},
+			expectedValue: "STATUS,L1,0,L2,0,D,0,T,78.58,H,19.54",
+			expectedType:  edgexcommon.ValueTypeString,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			drv := CreateControllerBoardDriver(t, true, true, tt.expectedValue)
+			drv.controllerBoard = tt.controllerBoard
+			actual, err := drv.HandleReadCommands(tt.deviceName, tt.protocols, []dsModels.CommandRequest{tt.reqs})
+			if tt.wantErr {
+				require.Error(err)
+				require.Nil(actual)
+				return
+			}
+
+			require.NoError(err)
+			require.NotNil(actual)
+			require.True(len(actual) > 0, "No results returned")
+			assert.Equal(t, tt.expectedType, actual[0].Type)
+
+			actualValue, err := actual[0].StringValue()
+			require.NoError(err)
+			assert.Equal(t, tt.expectedValue, actualValue)
+
+		})
+	}
 }

@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +36,7 @@ func TestNewControllerBoardError(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			config.VID = testCase.VID
 			config.PID = testCase.PID
-			_, err := NewControllerBoard(lc, make(chan *dsModels.AsyncValues), config)
+			_, err := NewControllerBoard(logger.NewMockClient(), make(chan *dsModels.AsyncValues), config)
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), testCase.ExpectedErrorMessage)
 		})
