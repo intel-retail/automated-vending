@@ -204,7 +204,7 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 // AvgTemp takes a slice of temperature measurements and returns a proper
 // average value of the values in the slice.
 func AvgTemp(measurements []TempMeasurement, duration time.Duration) (float64, int) {
-	var z int = 0
+	var z int
 	var mCount float64
 	var tempSum, avgTemp float64 = 0.00, 0.00
 

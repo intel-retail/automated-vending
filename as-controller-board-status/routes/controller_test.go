@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
 	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
@@ -75,15 +76,20 @@ func TestController_GetStatus(t *testing.T) {
 
 	tests := []struct {
 		name                  string
-		controllerBoardStatus functions.ControllerBoardStatus
+		controllerBoardStatus *functions.ControllerBoardStatus
 		expectedContent       string
 		expectedStatus        int
 		RESTURL               string
 	}{
-		// TODO: Add test cases.
 		{
 			name:                  "Success",
-			controllerBoardStatus: functions.ControllerBoardStatus{},
+			controllerBoardStatus: &functions.ControllerBoardStatus{},
+			expectedStatus:        http.StatusOK,
+			RESTURL:               "/status",
+		},
+		{
+			name:                  "nil controllerboardstatus",
+			controllerBoardStatus: nil,
 			expectedStatus:        http.StatusOK,
 			RESTURL:               "/status",
 		},
@@ -98,7 +104,7 @@ func TestController_GetStatus(t *testing.T) {
 				boardStatus: &boardStatus,
 			}
 
-			c.boardStatus.ControllerBoardStatus = &tt.controllerBoardStatus
+			c.boardStatus.ControllerBoardStatus = tt.controllerBoardStatus
 
 			c.GetStatus(w, req)
 			resp := w.Result()
@@ -110,6 +116,33 @@ func TestController_GetStatus(t *testing.T) {
 			err = json.Unmarshal(body, &responseContent)
 
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestNewController(t *testing.T) {
+
+	tests := []struct {
+		name        string
+		lc          logger.LoggingClient
+		service     interfaces.ApplicationService
+		boardStatus *functions.CheckBoardStatus
+	}{
+		{
+			name:        "success",
+			lc:          logger.NewMockClient(),
+			service:     &mocks.ApplicationService{},
+			boardStatus: &functions.CheckBoardStatus{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewController(tt.lc, tt.service, tt.boardStatus)
+			require.NotEmpty(t, got)
+			require.Equal(t, tt.lc, got.lc, "logging is not the same")
+			require.Equal(t, tt.service, got.service, "service is not the same")
+			require.Equal(t, tt.boardStatus, got.boardStatus, "boardstatus is not the same")
+
 		})
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 var now = time.Now()
@@ -213,7 +214,6 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// CheckControllerBoardStatus that intentionally fails if there is no
 	// event contained in the input interface
 	var emptyInputData interface{}
-
 	return []testTableCheckControllerBoardStatusStruct{
 			{
 				TestCaseName:      "Success, no pre-existing measurements, no recent notifications sent",
@@ -290,9 +290,13 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				TestCaseName:      "Unsuccessful due to empty params",
 				InputEdgexContext: edgexcontextSuccess,
 				InputData:         emptyInputData,
-				OutputBool:        false,
-				OutputInterface:   nil,
-				OutputLogs:        "",
+				InputCheckBoardStatus: CheckBoardStatus{
+					Configuration:      configSuccess,
+					NotificationClient: mockNotificationClient,
+				},
+				OutputBool:      false,
+				OutputInterface: nil,
+				OutputLogs:      "",
 			},
 			{
 				TestCaseName:      "Unsuccessful due to unserializable controller board status data",
@@ -396,6 +400,9 @@ func TestCheckControllerBoardStatus(t *testing.T) {
 			// Set up the test assert functions
 			assert := assert.New(t)
 
+			// this needs to be set for upgraded config value
+			err := ct.InputCheckBoardStatus.ParseStringConfigurations()
+			require.NoError(t, err)
 			// Run the function that needs to be tested
 			testBool, testInterface := ct.InputCheckBoardStatus.CheckControllerBoardStatus(ct.InputEdgexContext, ct.InputData)
 
