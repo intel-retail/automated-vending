@@ -128,21 +128,21 @@ docker ps --format 'table{{.Image}}\t{{.Status}}'
     | IMAGE                                                | STATUS            |
     |------------------------------------------------------|-------------------|
     | automated-checkout/ms-ledger:dev                     | Up 53 seconds     |
-    | eclipse-mosquitto:1.6.3                              | Up 52 seconds     |
+    | eclipse-mosquitto:2.0.14                             | Up 52 seconds     |
     | automated-checkout/as-vending:dev                    | Up 52 seconds     |
     | automated-checkout/ms-inventory:dev                  | Up 52 seconds     |
     | automated-checkout/ds-controller-board:dev           | Up 52 seconds     |
     | automated-checkout/ms-authentication:dev             | Up 55 seconds     |
-    | edgexfoundry/docker-device-mqtt-go:1.2.0             | Up 53 seconds     |
+    | edgexfoundry/device-mqtt:2.2.0                       | Up 53 seconds     |
     | automated-checkout/ds-card-reader:dev                | Up 53 seconds     |
     | automated-checkout/as-controller-board-status:dev    | Up 52 seconds     |
-    | edgexfoundry/docker-core-command-go:1.2.0            | Up About a minute |
-    | edgexfoundry/docker-core-data-go:1.2.0               | Up About a minute |
-    | edgexfoundry/docker-core-metadata-go:1.2.0           | Up About a minute |
-    | edgexfoundry/docker-support-notifications-go:1.2.0   | Up About a minute |
-    | edgexfoundry/docker-edgex-consul:1.2.0               | Up About a minute |
-    | automated-checkout/ds-cv-inference:dev             | Up 51 seconds     |
-    | redis:5.0.8-alpine                                   | Up About a minute |
+    | edgexfoundry/core-command:2.2.0                      | Up About a minute |
+    | edgexfoundry/core-data:2.2.0                         | Up About a minute |
+    | edgexfoundry/core-metadata:2.2.0                     | Up About a minute |
+    | edgexfoundry/support-notifications:2.2.0             | Up About a minute |
+    | edgexfoundry/consul:1.10.10                          | Up About a minute |
+    | automated-checkout/ds-cv-inference:dev               | Up 51 seconds     |
+    | redis:6.2-alpine                                     | Up About a minute |
 
 You can also use Portainer to check the status of the services. You must run Portainer service first:
 
