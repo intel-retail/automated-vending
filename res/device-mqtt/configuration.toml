@@ -1,3 +1,6 @@
+# Copyright © 2022 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
 MaxEventSize = 0 # value 0 unlimit the maximum event size that can be sent to message bus or core-data
 
 [Writable]
