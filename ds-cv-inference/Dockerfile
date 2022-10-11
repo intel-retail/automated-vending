@@ -3,12 +3,16 @@
 
 ARG OPENVINO_BASE=ubuntu20_dev
 ARG OPENVINO_VERSION=2022.2.0
-FROM openvino/${OPENVINO_BASE}:${OPENVINO_VERSION} AS openvino
+ARG OPENCV_VERSION=4.6.0
+
+FROM gocv/opencv:${OPENCV_VERSION} AS gocv
+
+FROM openvino/${OPENVINO_BASE}:${OPENVINO_VERSION}
 
 # required for installing dependencies
 USER root
 
-COPY --from=gocv/opencv:4.6.0 /usr/local /usr/local
+COPY --from=gocv /usr/local /usr/local
 
 RUN cd /opt/intel/openvino && \
       install_dependencies/install_openvino_dependencies.sh -c=opencv_req -c=opencv_opt -y
