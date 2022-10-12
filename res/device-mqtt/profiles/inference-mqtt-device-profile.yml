@@ -1,0 +1,31 @@
+---
+
+# Copyright © 2022 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+name: "Inference-device-Profile"
+manufacturer: "Inference"
+model: "MQTT-2"
+description: "Inference CV Module over MQTT device profile"
+labels:
+- "MQTT"
+- "Inference"
+
+deviceResources:
+- name: "inferenceDoorStatus"
+  description: "Trigger Inference's CV algo to compute SKU delta"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "inferenceSkuDelta"
+  description: "SKU added or removed since last inference"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "inferenceHeartbeat"
+  description: "Device heartbeat"
+  properties:
+    valueType: "string"
+    readWrite: "RW"

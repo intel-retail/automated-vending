@@ -1,10 +1,23 @@
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM automated-checkout/build:latest AS builder
+FROM golang:1.18-alpine3.16 AS builder
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2020: Intel'
+  copyright='Copyright (c) 2022: Intel'
+
+
+# add git for go modules
+RUN apk update && apk add --no-cache make git gcc libc-dev zeromq-dev linux-headers
+
+ENV GO111MODULE=on
+WORKDIR /usr/local/bin/
+
+# This caches the packages for use when building the other services.
+# Update the go.mod file in this repo when a new package is added to one of the services.
+# This will be obvious when building a service and the un-cached package it loaded every build.
+COPY go.mod .
+RUN go mod download
 
 RUN mkdir ms-inventory
 WORKDIR /usr/local/bin/ms-inventory/
@@ -17,15 +30,15 @@ RUN make gobuild
 FROM alpine
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2020: Intel'
+  copyright='Copyright (c) 2022: Intel'
 
 RUN apk --no-cache add zeromq
 COPY --from=builder /usr/local/bin/ms-inventory/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ms-inventory/main /ms-inventory
-COPY --from=builder /usr/local/bin/ms-inventory/inventory.json /inventory.json
-COPY --from=builder /usr/local/bin/ms-inventory/auditlog.json /auditlog.json
+COPY --from=builder /usr/local/bin/ms-inventory/inventory.json /tmp/inventory.json
+COPY --from=builder /usr/local/bin/ms-inventory/auditlog.json /tmp/auditlog.json
 
-RUN chmod 640 /inventory.json /auditlog.json && \
-  chown 2000 /inventory.json /auditlog.json
+RUN chmod 640 /tmp/inventory.json /tmp/auditlog.json && \
+  chown 2000 /tmp/inventory.json /tmp/auditlog.json
 
-CMD [ "/ms-inventory", "--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r"]
+CMD [ "/ms-inventory", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s"]

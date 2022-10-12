@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package driver
@@ -10,11 +10,12 @@ import (
 
 	"ds-controller-board/device"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	service "github.com/edgexfoundry/device-sdk-go/pkg/service"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -36,7 +37,12 @@ type ControllerBoardDriver struct {
 	lc              logger.LoggingClient
 	StopChannel     chan int
 	controllerBoard device.ControllerBoard
-	config          *device.Config
+	config          *device.ServiceConfig
+
+	displayTimeout time.Duration
+	lockTimeout    time.Duration
+
+	svc *service.DeviceService
 }
 
 // NewControllerBoardDeviceDriver allows EdgeX to initialize the
@@ -51,15 +57,28 @@ func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh ch
 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.config == nil {
-		drv.config = new(device.Config)
-		if err = utilities.MarshalSettings(service.DriverConfigs(), drv.config, true); err != nil {
+		drv.svc = service.RunningService()
+		if drv.svc == nil {
+			return errors.New("custom controller board driver service is null")
+		}
+		drv.config = &device.ServiceConfig{}
+
+		err := drv.svc.LoadCustomConfig(drv.config, "DriverConfig")
+		if err != nil {
+			return errors.Wrap(err, "custom driver configuration failed to load")
+		}
+		drv.displayTimeout, drv.lockTimeout, err = drv.config.Validate()
+		if err != nil {
 			return err
 		}
+
+		drv.lc.Debugf("Custom driver config is : %+v", drv.config)
+
 	}
 
 	drv.StopChannel = make(chan int)
 
-	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, drv.config)
+	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, &drv.config.DriverConfig)
 	if err != nil {
 		return err
 	}
@@ -77,9 +96,18 @@ func (drv *ControllerBoardDriver) HandleReadCommands(deviceName string, protocol
 	}
 
 	now := time.Now().UnixNano() / int64(time.Millisecond)
-	result := dsModels.NewStringValue(reqs[0].DeviceResourceName, now, drv.controllerBoard.GetStatus())
 
-	return []*dsModels.CommandValue{result}, nil
+	commandvalue, err := dsModels.NewCommandValueWithOrigin(
+		reqs[0].DeviceResourceName,
+		edgexcommon.ValueTypeString,
+		drv.controllerBoard.GetStatus(),
+		now,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error on NewCommandValueWithOrigin for %v: %v", reqs[0].DeviceResourceName, err)
+	}
+
+	return []*dsModels.CommandValue{commandvalue}, nil
 }
 
 // HandleWriteCommands handles incoming write commands from EdgeX.
@@ -90,41 +118,41 @@ func (drv *ControllerBoardDriver) HandleWriteCommands(deviceName string, protoco
 	switch deviceType {
 
 	case lock1:
-		cmdType := params[0].NumericValue[0]
+		cmdType := params[0].Value
 		switch cmdType {
-		case 1:
+		case true:
 			if err := drv.controllerBoard.Write(device.Command.UnLock1); err != nil {
 				return err
 			}
 			go func() {
-				time.Sleep(drv.config.LockTimeout)
+				time.Sleep(drv.displayTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock1)
 			}()
-		case 0:
+		case false:
 			if err := drv.controllerBoard.Write(device.Command.Lock1); err != nil {
 				return err
 			}
 		default:
-			return fmt.Errorf("unknown Command Type: '%d'", cmdType)
+			return fmt.Errorf("unknown Command Type: '%v'", cmdType)
 		}
 
 	case lock2:
-		cmdType := params[0].NumericValue[0]
+		cmdType := params[0].Value
 		switch cmdType {
-		case 1:
+		case true:
 			if err := drv.controllerBoard.Write(device.Command.UnLock2); err != nil {
 				return err
 			}
 			go func() {
-				time.Sleep(drv.config.LockTimeout)
+				time.Sleep(drv.lockTimeout)
 				_ = drv.controllerBoard.Write(device.Command.Lock2)
 			}()
-		case 0:
+		case false:
 			if err := drv.controllerBoard.Write(device.Command.Lock2); err != nil {
 				return err
 			}
 		default:
-			return fmt.Errorf("unknown Command Type: '%d'", cmdType)
+			return fmt.Errorf("unknown Command Type: '%v'", cmdType)
 		}
 
 	case getStatus:
@@ -209,7 +237,7 @@ func (drv *ControllerBoardDriver) displayText(message string) {
 	go func() {
 		for {
 			select {
-			case <-time.After(drv.config.DisplayTimeout):
+			case <-time.After(drv.displayTimeout):
 				drv.displayReset()
 				return
 			case <-drv.StopChannel:

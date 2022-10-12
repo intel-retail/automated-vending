@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -6,10 +6,9 @@ package main
 import (
 	"ms-inventory/routes"
 
-	"fmt"
 	"os"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/appsdk"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
 )
 
 const (
@@ -17,61 +16,48 @@ const (
 )
 
 func main() {
-	// Create an instance of the EdgeX SDK and initialize it.
-	edgexSdk := &appsdk.AppFunctionsSDK{ServiceKey: serviceKey}
-	if err := edgexSdk.Initialize(); err != nil {
-		edgexSdk.LoggingClient.Error(fmt.Sprintf("SDK initialization failed: %v\n", err))
-		os.Exit(-1)
+	// TODO: See https://docs.edgexfoundry.org/2.2/microservices/application/ApplicationServices/
+	//       for documentation on application services.
+	service, ok := pkg.NewAppService(serviceKey)
+	if !ok {
+		os.Exit(1)
 	}
+	lc := service.LoggingClient()
 
-	// Retrieve the application settings from configuration.toml
-	appSettings := edgexSdk.ApplicationSettings()
-	if appSettings == nil {
-		edgexSdk.LoggingClient.Error("No application settings found")
-		os.Exit(-1)
-	}
-
-	var err error
-	err = edgexSdk.AddRoute("/inventory", routes.InventoryGet, "GET")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/inventory", routes.InventoryPost, "POST", "OPTIONS")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/inventory/delta", routes.DeltaInventorySKUPost, "POST", "OPTIONS")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/inventory/{sku}", routes.InventoryItemGet, "GET")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/inventory/{sku}", routes.InventoryDelete, "DELETE", "OPTIONS")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/auditlog", routes.AuditLogGetAll, "GET", "OPTIONS")
-	errorAddRouteHandler(edgexSdk, err)
-	err = edgexSdk.AddRoute("/auditlog", routes.AuditLogPost, "POST")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/auditlog/{entry}", routes.AuditLogGetEntry, "GET", "OPTIONS")
-	errorAddRouteHandler(edgexSdk, err)
-	err = edgexSdk.AddRoute("/auditlog/{entry}", routes.AuditLogDelete, "DELETE")
-	errorAddRouteHandler(edgexSdk, err)
-
-	// Tell the SDK to "start" and begin listening for events to trigger the pipeline
-	err = edgexSdk.MakeItRun()
+	inventoryFileName, err := service.GetAppSetting("InventoryFileName")
 	if err != nil {
-		edgexSdk.LoggingClient.Error("MakeItRun returned error: ", err.Error())
-		os.Exit(-1)
+		lc.Errorf("failed load InventoryFileName from ApplicationSettings: %s", err.Error())
+		os.Exit(1)
+	}
+
+	if len(inventoryFileName) == 0 {
+		lc.Error("InventoryFileName configuration setting is empty")
+		os.Exit(1)
+	}
+
+	auditLogFileName, err := service.GetAppSetting("AuditLogFileName")
+	if err != nil {
+		lc.Errorf("failed load AuditLogFileName from ApplicationSettings: %s", err.Error())
+		os.Exit(1)
+	}
+
+	if len(auditLogFileName) == 0 {
+		lc.Error("AuditLogFileName configuration setting is empty")
+		os.Exit(1)
+	}
+
+	controller := routes.NewController(lc, service, auditLogFileName, inventoryFileName)
+	err = controller.AddAllRoutes()
+	if err != nil {
+		lc.Errorf("failed to add all Routes: %s", err.Error())
+		os.Exit(1)
+	}
+	if err := service.MakeItRun(); err != nil {
+		lc.Errorf("MakeItRun returned error: %s", err.Error())
+		os.Exit(1)
 	}
 
 	// Do any required cleanup here
 
 	os.Exit(0)
-}
-
-func errorAddRouteHandler(edgexSdk *appsdk.AppFunctionsSDK, err error) {
-	if err != nil {
-		edgexSdk.LoggingClient.Error("Error adding route: %v", err.Error())
-		os.Exit(-1)
-	}
 }

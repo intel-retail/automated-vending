@@ -1,9 +1,16 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
 
-import "time"
+import (
+	"as-controller-board-status/config"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
+)
 
 // ControllerBoardStatusAppSettings is a data structure that holds the
 // validated application settings (loaded from configuration.toml).
@@ -12,22 +19,20 @@ type ControllerBoardStatusAppSettings struct {
 	DeviceName                                string
 	MaxTemperatureThreshold                   float64
 	MinTemperatureThreshold                   float64
-	MQTTEndpoint                              string
+	DoorStatusCommandEndpoint                 string
 	NotificationCategory                      string
 	NotificationEmailAddresses                []string
-	NotificationHost                          string
 	NotificationLabels                        []string
 	NotificationReceiver                      string
 	NotificationSender                        string
 	NotificationSeverity                      string
-	NotificationSlug                          string
-	NotificationSlugPrefix                    string
+	NotificationName                          string
 	NotificationSubscriptionMaxRESTRetries    int
 	NotificationSubscriptionRESTRetryInterval time.Duration
 	NotificationThrottleDuration              time.Duration
 	RESTCommandTimeout                        time.Duration
-	SubscriptionHost                          string
 	VendingEndpoint                           string
+	SubscriptionAdminState                    string
 }
 
 // ControllerBoardStatus is used to hold the data that will be passed to
@@ -55,14 +60,23 @@ type TempMeasurement struct {
 // get passed around outside of this application service. It is used to assist
 // with the delivery of ControllerBoardStatus to the as-vending service.
 type CheckBoardStatus struct {
-	MinTemperatureThreshold float64
-	MaxTemperatureThreshold float64
-	MinHumidityThreshold    float64
-	MaxHumidityThreshold    float64
-	DoorClosed              bool              // true means the door is closed and false means the door is open
-	Measurements            []TempMeasurement // used to store temperature readings over time.
-	LastNotified            time.Time         // used to store last time a notification was sent out so we don't spam the maintenance person
-	Configuration           *ControllerBoardStatusAppSettings
+	MinTemperatureThreshold                   float64
+	MaxTemperatureThreshold                   float64
+	MinHumidityThreshold                      float64
+	MaxHumidityThreshold                      float64
+	DoorClosed                                bool              // true means the door is closed and false means the door is open
+	Measurements                              []TempMeasurement // used to store temperature readings over time.
+	LastNotified                              time.Time         // used to store last time a notification was sent out so we don't spam the maintenance person
+	Configuration                             *config.ControllerBoardStatusConfig
+	SubscriptionClient                        interfaces.SubscriptionClient
+	NotificationClient                        interfaces.NotificationClient
+	ControllerBoardStatus                     *ControllerBoardStatus
+	averageTemperatureMeasurement             time.Duration
+	notificationSubscriptionRESTRetryInterval time.Duration
+	notificationThrottle                      time.Duration
+	restCommandTimeout                        time.Duration
+	notificationEmailAddresses                []string
+	notificationLabels                        []string
 }
 
 // VendingDoorStatus is a string representation of a boolean whose state corresponds
@@ -72,4 +86,32 @@ type CheckBoardStatus struct {
 // closed (true).
 type VendingDoorStatus struct {
 	VendingDoorStatus string `json:"inferenceDoorStatus"` // TODO: remove inference and rename to vendingDoorStatus
+}
+
+func (checkBoardStatus *CheckBoardStatus) ParseStringConfigurations() error {
+	var err error
+	checkBoardStatus.notificationEmailAddresses = strings.Split(checkBoardStatus.Configuration.NotificationEmailAddresses, ",")
+	checkBoardStatus.notificationLabels = strings.Split(checkBoardStatus.Configuration.NotificationLabels, ",")
+
+	checkBoardStatus.averageTemperatureMeasurement, err = time.ParseDuration(checkBoardStatus.Configuration.AverageTemperatureMeasurementDuration)
+	if err != nil {
+		return fmt.Errorf("AverageTemperatureMeasurementDuration failed to be parsed: %v", err)
+	}
+
+	checkBoardStatus.notificationSubscriptionRESTRetryInterval, err = time.ParseDuration(checkBoardStatus.Configuration.NotificationSubscriptionRESTRetryIntervalDuration)
+	if err != nil {
+		return fmt.Errorf("NotificationSubscriptionRESTRetryIntervalDuration failed to be parsed: %v", err)
+	}
+
+	checkBoardStatus.notificationThrottle, err = time.ParseDuration(checkBoardStatus.Configuration.NotificationThrottleDuration)
+	if err != nil {
+		return fmt.Errorf("NotificationThrottleDuration failed to be parsed: %v", err)
+	}
+
+	checkBoardStatus.restCommandTimeout, err = time.ParseDuration(checkBoardStatus.Configuration.RESTCommandTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("RESTCommandTimeoutDuration failed to be parsed: %v", err)
+	}
+
+	return nil
 }

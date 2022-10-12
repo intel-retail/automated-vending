@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -11,20 +11,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/appcontext"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 )
-
-var controllerBoardStatus = ControllerBoardStatus{}
 
 const (
 	minimum = "minimum"
 	maximum = "maximum"
 	// ControllerBoardDeviceServiceDeviceName is the name of the EdgeX device
 	// corresponding to our upstream event source.
-	ControllerBoardDeviceServiceDeviceName = "ds-controller-board"
+	ControllerBoardDeviceServiceDeviceName = "controller-board"
 )
 
 // CheckControllerBoardStatus is an EdgeX function that is passed into the EdgeX SDK's function pipeline.
@@ -32,38 +29,42 @@ const (
 // correctly by this application service. In this case, only one unique type of EdgeX device will come
 // through to this function, but in general this is basically a template function that is also followed
 // in other services in the Automated Checkout project.
-func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(edgexcontext *appcontext.Context, params ...interface{}) (bool, interface{}) {
-	if len(params) < 1 {
+func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.AppFunctionContext, data interface{}) (bool, interface{}) {
+	if data == nil {
 		// We didn't receive a result
 		return false, nil
 	}
 
 	// Declare shorthand for the LoggingClient
-	lc := edgexcontext.LoggingClient
+	lc := ctx.LoggingClient()
 
-	event := params[0].(models.Event)
+	event := data.(dtos.Event)
 
-	if event.Device == ControllerBoardDeviceServiceDeviceName {
+	if event.DeviceName == ControllerBoardDeviceServiceDeviceName {
 		for _, eventReading := range event.Readings {
-			lc.Debug(fmt.Sprintf("Received event reading value: %v", eventReading.Value))
+			if len(eventReading.Value) < 1 {
+				return false, fmt.Errorf("event reading was empty")
+			}
+
+			lc.Debugf("Received event reading value: %s", eventReading.Value)
 
 			// Unmarshal the event reading data into the global controllerBoardStatus variable
-			err := json.Unmarshal([]byte(eventReading.Value), &controllerBoardStatus)
+			err := json.Unmarshal([]byte(eventReading.Value), &boardStatus.ControllerBoardStatus)
 			if err != nil {
-				lc.Error(fmt.Sprintf("Failed to unmarshal controller board data, the event data is: %v", eventReading))
+				lc.Errorf("Failed to unmarshal controller board data %s: %s", eventReading.Value, err.Error())
 				return false, nil
 			}
 
 			// Check if the temperature thresholds have been exceeded
-			err = boardStatus.processTemperature(lc, controllerBoardStatus.Temperature)
+			err = boardStatus.processTemperature(lc, boardStatus.ControllerBoardStatus.Temperature)
 			if err != nil {
-				lc.Error(fmt.Sprintf("Encountered error while checking temperature thresholds: %v", err.Error()))
+				lc.Errorf("Encountered error while checking temperature thresholds: %s", err.Error())
 			}
 
 			// Check if the door open/closed state requires action
-			err = boardStatus.processVendingDoorState(lc, controllerBoardStatus.DoorClosed)
+			err = boardStatus.processVendingDoorState(lc, boardStatus.ControllerBoardStatus.DoorClosed)
 			if err != nil {
-				lc.Error(fmt.Sprintf("Encountered error while checking the open/closed state of the door: %v", err.Error()))
+				lc.Errorf("Encountered error while checking the open/closed state of the door: %s", err.Error())
 			}
 		}
 	}
@@ -86,7 +87,7 @@ func (boardStatus *CheckBoardStatus) processTemperatureMeasurements(temperature 
 	// EdgeX
 	boardStatus.Measurements = append(boardStatus.Measurements, newMeasurement)
 
-	avgTemp, cutIndex := AvgTemp(boardStatus.Measurements, boardStatus.Configuration.AverageTemperatureMeasurementDuration)
+	avgTemp, cutIndex := AvgTemp(boardStatus.Measurements, boardStatus.averageTemperatureMeasurement)
 
 	// Only keep track of the measurements used to calculate the latest average
 	// temperature
@@ -127,7 +128,7 @@ func getTempThresholdExceededMessage(minOrMax string, avgTemp float64, tempThres
 // sendTempThresholdExceededNotification leverages the SendNotification
 // function to submit an EdgeX REST call to send a notification to a user.
 // It does not check if a notification needs to be sent, it simply sends it
-func (boardStatus *CheckBoardStatus) sendTempThresholdExceededNotification(message interface{}) error {
+func (boardStatus *CheckBoardStatus) sendTempThresholdExceededNotification(message string) error {
 	err := boardStatus.SendNotification(message)
 	if err != nil {
 		return fmt.Errorf("Encountered error sending notification for exceeding temperature threshold: %v", err.Error())
@@ -143,10 +144,10 @@ func (boardStatus *CheckBoardStatus) sendTempThresholdExceededNotifications(avgT
 	// only if there is a message that needs to be sent when the
 	// min/max thresholds are exceeded, then loop over that map
 	messages := make(map[string]float64)
-	if controllerBoardStatus.MaxTemperatureStatus {
+	if boardStatus.ControllerBoardStatus.MaxTemperatureStatus {
 		messages[maximum] = boardStatus.Configuration.MaxTemperatureThreshold
 	}
-	if controllerBoardStatus.MinTemperatureStatus {
+	if boardStatus.ControllerBoardStatus.MinTemperatureStatus {
 		messages[minimum] = boardStatus.Configuration.MinTemperatureThreshold
 	}
 	for minMaxStr, tempThresholdValueFloat := range messages {
@@ -172,11 +173,11 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 	// Update the min/max temperature status readout for the global controller
 	// board status according to the how the average temperature compares to
 	// the configured min/max temperature threshold values
-	controllerBoardStatus.updateThresholdsFromAverageTemperature(avgTemp, boardStatus.Configuration.MaxTemperatureThreshold, boardStatus.Configuration.MinTemperatureThreshold)
+	boardStatus.ControllerBoardStatus.updateThresholdsFromAverageTemperature(avgTemp, boardStatus.Configuration.MaxTemperatureThreshold, boardStatus.Configuration.MinTemperatureThreshold)
 
 	// Take note of whether or not we've sent a notification within a duration
 	// not allowable by the user's configuration
-	notificationSentRecently := (boardStatus.Configuration.NotificationThrottleDuration > time.Since(boardStatus.LastNotified))
+	notificationSentRecently := (boardStatus.notificationThrottle > time.Since(boardStatus.LastNotified))
 
 	// Send a notification if the temperature has exceeded thresholds,
 	// and if we have not sent a notification recently
@@ -190,9 +191,9 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 	// If either the minimum or maximum temperature thresholds have been
 	// exceeded, send the current state to the central service so it can
 	// react accordingly
-	if controllerBoardStatus.MinTemperatureStatus || controllerBoardStatus.MaxTemperatureStatus {
+	if boardStatus.ControllerBoardStatus.MinTemperatureStatus || boardStatus.ControllerBoardStatus.MaxTemperatureStatus {
 		lc.Info("Pushing controller board status to central vending service due to a temperature threshold being exceeded")
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, RESTPost, controllerBoardStatus)
+		err := boardStatus.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, boardStatus.ControllerBoardStatus)
 		if err != nil {
 			return fmt.Errorf("Encountered error sending the controller board's status to the central vending endpoint: %v", err.Error())
 		}
@@ -203,7 +204,7 @@ func (boardStatus *CheckBoardStatus) processTemperature(lc logger.LoggingClient,
 // AvgTemp takes a slice of temperature measurements and returns a proper
 // average value of the values in the slice.
 func AvgTemp(measurements []TempMeasurement, duration time.Duration) (float64, int) {
-	var z int = 0
+	var z int
 	var mCount float64
 	var tempSum, avgTemp float64 = 0.00, 0.00
 
@@ -232,42 +233,28 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 	if boardStatus.DoorClosed != doorClosed {
 		// Set the boardStatus's DoorClosed value to the new value
 		boardStatus.DoorClosed = doorClosed
-		lc.Info(fmt.Sprintf("The door closed status has changed to: %v", doorClosed))
+		lc.Infof("The door closed status has changed to: %t", doorClosed)
 
 		// Set the door closed state and make sure MinTemp and MaxTemp status
 		// are false to avoid triggering a false temperature event
-		err := boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, RESTPost, ControllerBoardStatus{
+		err := boardStatus.RESTCommandJSON(boardStatus.Configuration.VendingEndpoint, http.MethodPost, ControllerBoardStatus{
 			DoorClosed:           doorClosed,
 			MinTemperatureStatus: false,
 			MaxTemperatureStatus: false,
 		})
 		if err != nil {
-			return fmt.Errorf("Failed to submit the controller board's status to the central vending state service: %v", err.Error())
+			return fmt.Errorf("failed to submit the controller board's status to the central vending state service: %v", err.Error())
 		}
 
 		// Prepare a message to be sent to the MQTT bus. Depending on the state
 		// of the door, this message may trigger a CV inference
-		err = boardStatus.Configuration.RESTCommandJSON(boardStatus.Configuration.MQTTEndpoint, RESTPut, VendingDoorStatus{
+		err = boardStatus.RESTCommandJSON(boardStatus.Configuration.DoorStatusCommandEndpoint, http.MethodPut, VendingDoorStatus{
 			VendingDoorStatus: strconv.FormatBool(doorClosed),
 		})
 		if err != nil {
-			return fmt.Errorf("Failed to submit the vending door state to the MQTT device service: %v", err.Error())
+			return fmt.Errorf("failed to submit the vending door state to the MQTT device service: %v", err.Error())
 		}
 	}
 
 	return nil
-}
-
-// GetStatus is a REST API endpoint that enables a web UI or some other downstream
-// service to inquire about the status of the upstream Automated Checkout hardware interface(s).
-func GetStatus(writer http.ResponseWriter, req *http.Request) {
-	utilities.ProcessCORS(writer, req, func(writer http.ResponseWriter, req *http.Request) {
-		controllerBoardStatusJSON, err := utilities.GetAsJSON(controllerBoardStatus)
-		if err != nil {
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to serialize the controller board's current state.", true)
-			return
-		}
-
-		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, controllerBoardStatusJSON, false)
-	})
 }

@@ -127,7 +127,7 @@ The following items can be configured via the `ApplicationSettings` section of t
 - `DeviceName` - The string name of the upstream EdgeX device that will be pushing events & readings to this application service
 - `MaxTemperatureThreshold` - The float64 value of the maximum temperature threshold, if the average temperature over the sample `AverageTemperatureMeasurementDuration` exceeds this value, a notification is sent
 - `MinTemperatureThreshold` - The float64 value of the minimum temperature threshold, if the average temperature over the sample `AverageTemperatureMeasurementDuration` exceeds this value, a notification is sent
-- `MQTTEndpoint` - A string containing the full EdgeX core command REST API endpoint corresponding to the `inferenceDoorStatus` command, registered by the MQTT device service in the cv inference service
+- `DoorStatusCommandEndpoint` - A string containing the full EdgeX core command REST API endpoint corresponding to the `inferenceDoorStatus` command, registered by the MQTT device service in the cv inference service
 - `NotificationCategory` - The category for notifications as a string
 - `NotificationEmailAddresses` - A comma-separated values (CSV) string of emails to send notifications to
 - `NotificationHost` - The full string URL of the EdgeX notifications service API that allows notifications to be sent by submitting an HTTP Post request

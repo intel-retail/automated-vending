@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"go.bug.st/serial.v1"
 	"go.bug.st/serial.v1/enumerator"
 )
 
 const (
-	deviceName     = "ds-controller-board"
 	deviceResource = "controller-board-status"
 )
 
@@ -28,6 +28,7 @@ type ControllerBoardPhysical struct {
 	LoggingClient logger.LoggingClient
 	DevSerialPort serial.Port
 	TTYPort       string // typically is /dev/ttyACM0
+	DeviceName    string
 }
 
 // Write is used to handle commands being written to the
@@ -66,7 +67,7 @@ func (board *ControllerBoardPhysical) Read() {
 
 		// Must build up the complete string read until all of it is received
 		serialString = serialString + string(buff[:n])
-		if !strings.ContainsAny(serialString,"\r\n") {
+		if !strings.ContainsAny(serialString, "\r\n") {
 			continue
 		}
 
@@ -87,11 +88,21 @@ func (board *ControllerBoardPhysical) Read() {
 
 			board.DevStatus = string(parsedStatusBytes) //string(buff[:n])
 			now := time.Now().UnixNano() / int64(time.Millisecond)
-			result := dsModels.NewStringValue(deviceResource, now, board.DevStatus)
+
+			commandvalue, err := dsModels.NewCommandValueWithOrigin(
+				deviceResource,
+				edgexcommon.ValueTypeString,
+				board.DevStatus,
+				now,
+			)
+			if err != nil {
+				board.LoggingClient.Errorf("error on NewCommandValueWithOrigin for %v: %v", deviceResource, err)
+				return
+			}
 
 			asyncValues := &dsModels.AsyncValues{
-				DeviceName:    deviceName,
-				CommandValues: []*dsModels.CommandValue{result},
+				DeviceName:    board.DeviceName,
+				CommandValues: []*dsModels.CommandValue{commandvalue},
 			}
 
 			board.AsyncCh <- asyncValues

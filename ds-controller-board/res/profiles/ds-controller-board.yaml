@@ -1,0 +1,80 @@
+---
+# Copyright © 2022 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+name: "ds-controller-board"
+manufacturer: "Intel"
+description: "A device for reading from controller board"
+
+deviceResources:
+- name: "controller-board-status"
+  description: "Read controller-board-status"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "getStatus"
+  description: "getStatus from controller"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "lock1"
+  description: "Read and set lock1"
+  properties:
+    valueType: "bool"
+    readWrite: "RW"
+
+- name: "lock2"
+  description: "Read and set lock2"
+  properties:
+    valueType: "bool"
+    readWrite: "RW"
+
+- name: "displayRow0"
+  description: "Read and set displayRow0"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "displayRow1"
+  description: "Read and set displayRow1"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "displayRow2"
+  description: "Read and set displayRow2"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "displayRow3"
+  description: "Read and set displayRow3"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "displayReset"
+  description: "Reset the display"
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "setHumidity"
+  description: "Set the humidity value in a Virtual ControllerBoard."
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "setTemperature"
+  description: "Set the temperature value in a Virtual ControllerBoard."
+  properties:
+    valueType: "string"
+    readWrite: "RW"
+
+- name: "setDoorClosed"
+  description: "Set the door-closed value in a Virtual ControllerBoard."
+  properties:
+    valueType: "string"
+    readWrite: "RW"

@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -9,21 +9,18 @@ import (
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
-// AuditLogFileName is the name of the file that will store the audit log
-var AuditLogFileName = "auditlog.json"
-
-// InventoryFileName is the name of the file that will store the inventory
-var InventoryFileName = "inventory.json"
-
 // DeleteAllQueryString is a string used across this module to enable
 // CRUD operations on "all" items in inventory or audit log
-const DeleteAllQueryString = "all"
+const (
+	DeleteAllQueryString = "all"
+)
 
 // GetInventoryItems returns a list of InventoryItems by reading the inventory
 // JSON file
-func GetInventoryItems() (inventoryItems Products, err error) {
-	err = utilities.LoadFromJSONFile(InventoryFileName, &inventoryItems)
+func (c *Controller) GetInventoryItems() (inventoryItems Products, err error) {
+	err = utilities.LoadFromJSONFile(c.inventoryFileName, &inventoryItems)
 	if err != nil {
+		c.lc.Errorf("Failed to load inventory JSON file: %s", err.Error())
 		return inventoryItems, errors.New(
 			"Failed to load inventory JSON file: " + err.Error(),
 		)
@@ -33,9 +30,10 @@ func GetInventoryItems() (inventoryItems Products, err error) {
 
 // GetInventoryItemBySKU returns an inventory item by reading from the
 // inventory JSON file
-func GetInventoryItemBySKU(SKU string) (inventoryItem Product, inventoryItems Products, err error) {
-	inventoryItems, err = GetInventoryItems()
+func (c *Controller) GetInventoryItemBySKU(SKU string) (inventoryItem Product, inventoryItems Products, err error) {
+	inventoryItems, err = c.GetInventoryItems()
 	if err != nil {
+		c.lc.Errorf("Failed to get inventory items: %s", err.Error())
 		return Product{}, Products{}, errors.New(
 			"Failed to get inventory items: " + err.Error(),
 		)
@@ -50,9 +48,10 @@ func GetInventoryItemBySKU(SKU string) (inventoryItem Product, inventoryItems Pr
 
 // GetAuditLog returns a list of audit log entries by reading from the
 // audit log JSON file
-func GetAuditLog() (auditLog AuditLog, err error) {
-	err = utilities.LoadFromJSONFile(AuditLogFileName, &auditLog)
+func (c *Controller) GetAuditLog() (auditLog AuditLog, err error) {
+	err = utilities.LoadFromJSONFile(c.auditLogFileName, &auditLog)
 	if err != nil {
+		c.lc.Errorf("Failed to load audit log JSON file: %s", err.Error())
 		return auditLog, errors.New(
 			"Failed to load audit log JSON file: " + err.Error(),
 		)
@@ -62,9 +61,10 @@ func GetAuditLog() (auditLog AuditLog, err error) {
 
 // GetAuditLogEntryByID returns an audit log entry by reading from the
 // audit log JSON file
-func GetAuditLogEntryByID(auditEntryID string) (auditLogEntry AuditLogEntry, auditLogEntries AuditLog, err error) {
-	auditLogEntries, err = GetAuditLog()
+func (c *Controller) GetAuditLogEntryByID(auditEntryID string) (auditLogEntry AuditLogEntry, auditLogEntries AuditLog, err error) {
+	auditLogEntries, err = c.GetAuditLog()
 	if err != nil {
+		c.lc.Errorf("Failed to get audit log items: %s" + err.Error())
 		return AuditLogEntry{}, AuditLog{}, errors.New(
 			"Failed to get audit log items: " + err.Error(),
 		)
@@ -78,36 +78,42 @@ func GetAuditLogEntryByID(auditEntryID string) (auditLogEntry AuditLogEntry, aud
 }
 
 // DeleteInventory will reset the content of the inventory JSON file
-func DeleteInventory() error {
-	return WriteJSON(InventoryFileName, Products{Data: []Product{}})
+func (c *Controller) DeleteInventory() error {
+	c.lc.Debug("Inventory JSON content reset")
+	return c.WriteJSON(c.inventoryFileName, Products{Data: []Product{}})
 }
 
 // DeleteAuditLog will reset the content of the audit log JSON file
-func DeleteAuditLog() error {
-	return WriteJSON(AuditLogFileName, AuditLog{Data: []AuditLogEntry{}})
+func (c *Controller) DeleteAuditLog() error {
+	c.lc.Debug("Audit Log JSON content reset")
+	return c.WriteJSON(c.auditLogFileName, AuditLog{Data: []AuditLogEntry{}})
 }
 
 // WriteJSON is a shorthand for writing an interface to JSON
-func WriteJSON(fileName string, content interface{}) error {
+func (c *Controller) WriteJSON(fileName string, content interface{}) error {
+	c.lc.Debugf("Wrote: %s to Inventory JSON: %s", content, fileName)
 	return utilities.WriteToJSONFile(fileName, content, 0644)
 }
 
 // WriteInventory is a shorthand for writing the inventory quickly
-func (inventoryItems *Products) WriteInventory() error {
-	return WriteJSON(InventoryFileName, inventoryItems)
+func (c *Controller) WriteInventory() error {
+	c.lc.Debugf("Wrote: %s to Inventory: %s", c.inventoryItems, c.inventoryFileName)
+	return c.WriteJSON(c.inventoryFileName, c.inventoryItems)
 }
 
 // WriteAuditLog is a shorthand for writing the audit log quickly
-func (auditLog *AuditLog) WriteAuditLog() error {
-	return WriteJSON(AuditLogFileName, auditLog)
+func (c *Controller) WriteAuditLog() error {
+	c.lc.Debugf("Wrote: %s to Inventory: %s", c.auditLog, c.auditLogFileName)
+	return c.WriteJSON(c.auditLogFileName, c.auditLog)
 }
 
 // DeleteInventoryItem deletes an inventory item matching the
 // specified SKU
-func (inventoryItems *Products) DeleteInventoryItem(inventoryItem Product) {
-	for i, item := range inventoryItems.Data {
+func (c *Controller) DeleteInventoryItem(inventoryItem Product) {
+	for i, item := range c.inventoryItems.Data {
 		if item.SKU == inventoryItem.SKU {
-			inventoryItems.Data = append(inventoryItems.Data[:i], inventoryItems.Data[i+1:]...)
+			c.inventoryItems.Data = append(c.inventoryItems.Data[:i], c.inventoryItems.Data[i+1:]...)
+			c.lc.Debugf("Deleted: %s from inventory", inventoryItem.SKU)
 			break
 		}
 	}
@@ -115,10 +121,11 @@ func (inventoryItems *Products) DeleteInventoryItem(inventoryItem Product) {
 
 // DeleteAuditLogEntry deletes an audit log entry item matching the
 // specified EntryID
-func (auditLog *AuditLog) DeleteAuditLogEntry(auditLogEntry AuditLogEntry) {
-	for i, item := range auditLog.Data {
+func (c *Controller) DeleteAuditLogEntry(auditLogEntry AuditLogEntry) {
+	for i, item := range c.auditLog.Data {
 		if item.AuditEntryID == auditLogEntry.AuditEntryID {
-			auditLog.Data = append(auditLog.Data[:i], auditLog.Data[i+1:]...)
+			c.auditLog.Data = append(c.auditLog.Data[:i], c.auditLog.Data[i+1:]...)
+			c.lc.Debugf("Deleted: %s from audit log", auditLogEntry.AuditEntryID)
 			break
 		}
 	}

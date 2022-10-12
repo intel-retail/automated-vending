@@ -112,7 +112,7 @@ The following diagram represents the flow for swiping your badge and unlocking t
 To simulate this, perform this REST API call to the `ds-card-reader` service ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-reader-event":"0003293374"}' http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003293374"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 !!! note
@@ -171,7 +171,7 @@ Then open the door, and close it afterwards, while waiting approximately 3-4 sec
 The following command makes a REST API call to the `ds-controller-board` service to open the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48082/api/v1/device/name/ds-controller-board/command/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
 ```
 
 Wait 3.75 seconds:
@@ -188,7 +188,7 @@ sleep 3.75
 The following command makes a REST API call to the `ds-controller-board` service to close the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48082/api/v1/device/name/ds-controller-board/command/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
 ```
 
 Wait about 20-30 seconds for the inventory to be discovered by the CV inference service, and also for background processing of events to occur. **The time-sensitive sequence has been completed.**
@@ -318,7 +318,7 @@ That's it! Each of the above actions has a corresponding REST API call that we w
 To begin, start by performing the following REST command to simulate a customer swiping their badge to open the cooler ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-reader-event":"0003278380"}' http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278380"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 !!! note
@@ -357,7 +357,7 @@ Then open the door, and close it afterwards, while waiting approximately 3-4 sec
 The following command makes a REST API call to the `ds-controller-board` service to open the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48082/api/v1/device/name/ds-controller-board/command/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
 ```
 
 Wait 3.75 seconds:
@@ -369,7 +369,7 @@ sleep 3.75
 The following command makes a REST API call to the `ds-controller-board` service to close the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48082/api/v1/device/name/ds-controller-board/command/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
 ```
 
 At this point we are done simulating customer interactions with the Automated Checkout. The next steps are to get the inventory, ledger, and audit logs, and verify that they all show consistent information ***(not time sensitive, but may need to wait 20-30 seconds for background processing)***:
@@ -540,7 +540,7 @@ This scenario walks through the following steps:
 To begin the scenario, first start by setting the temperature of the cooler to `99.00` degrees Fahrenheit. The following command will make a REST API call to the `ds-controller-board` service ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"99.00"}' http://localhost:48082/api/v1/device/name/ds-controller-board/command/setTemperature
+curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"99.00"}' http://localhost:48097/api/v2/device/name/controller-board/setTemperature
 ```
 
 !!! note
@@ -585,7 +585,7 @@ For the sake of simplicity in this walkthrough, we will first fix the temperatur
 First, set the temperature to a normal value (45 degrees) a few times over the span of 15 seconds (minimum) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"45.00"}' http://localhost:48082/api/v1/device/name/ds-controller-board/command/setTemperature
+curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"45.00"}' http://localhost:48097/api/v2/device/name/controller-board/setTemperature
 ```
 
 !!! note
@@ -596,7 +596,7 @@ Now that a new, proper average temperature value has been set, the maintenance w
 To do this, follow a familiar step, only this time use a card that has been assigned to a maintenance worker role ***(not time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-reader-event":"0003278385"}' http://localhost:48098/api/v1/device/name/ds-card-reader/card-reader-event
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278385"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
 ```
 
 !!! note

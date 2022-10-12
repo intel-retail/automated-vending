@@ -1,49 +1,75 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"as-vending/config"
 	"as-vending/functions"
+	"as-vending/routes"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/appsdk"
-	"github.com/edgexfoundry/app-functions-sdk-go/pkg/transforms"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/transforms"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 const (
 	serviceKey = "as-vending"
 )
 
+type vendingAppService struct {
+	service       interfaces.ApplicationService
+	lc            logger.LoggingClient
+	serviceConfig *config.ServiceConfig
+	vendingState  *functions.VendingState
+}
+
 func main() {
-	// create an instance of the EdgeX SDK and initialize it
-	edgexSdk := &appsdk.AppFunctionsSDK{ServiceKey: serviceKey}
-	if err := edgexSdk.Initialize(); err != nil {
-		edgexSdk.LoggingClient.Error(fmt.Sprintf("SDK initialization failed: %v\n", err))
-		os.Exit(-1)
+	app := vendingAppService{}
+	code := app.CreateAndRunAppService(serviceKey, pkg.NewAppService)
+	os.Exit(code)
+}
+
+func (app *vendingAppService) CreateAndRunAppService(serviceKey string, newServiceFactory func(string) (interfaces.ApplicationService, bool)) int {
+	var ok bool
+	app.service, ok = newServiceFactory(serviceKey)
+	if !ok {
+		return 1
 	}
 
-	// get the application settings from configuration.toml
-	appSettings := edgexSdk.ApplicationSettings()
-	if appSettings == nil {
-		edgexSdk.LoggingClient.Error("No application settings found")
-		os.Exit(-1)
+	app.lc = app.service.LoggingClient()
+	newVendingState := functions.VendingState{}
+	app.vendingState = &newVendingState
+
+	// retrieve the required configurations
+	app.serviceConfig = &config.ServiceConfig{}
+	if err := app.service.LoadCustomConfig(app.serviceConfig, "Vending"); err != nil {
+		app.lc.Errorf("failed load custom Vending configuration: %s", err.Error())
+		return 1
 	}
 
-	var vendingState functions.VendingState
-	vendingState.Configuration = new(functions.ServiceConfiguration)
-
-	// retrieve & parse the required application settings into a proper
-	// configuration struct
-	if err := utilities.MarshalSettings(appSettings, vendingState.Configuration, true); err != nil {
-		edgexSdk.LoggingClient.Error(fmt.Sprintf("Application settings could not be processed: %v", err.Error()))
-		os.Exit(-1)
+	if err := app.serviceConfig.Vending.Validate(); err != nil {
+		app.lc.Errorf("failed to validate Vending configuration: %v", err)
+		return 1
 	}
 
-	edgexSdk.LoggingClient.Info(fmt.Sprintf("Running the application functions for %v devices...", vendingState.Configuration.DeviceNames))
+	app.vendingState.Configuration = &app.serviceConfig.Vending
+	// parse configuration durations to a time.Duration object
+	if err := app.vendingState.ParseDurationFromConfig(); err != nil {
+		app.lc.Errorf("failed to parse configuration: %v", err)
+		return 1
+	}
+
+	app.vendingState.CommandClient = app.service.CommandClient()
+	if app.vendingState.CommandClient == nil {
+		app.lc.Error("Error command service missing from client's configuration")
+		return 1
+	}
+
+	app.lc.Infof("Running the application functions for %s and %s devices", app.vendingState.Configuration.CardReaderDeviceName, app.vendingState.Configuration.InferenceDeviceName)
 
 	// create stop channels for each of the wait threads
 	stopChannel := make(chan int)
@@ -52,58 +78,47 @@ func main() {
 	inferenceStopChannel := make(chan int)
 
 	// Set default values for vending state
-	vendingState.CVWorkflowStarted = false
-	vendingState.MaintenanceMode = false
-	vendingState.CurrentUserData = functions.OutputData{}
-	vendingState.DoorClosed = true
+	app.vendingState.CVWorkflowStarted = false
+	app.vendingState.MaintenanceMode = false
+	app.vendingState.CurrentUserData = functions.OutputData{}
+	app.vendingState.DoorClosed = true
 	// global stop channel for threads
-	vendingState.ThreadStopChannel = stopChannel
+	app.vendingState.ThreadStopChannel = stopChannel
 	// open event thread
-	vendingState.DoorOpenedDuringCVWorkflow = false
-	vendingState.DoorOpenWaitThreadStopChannel = doorOpenStopChannel
+	app.vendingState.DoorOpenedDuringCVWorkflow = false
+	app.vendingState.DoorOpenWaitThreadStopChannel = doorOpenStopChannel
 	// close event thread
-	vendingState.DoorClosedDuringCVWorkflow = false
-	vendingState.DoorCloseWaitThreadStopChannel = doorCloseStopChannel
+	app.vendingState.DoorClosedDuringCVWorkflow = false
+	app.vendingState.DoorCloseWaitThreadStopChannel = doorCloseStopChannel
 	// inference thread
-	vendingState.InferenceDataReceived = false
-	vendingState.InferenceWaitThreadStopChannel = inferenceStopChannel
+	app.vendingState.InferenceDataReceived = false
+	app.vendingState.InferenceWaitThreadStopChannel = inferenceStopChannel
 
-	var err error
-
-	err = edgexSdk.AddRoute("/boardStatus", vendingState.BoardStatus, "POST")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/resetDoorLock", vendingState.ResetDoorLock, "POST")
-	errorAddRouteHandler(edgexSdk, err)
-
-	err = edgexSdk.AddRoute("/maintenanceMode", vendingState.GetMaintenanceMode, "GET", "OPTIONS")
-	errorAddRouteHandler(edgexSdk, err)
+	controller := routes.NewController(app.lc, app.service, app.vendingState)
+	err := controller.AddAllRoutes()
+	if err != nil {
+		app.lc.Errorf("failed to add all Routes: %s", err.Error())
+		return 1
+	}
 
 	// create the function pipeline to run when an event is read on the device channels
-	err = edgexSdk.SetFunctionsPipeline(
-		transforms.NewFilter(vendingState.Configuration.DeviceNames).FilterByDeviceName,
-		vendingState.DeviceHelper,
+	err = app.service.SetFunctionsPipeline(
+		transforms.NewFilterFor([]string{app.vendingState.Configuration.CardReaderDeviceName, app.vendingState.Configuration.InferenceDeviceName}).FilterByDeviceName,
+		app.vendingState.DeviceHelper,
 	)
 	if err != nil {
-		edgexSdk.LoggingClient.Error("SDK initialization failed: " + err.Error())
-		os.Exit(-1)
+		app.lc.Errorf("SDK initialization failed: %s", err.Error())
+		return 1
 	}
 
 	// tell the SDK to "start" and begin listening for events to trigger the pipeline.
-	err = edgexSdk.MakeItRun()
+	err = app.service.MakeItRun()
 	if err != nil {
-		edgexSdk.LoggingClient.Error("MakeItRun returned error: ", err.Error())
-		os.Exit(-1)
+		app.lc.Errorf("MakeItRun returned error: %s", err.Error())
+		return 1
 	}
 
 	// do any required cleanup here
 
-	os.Exit(0)
-}
-
-func errorAddRouteHandler(edgexSdk *appsdk.AppFunctionsSDK, err error) {
-	if err != nil {
-		edgexSdk.LoggingClient.Error("Error adding route: %v", err.Error())
-		os.Exit(-1)
-	}
+	return 0
 }

@@ -6,13 +6,13 @@ The following are the different events used in the Automated Checkout reference 
 
 [`ds-card-reader`](./automated-checkout-services/device_services.md#card-reader) uses the EdgeX events pattern to send the card information into EdgeX Core Data as well as maintain a healthy state.
 
-`card-reader-event` is an asynchronous event sent when a card is scanned by the card reader device. The event reading value is a string containing a 10-digit number and is placed into EdgeX Core Data as an event reading.
+`card-number` is an asynchronous event sent when a card is scanned by the card reader device. The event reading value is a string containing a 10-digit number and is placed into EdgeX Core Data as an event reading.
 
 ``` json
 "0003293374"
 ```
 
-`card-reader-status` is an auto-event used to check the status of card reader connection. Every x seconds the event will check to see if the card reader is accessible. If the service is unable to verify the connection to the card reader then the service will restart. This event produces no database entry in EdgeX Core Data.
+`status` is an auto-event used to check the status of card reader connection. Every x seconds the event will check to see if the card reader is accessible. If the service is unable to verify the connection to the card reader then the service will restart. This event produces no database entry in EdgeX Core Data.
 
 ## Controller board events
 

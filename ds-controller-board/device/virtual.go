@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 // ControllerBoardVirtual is a virtualized controller board that locally handles
@@ -23,6 +24,7 @@ type ControllerBoardVirtual struct {
 	DoorClosed    int
 	Temperature   float64
 	Humidity      int64
+	DeviceName    string
 }
 
 // Read : A continuous loop that reads ControllerBoard Status and forwards it to the EdgeX stack as a Reading.
@@ -46,11 +48,20 @@ func (board *ControllerBoardVirtual) Read() {
 		}
 
 		board.DevStatus = string(parsedStatusBytes)
-		result := dsModels.NewStringValue(deviceResource, now, board.DevStatus)
+		commandvalue, err := dsModels.NewCommandValueWithOrigin(
+			deviceResource,
+			edgexcommon.ValueTypeString,
+			board.DevStatus,
+			now,
+		)
+		if err != nil {
+			board.LoggingClient.Errorf("error on NewCommandValueWithOrigin for %v: %v", deviceResource, err)
+			return
+		}
 
 		asyncValues := &dsModels.AsyncValues{
-			DeviceName:    deviceName,
-			CommandValues: []*dsModels.CommandValue{result},
+			DeviceName:    board.DeviceName,
+			CommandValues: []*dsModels.CommandValue{commandvalue},
 		}
 		board.AsyncCh <- asyncValues
 	}
@@ -58,7 +69,7 @@ func (board *ControllerBoardVirtual) Read() {
 
 // Write : Used to handle Commands being written to the ControllerBoard.
 func (board *ControllerBoardVirtual) Write(cmd string) error {
-	board.LoggingClient.Info(fmt.Sprintf("Write: '%s' command issued.\n", cmd))
+	board.LoggingClient.Debugf("Write: '%s' command issued.\n", cmd)
 	switch cmd {
 	case Command.Lock1:
 		board.L1 = 1

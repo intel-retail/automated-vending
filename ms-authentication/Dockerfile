@@ -1,10 +1,19 @@
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM automated-checkout/build:latest AS builder
+FROM golang:1.18-alpine3.16 AS builder
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2020: Intel'
+  copyright='Copyright (c) 2022: Intel'
+
+# add git for go modules
+RUN apk update && apk add --no-cache make git gcc libc-dev zeromq-dev linux-headers
+
+ENV GO111MODULE=on
+WORKDIR /usr/local/bin/
+
+COPY go.mod .
+RUN go mod download
 
 RUN mkdir ms-authentication
 WORKDIR /usr/local/bin/ms-authentication/
@@ -17,7 +26,7 @@ RUN make gobuild
 FROM alpine
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2020: Intel'
+  copyright='Copyright (c) 2022: Intel'
 
 RUN apk --no-cache add zeromq
 COPY --from=builder /usr/local/bin/ms-authentication/res/configuration.toml /res/configuration.toml
@@ -26,4 +35,4 @@ COPY --from=builder /usr/local/bin/ms-authentication/cards.json /cards.json
 COPY --from=builder /usr/local/bin/ms-authentication/accounts.json /accounts.json
 COPY --from=builder /usr/local/bin/ms-authentication/people.json /people.json
 
-CMD [ "/ms-authentication", "--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r"]
+CMD [ "/ms-authentication", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s"]

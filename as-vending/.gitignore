@@ -10,7 +10,6 @@
 main
 as-vending
 test.txt
-go.sum
 .vscode/*
 
 # Output of the go coverage tool, specifically when used with LiteIDE

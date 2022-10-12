@@ -17,6 +17,8 @@ services:
     devices:
       - /dev/input:/dev/input
     environment:
-      Driver_SimulateDevice: "false"
-
+      DRIVERCONFIG_SIMULATEDEVICE: "false"
+      DRIVERCONFIG_DEVICESEARCHPATH: "/dev/input/event*"
+      DRIVERCONFIG_VID: 65535 # 0xFFFF
+      DRIVERCONFIG_PID: 53    # 0x0035
 ...

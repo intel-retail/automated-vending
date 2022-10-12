@@ -486,14 +486,14 @@
                 
                 <h1 id="automated-checkout-events">Automated Checkout Events</h1>
 <p>The following are the different events used in the Automated Checkout reference implementation.</p>
-<h2 id="card-reader-events">Card reader events</h2>
+<h2 id="card-number">Card number</h2>
 <p><a href="automated-checkout-services/device_services.html#card-reader"><code>ds-card-reader</code></a> uses the EdgeX events pattern to send the card information into EdgeX Core Data as well as maintain a healthy state.</p>
-<p><code>card-reader-event</code> is an asynchronous event sent when a card is scanned by the card reader device. The event reading value is a string containing a 10-digit number and is placed into EdgeX Core Data as an event reading.</p>
+<p><code>card-number</code> is an asynchronous event sent when a card is scanned by the card reader device. The event reading value is a string containing a 10-digit number and is placed into EdgeX Core Data as an event reading.</p>
 <div class="codehilite"><pre><span></span><code><span class="s2">&quot;0003293374&quot;</span>
 </code></pre></div>
 
 
-<p><code>card-reader-status</code> is an auto-event used to check the status of card reader connection. Every x seconds the event will check to see if the card reader is accessible. If the service is unable to verify the connection to the card reader then the service will restart. This event produces no database entry in EdgeX Core Data.</p>
+<p><code>status</code> is an auto-event used to check the status of card reader connection. Every x seconds the event will check to see if the card reader is accessible. If the service is unable to verify the connection to the card reader then the service will restart. This event produces no database entry in EdgeX Core Data.</p>
 <h2 id="controller-board-events">Controller board events</h2>
 <p><a href="automated-checkout-services/device_services.html#controller-board"><code>ds-controller-board</code></a> uses the EdgeX events pattern to send the card information into EdgeX Core Data.</p>
 <p><code>controller-board-status</code> is an auto-event used to send the current state of the controller board and all of its periferals to EdgeX Core Data. This data is used by the as-controller-board-status application service to determine the state of the system. The information included in the status are the door lock states, door state, temperature, and humidity. The EdgeX Reading value is a string containing the following JSON:</p>

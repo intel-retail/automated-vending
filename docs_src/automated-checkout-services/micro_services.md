@@ -140,24 +140,6 @@ Sample response:
 
 ---
 
-#### `OPTIONS`: `/inventory`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/inventory` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48095/inventory
-```
-
-Sample response:
-
-```text
-200 OK
-```
-
----
-
 #### `POST`: `/inventory/delta`
 
 The `POST` call will increment or decrement inventory item(s) by a provided `delta` that match the given `SKU` numbers, and will return a JSON string containing the updated inventory items in the `content` field of the response.
@@ -177,24 +159,6 @@ Sample response:
   "statusCode": 200,
   "error": false
 }
-```
-
----
-
-#### `OPTIONS`: `/inventory/delta`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/inventory/delta` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48095/inventory/delta
-```
-
-Sample response:
-
-```text
-200 OK
 ```
 
 ---
@@ -267,24 +231,6 @@ If the provided `{sku}` does not correspond to a known item in the inventory, th
 
 ---
 
-#### `OPTIONS`: `/inventory/{sku}`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/inventory/{sku}` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48095/inventory/4900002470
-```
-
-Sample response:
-
-```text
-200 OK
-```
-
----
-
 #### `GET`: `/auditlog`
 
 The `GET` call on this API endpoint will return the entire audit log in JSON format.
@@ -327,24 +273,6 @@ Sample response:
   "statusCode": 200,
   "error": false
 }
-```
-
----
-
-#### `OPTIONS`: `/auditlog`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/auditlog` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48095/auditlog
-```
-
-Sample response:
-
-```text
-200 OK
 ```
 
 ---
@@ -417,24 +345,6 @@ If the `{auditEntryId}` parameter does not correspond to an existing audit log e
 
 ---
 
-#### `OPTIONS`: `/auditlog/{auditEntryId}`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/auditlog` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48095/auditlog/f944b60b-e389-4054-9643-2a33e4a0b227
-```
-
-Sample response:
-
-```text
-200 OK
-```
-
----
-
 ## Ledger service
 
 ### Ledger service description
@@ -491,24 +401,6 @@ Sample response:
 
 ---
 
-#### `OPTIONS`: `/ledger`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/ledger` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48093/ledger
-```
-
-Sample response:
-
-```text
-200 OK
-```
-
----
-
 #### `GET`: `/ledger/{accountid}`
 
 The `GET` call will return the ledger for a specified `{accountid}`.
@@ -539,24 +431,6 @@ If the provided `{accountid}` parameter does not correspond to a valid ledger ac
   "statusCode": 400,
   "error": false
 }
-```
-
----
-
-#### `OPTIONS`: `/ledger/{accountid}`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/ledger/{accountid}` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48093/ledger/1
-```
-
-Sample response:
-
-```text
-200 OK
 ```
 
 ---
@@ -595,24 +469,6 @@ If the provided `transactionID` does not correspond to an existing transaction i
 
 ---
 
-#### `OPTIONS`: `/ledgerPaymentUpdate`
-
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/ledgerPaymentUpdate` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48093/ledgerPaymentUpdate
-```
-
-Sample response:
-
-```text
-200 OK
-```
-
----
-
 #### `DELETE`: `/ledger/{accountid}/{transactionid}`
 
 The `DELETE` call will delete the transaction by its `transactionid` from the ledger for the specified account by its `accountid`.
@@ -647,20 +503,8 @@ If the provided `transactionID` does not correspond to an existing transaction i
 
 ---
 
-#### `OPTIONS`: `/ledger/{accountid}/{transactionid}`
+#### `How to add to CORS settings and Enable CORS`
 
-The `OPTIONS` call will respond with a `200 OK` always. This is to enable web browsers to interact with the `/ledger/{accountid}/{transactionid}` API endpoint, in accordance with the expected response for a CORS [pre-flight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request).
-
-Simple usage example:
-
-```bash
-curl -X OPTIONS http://localhost:48093/ledger/1/1588006579251812793
-```
-
-Sample response:
-
-```text
-200 OK
-```
+Please refer to [EdgeX kamakura documentation on how to add CORS settings and Enable CORS](https://github.com/edgexfoundry/edgex-docs/blob/kamakura/docs_src/security/Ch-CORS-Settings.md)
 
 ---

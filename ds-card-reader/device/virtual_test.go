@@ -1,28 +1,24 @@
+//go:build all || !physical
 // +build all !physical
 
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
 
 import (
-	"bufio"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
 	"testing"
 
 	"ds-card-reader/common"
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	logger "github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	logger "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
 
 const (
-	virtualLogFile                     = "virtual_test.log"
-	virtualCardReaderDeviceServiceName = "ds-card-reader"
 	virtualDeviceSearchPath            = ""
 	virtualDeviceName                  = "ds-card-reader"
 	virtualVID                         = uint16(0x0000)
@@ -30,45 +26,12 @@ const (
 	expectedCardNumberVirtual          = "0123456789"
 )
 
-func clearVirtualLogs() error {
-	return ioutil.WriteFile(virtualLogFile, []byte{}, 0644)
-}
-
-func doesVirtualLogFileContainString(input string) (bool, error) {
-	// attempt to open the log file
-	file, err := os.Open(virtualLogFile)
-	if err != nil {
-		return false, err
-	}
-
-	// defer closing the file open buffer
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	// iterate over every line in the log file
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, input) {
-			return true, nil
-		}
-	}
-
-	// check for residual errors in the scanner
-	err = scanner.Err()
-	if err != nil {
-		return false, err
-	}
-
-	return false, nil
-}
-
 // TestVirtualCardReader validates that the InitializeCardReader
 // and the virtual functions work as expected for a virtual card reader
 func TestVirtualCardReader(t *testing.T) {
 
 	// prepare a few needed interfaces for use in tests
-	lc := logger.NewClient(virtualCardReaderDeviceServiceName, false, virtualLogFile, "DEBUG")
+	lc := logger.NewMockClient()
 	expectedAsyncCh := make(chan<- *dsModels.AsyncValues, 16)
 
 	// we will expect the result of our tests to have a CardReader interface
@@ -142,9 +105,6 @@ func TestWrite(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	err := clearVirtualLogs()
-	require.NoError(err)
-
 	// note: it is critical to create a two-way channel and then pass in the
 	// one-way component of this channel to the CardReaderVirtual below.
 	// In order to receive values from the channel, the original channel
@@ -152,7 +112,7 @@ func TestWrite(t *testing.T) {
 	// since it only takes the one-way component
 	asyncCh := make(chan *dsModels.AsyncValues, 16)
 
-	loggingClient := logger.NewClient(virtualCardReaderDeviceServiceName, false, virtualLogFile, "DEBUG")
+	loggingClient := logger.NewMockClient()
 
 	reader := CardReaderVirtual{
 		AsyncCh:       asyncCh,
@@ -160,7 +120,7 @@ func TestWrite(t *testing.T) {
 		LoggingClient: loggingClient,
 	}
 
-	reader.Write(common.CommandCardReaderEvent, expectedCardNumberVirtual)
+	reader.Write(common.CommandCardNumber, expectedCardNumberVirtual)
 
 	actual := <-asyncCh
 	require.NotNil(actual.DeviceName) // "actual" is a pointer, must not be nil
@@ -170,11 +130,4 @@ func TestWrite(t *testing.T) {
 	require.NoError(err)
 
 	assert.Equal(expectedCardNumberVirtual, actualStringValue)
-
-	actualLogPresence, err := doesVirtualLogFileContainString(fmt.Sprintf("received event with card number %v", expectedCardNumberVirtual))
-	require.NoError(err)
-	assert.True(actualLogPresence)
-
-	err = clearVirtualLogs()
-	require.NoError(err)
 }

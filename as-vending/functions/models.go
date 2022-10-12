@@ -1,9 +1,15 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
 
-import "time"
+import (
+	"as-vending/config"
+	"fmt"
+	"time"
+
+	clientInterfaces "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
+)
 
 // VendingState is a representation of the entire state of vending workflow.
 // The information stored in this is shared across this application service.
@@ -21,28 +27,11 @@ type VendingState struct {
 	DoorCloseWaitThreadStopChannel chan int   `json:"doorCloseWaitThreadStopChannel"`
 	InferenceDataReceived          bool       `json:"inferenceDataReceived"` // inference event
 	InferenceWaitThreadStopChannel chan int   `json:"inferenceWaitThreadStopChannel"`
-	Configuration                  *ServiceConfiguration
-}
-
-type ServiceConfiguration struct {
-	AuthenticationEndpoint            string        // "http://localhost:48096/authentication"
-	DeviceControllerBoarddisplayReset string        // "http://localhost:48082/api/v1/device/name/ds-controller-board/command/displayReset"
-	DeviceControllerBoarddisplayRow0  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow0"
-	DeviceControllerBoarddisplayRow1  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow1"
-	DeviceControllerBoarddisplayRow2  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow2"
-	DeviceControllerBoarddisplayRow3  string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/displayRow3"
-	DeviceControllerBoardLock1        string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/lock1"
-	DeviceControllerBoardLock2        string        // "http://localhost:48082/api/v1/device/name/device-controller-board/command/lock2"
-	DeviceNames                       []string      // "ds-card-reader,Inference-MQTT-device"
-	DoorCloseStateTimeout             time.Duration // "20s"
-	DoorOpenStateTimeout              time.Duration // "15s"
-	InferenceDoorStatus               string        // "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceDoorStatus"
-	InferenceHeartbeat                string        // "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/inferenceHeartbeat"
-	InferenceTimeout                  time.Duration // "20s"
-	InventoryAuditLogService          string        // "http://localhost:48095/auditlog"
-	InventoryService                  string        // "http://localhost:48095/inventory/delta"
-	LCDRowLength                      int           // "19"
-	LedgerService                     string        // "http://localhost:48093/ledger"
+	Configuration                  *config.VendingConfig
+	CommandClient                  clientInterfaces.CommandClient
+	DoorCloseStateTimeout          time.Duration
+	DoorOpenStateTimeout           time.Duration
+	InferenceTimeout               time.Duration
 }
 
 // MaintenanceMode is a simple structure used to return the state of
@@ -121,4 +110,23 @@ type AuditLogEntry struct {
 	InventoryDelta []deltaSKU `json:"inventoryDelta"`
 	CreatedAt      int64      `json:"createdAt,string"`
 	AuditEntryID   string     `json:"auditEntryId"`
+}
+
+func (vs *VendingState) ParseDurationFromConfig() error {
+	var err error
+	vs.DoorCloseStateTimeout, err = time.ParseDuration(vs.Configuration.DoorCloseStateTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("failed to parse DoorCloseStateTimeoutDuration configuration: %v", err)
+	}
+
+	vs.DoorOpenStateTimeout, err = time.ParseDuration(vs.Configuration.DoorOpenStateTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("failed to parse DoorOpenStateTimeoutDuration configuration: %v", err)
+	}
+
+	vs.InferenceTimeout, err = time.ParseDuration(vs.Configuration.InferenceTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("failed to parse InferenceTimeoutDuration configuration: %v", err)
+	}
+	return nil
 }

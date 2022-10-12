@@ -1,10 +1,23 @@
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2022 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM automated-checkout/build:latest AS builder
+FROM golang:1.18-alpine3.16 AS builder
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2019: Intel'
+  copyright='Copyright (c) 2022: Intel'
+
+
+# add git for go modules
+RUN apk update && apk add --no-cache make git gcc libc-dev zeromq-dev linux-headers
+
+ENV GO111MODULE=on
+WORKDIR /usr/local/bin/
+
+# This caches the packages for use when building the other services.
+# Update the go.mod file in this repo when a new package is added to one of the services.
+# This will be obvious when building a service and the un-cached package it loaded every build.
+COPY go.mod .
+RUN go mod download
 
 RUN mkdir ms-ledger
 WORKDIR /usr/local/bin/ms-ledger/
@@ -17,14 +30,14 @@ RUN make gobuild
 FROM alpine
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2019: Intel'
+  copyright='Copyright (c) 2022: Intel'
 
 RUN apk --no-cache add zeromq
 COPY --from=builder /usr/local/bin/ms-ledger/res/configuration.toml /res/configuration.toml
 COPY --from=builder /usr/local/bin/ms-ledger/main /ms-ledger
-COPY --from=builder /usr/local/bin/ms-ledger/ledger.json /ledger.json
+COPY --from=builder /usr/local/bin/ms-ledger/ledger.json /tmp/ledger.json
 
-RUN chmod 640 /ledger.json && \
-  chown 2000 /ledger.json
+RUN chmod 640 /tmp/ledger.json && \
+  chown 2000 /tmp/ledger.json
 
-CMD [ "/ms-ledger","--confdir=/res", "-cp=consul.http://edgex-core-consul:8500", "-r" ]
+CMD [ "/ms-ledger", "-cp=consul.http://edgex-core-consul:8500", "-r", "-s" ]

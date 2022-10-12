@@ -10,7 +10,6 @@
 main
 as-controller-board-status
 test.txt
-go.sum
 .vscode/*
 
 # Output of the go coverage tool, specifically when used with LiteIDE

@@ -1,147 +1,54 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
 
 import (
-	"encoding/json"
+	"as-controller-board-status/config"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/appcontext"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
+	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 var now = time.Now()
 
-type testGetStatusStruct struct {
-	TestCaseName          string
-	ControllerBoardStatus ControllerBoardStatus
-	OutputHTTPResponse    utilities.HTTPResponse
-	RESTMethod            string
-	RESTURL               string
-}
-
-func prepGetStatusTest() ([]testGetStatusStruct, error) {
-	testControllerBoardStatus := ControllerBoardStatus{}
-	controllerBoardStatusJSON, err := utilities.GetAsJSON(testControllerBoardStatus)
-	if err != nil {
-		return []testGetStatusStruct{}, err
-	}
-	return []testGetStatusStruct{
-		{
-			TestCaseName:          "Success",
-			ControllerBoardStatus: testControllerBoardStatus,
-			OutputHTTPResponse: utilities.HTTPResponse{
-				Content:     controllerBoardStatusJSON,
-				ContentType: "json",
-				StatusCode:  200,
-				Error:       false,
-			},
-			RESTMethod: "GET",
-			RESTURL:    "/status",
-		},
-	}, nil
-}
-
-// TestGetStatus validates that the GetStatus function
-// properly handles all error and success scenarios
-func TestGetStatus(t *testing.T) {
-	testTable := []testGetStatusStruct{}
-	err := fmt.Errorf("")
-	t.Run("GetStatus test setup", func(t *testing.T) {
-		assert := assert.New(t)
-		testTable, err = prepGetStatusTest()
-
-		assert.NoError(err, "Failed to set up test")
-	})
-	for _, testCase := range testTable {
-		ct := testCase // pinning to avoid concurrency issues
-		t.Run(ct.TestCaseName, func(t *testing.T) {
-			assert := assert.New(t)
-
-			req := httptest.NewRequest(ct.RESTMethod, ct.RESTURL, nil)
-			w := httptest.NewRecorder()
-			GetStatus(w, req)
-			resp := w.Result()
-			defer resp.Body.Close()
-
-			body, err := ioutil.ReadAll(resp.Body)
-			assert.NoError(err, "Failed to read response body")
-
-			// Prepare to unmarshal the response body into the helpers struct
-			responseContent := utilities.HTTPResponse{}
-			err = json.Unmarshal(body, &responseContent)
-
-			assert.NoError(err, "Failed to unmarshal response body into HTTPResponse struct")
-			assert.Equal(ct.OutputHTTPResponse, responseContent)
-		})
-	}
-}
-
-func getCommonApplicationSettings() map[string]string {
-	return map[string]string{
-		AverageTemperatureMeasurementDuration:     "-15s",
-		DeviceName:                                "ds-controller-board",
-		MaxTemperatureThreshold:                   temp51s,
-		MinTemperatureThreshold:                   temp49s,
-		MQTTEndpoint:                              "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/vendingDoorStatus",
-		NotificationCategory:                      "HW_HEALTH",
-		NotificationEmailAddresses:                "test@site.com,test@site.com",
-		NotificationHost:                          "http://localhost:48060/api/v1/notification",
-		NotificationLabels:                        "HW_HEALTH",
-		NotificationReceiver:                      "System Administrator",
-		NotificationSender:                        "Automated Checkout Maintenance Notification",
-		NotificationSeverity:                      "CRITICAL",
-		NotificationSlug:                          "sys-admin",
-		NotificationSlugPrefix:                    "maintenance-notification",
-		NotificationSubscriptionMaxRESTRetries:    "10",
-		NotificationSubscriptionRESTRetryInterval: "10s",
-		NotificationThrottleDuration:              "1m",
-		RESTCommandTimeout:                        "15s",
-		SubscriptionHost:                          "http://localhost:48060/api/v1/subscription",
-		VendingEndpoint:                           "http://localhost:48099/boardStatus",
-	}
-}
-
-func getCommonApplicationSettingsTyped() *ControllerBoardStatusAppSettings {
-	return &ControllerBoardStatusAppSettings{
-		AverageTemperatureMeasurementDuration:     time.Second * -15,
-		DeviceName:                                "ds-controller-board",
-		MaxTemperatureThreshold:                   temp51,
-		MinTemperatureThreshold:                   temp49,
-		MQTTEndpoint:                              "http://localhost:48082/api/v1/device/name/Inference-MQTT-device/command/vendingDoorStatus",
-		NotificationCategory:                      "HW_HEALTH",
-		NotificationEmailAddresses:                []string{"test@site.com", "test@site.com"},
-		NotificationHost:                          "http://localhost:48060/api/v1/notification",
-		NotificationLabels:                        []string{"HW_HEALTH"},
-		NotificationReceiver:                      "System Administrator",
-		NotificationSender:                        "Automated Checkout Maintenance Notification",
-		NotificationSeverity:                      "CRITICAL",
-		NotificationSlug:                          "sys-admin",
-		NotificationSlugPrefix:                    "maintenance-notification",
-		NotificationSubscriptionMaxRESTRetries:    10,
-		NotificationSubscriptionRESTRetryInterval: time.Second * 10,
-		NotificationThrottleDuration:              time.Minute * 1,
-		RESTCommandTimeout:                        time.Second * 15,
-		SubscriptionHost:                          "http://localhost:48060/api/v1/subscription",
-		VendingEndpoint:                           "http://localhost:48099/boardStatus",
+func getCommonApplicationSettingsTyped() *config.ControllerBoardStatusConfig {
+	return &config.ControllerBoardStatusConfig{
+		AverageTemperatureMeasurementDuration:             "-15s",
+		DeviceName:                                        "controller-board",
+		MaxTemperatureThreshold:                           temp51,
+		MinTemperatureThreshold:                           temp49,
+		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v2/device/name/Inference-device/vendingDoorStatus",
+		NotificationCategory:                              "HW_HEALTH",
+		NotificationEmailAddresses:                        "test@site.com,test@site.com",
+		NotificationLabels:                                "HW_HEALTH",
+		NotificationReceiver:                              "System Administrator",
+		NotificationSender:                                "Automated Checkout Maintenance Notification",
+		NotificationSeverity:                              "CRITICAL",
+		NotificationName:                                  "maintenance-notification",
+		NotificationSubscriptionMaxRESTRetries:            10,
+		NotificationSubscriptionRESTRetryIntervalDuration: "10s",
+		NotificationThrottleDuration:                      "1m",
+		RESTCommandTimeoutDuration:                        "15s",
+		VendingEndpoint:                                   "http://localhost:48099/boardStatus",
 	}
 }
 
 type testTableCheckControllerBoardStatusStruct struct {
 	TestCaseName                              string
-	InputEdgexContext                         *appcontext.Context
-	InputParams                               []interface{}
+	InputEdgexContext                         interfaces.AppFunctionContext
+	InputData                                 interface{}
 	InputCheckBoardStatus                     CheckBoardStatus
 	OutputCheckBoardStatus                    CheckBoardStatus
 	OutputBool                                bool
@@ -153,15 +60,10 @@ type testTableCheckControllerBoardStatusStruct struct {
 }
 
 const (
-	checkControllerBoardStatusLogFileName = "./test_CheckControllerBoardStatus.log"
-	temp49                                = 49.0
-	temp50                                = 50.0
-	temp51                                = 51.0
-	temp52                                = 52.0
-	temp49s                               = "49.0"
-	// temp50s                               = "50.0"
-	temp51s = "51.0"
-	// temp52s                               = "52.0"
+	temp49 = 49.0
+	temp50 = 50.0
+	temp51 = 51.0
+	temp52 = 52.0
 )
 
 // The CheckControllerBoardStatus function is the main entrypoint from EdgeX
@@ -173,7 +75,7 @@ const (
 //
 // Top-level cases:
 // Success case requires:
-// - http server that returns 200 for edgexconfig MQTTEndpoint,VendingEndpoint
+// - http server that returns 200 for edgexconfig DoorStatusCommandEndpoint,VendingEndpoint
 // - http server that returns Accepted edgexconfig NotificationHost
 //
 // Error conditions:
@@ -183,7 +85,7 @@ const (
 // x failure to call processTemperature, which can be created by sending a
 //   status other than "Accepted" via the NotificationHost
 // x failure to call processVendingDoorState, which can be created by
-//   sending a status other than status OK to the MQTTEndpoint
+//   sending a status other than status OK to the DoorStatusCommandEndpoint
 //
 // = 6 test cases total, 3 httptest servers
 //
@@ -193,7 +95,7 @@ const (
 // x NotificationHost endpoint responding (without error) with non-Accepted
 //
 // = 11 test cases total
-func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerBoardStatusStruct, testServers []*httptest.Server, err error) {
+func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerBoardStatusStruct, testServers []*httptest.Server) {
 	// This server returns 200 OK when hit with a request
 	testServerStatusOK := GetHTTPTestServer(http.StatusOK, "")
 
@@ -207,94 +109,72 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	testServerThrowError := GetErrorHTTPTestServer()
 
 	// Set up a generic EdgeX logger
-	lc := logger.NewClient("output_test", false, checkControllerBoardStatusLogFileName, "DEBUG")
+	lc := logger.NewMockClient()
+	correlationID := "test"
+
+	// mock for service
+	mockNotificationClient := &client_mocks.NotificationClient{}
+	mockNotificationClient.On("SendNotification", mock.Anything, mock.Anything).Return(nil, nil)
 
 	// The success condition is ideal, and is configured to use URL's that all
 	// respond with responses that correspond to successful scenarios.
-	edgexcontextSuccess := &appcontext.Context{
-		LoggingClient: lc,
-	}
+	edgexcontextSuccess := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configSuccess := getCommonApplicationSettingsTyped()
-	configSuccess.MQTTEndpoint = testServerStatusOK.URL
+	configSuccess.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configSuccess.VendingEndpoint = testServerStatusOK.URL
-	configSuccess.NotificationHost = testServerAccepted.URL
 	configSuccess.MinTemperatureThreshold = temp51
 	configSuccess.MaxTemperatureThreshold = temp49
 
 	// Create the condition of exceeding the minimum temperature threshold,
 	// and make everything else successful. Additionally, use a controller
 	// board state that has more measurements than the cutoff
-	edgexcontextSuccessMinThresholdExceeded := &appcontext.Context{
-		LoggingClient: lc,
-	}
+	edgexcontextSuccessMinThresholdExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configSuccessMinThresholdExceeded := getCommonApplicationSettingsTyped()
-	configSuccessMinThresholdExceeded.MQTTEndpoint = testServerStatusOK.URL
+	configSuccessMinThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configSuccessMinThresholdExceeded.VendingEndpoint = testServerStatusOK.URL
-	configSuccessMinThresholdExceeded.NotificationHost = testServerAccepted.URL
 	configSuccessMinThresholdExceeded.MinTemperatureThreshold = temp51
 
 	// Create the condition of exceeding the maximum temperature threshold,
 	// and make the VendingEndpoint throw an error.
-	edgexcontextBadVendingEndpointMaxThresholdExceeded := &appcontext.Context{
-		LoggingClient: lc,
-	}
+	edgexcontextBadVendingEndpointMaxThresholdExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadVendingEndpointMaxThresholdExceeded := getCommonApplicationSettingsTyped()
-	configBadVendingEndpointMaxThresholdExceeded.MQTTEndpoint = testServerStatusOK.URL
+	configBadVendingEndpointMaxThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configBadVendingEndpointMaxThresholdExceeded.VendingEndpoint = testServerThrowError.URL
-	configBadVendingEndpointMaxThresholdExceeded.NotificationHost = testServerAccepted.URL
 	configBadVendingEndpointMaxThresholdExceeded.MaxTemperatureThreshold = temp49
 
 	// Create the condition of exceeding the maximum temperature threshold,
 	// and make the NotificationHost endpoint throw something other than what
 	// we want. We want Accepted, but we're going to get 500
-	edgexcontextUnacceptingNotificationHostMaxThresholdExceeded := &appcontext.Context{
-		LoggingClient: lc,
-	}
+	edgexcontextUnacceptingNotificationHostMaxThresholdExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configUnacceptingNotificationHostMaxThresholdExceeded := getCommonApplicationSettingsTyped()
-	configUnacceptingNotificationHostMaxThresholdExceeded.MQTTEndpoint = testServerStatusOK.URL
+	configUnacceptingNotificationHostMaxThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configUnacceptingNotificationHostMaxThresholdExceeded.VendingEndpoint = testServerStatusOK.URL
-	configUnacceptingNotificationHostMaxThresholdExceeded.NotificationHost = testServer500.URL
 	configUnacceptingNotificationHostMaxThresholdExceeded.MaxTemperatureThreshold = temp49
 
 	// Create the condition of exceeding the maximum threshold, but also
 	// create the condition where the NotificationHost is unreachable,
 	// which creates an error condition when attempting to send a "max
 	// temperature exceeded" notification
-	edgexcontextBadNotificationHostThresholdsExceeded := &appcontext.Context{
-		LoggingClient: lc,
-	}
+	edgexcontextBadNotificationHostThresholdsExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadNotificationHostThresholdsExceeded := getCommonApplicationSettingsTyped()
-	configBadNotificationHostThresholdsExceeded.NotificationHost = testServerThrowError.URL
 	configBadNotificationHostThresholdsExceeded.VendingEndpoint = testServerStatusOK.URL
 	configBadNotificationHostThresholdsExceeded.MaxTemperatureThreshold = temp49
 
 	// Set bad MQTT and Vending endpoints to produce specific error conditions
 	// in processTemperature, which first sends a request to MQTT, then
 	// another request to the vending endpoint
-	edgexcontextBadMQTTEndpoint := &appcontext.Context{
-		LoggingClient: lc,
-	}
-	configBadMQTTEndpoint := getCommonApplicationSettingsTyped()
-	configBadMQTTEndpoint.MQTTEndpoint = testServerThrowError.URL
-	configBadMQTTEndpoint.VendingEndpoint = testServerStatusOK.URL
+	edgexcontextBadDoorStatusCommandEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
+	configBadDoorStatusCommandEndpoint := getCommonApplicationSettingsTyped()
+	configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint = testServerThrowError.URL
+	configBadDoorStatusCommandEndpoint.VendingEndpoint = testServerStatusOK.URL
 
 	// As described above, in order to produce the error condition for
 	// processTemperature failing to hit the VendingEndpoint, we have to hit
-	// the MQTTEndpoint successfully first
-	edgexcontextBadVendingEndpoint := &appcontext.Context{
-		LoggingClient: lc,
-	}
+	// the DoorStatusCommandEndpoint successfully first
+	edgexcontextBadVendingEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadVendingEndpoint := getCommonApplicationSettingsTyped()
-	configBadVendingEndpoint.MQTTEndpoint = testServerStatusOK.URL
+	configBadVendingEndpoint.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configBadVendingEndpoint.VendingEndpoint = testServerThrowError.URL
-
-	// By not properly specifying valid application settings values, we create
-	// the error condition in ProcessApplicationSettings that claims
-	// the passed-in configuration is invalid
-	// edgexcontextBadApplicationSettings := &appcontext.Context{
-	// 	LoggingClient: lc,
-	// }
-	// configBadApplicationSettings := &ControllerBoardStatusAppSettings{}
 
 	// The expected incoming event reading from the controller board device
 	// service looks like this. Humidity and lock values don't matter at this
@@ -304,54 +184,41 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 
 	// Following up from the previous 2 lines, the actual event itself (which
 	// contains the reading from above) looks like this in the ideal case
-	controllerBoardStatusEventSuccess := models.Event{
-		Device: ControllerBoardDeviceServiceDeviceName,
-		Readings: []models.Reading{
+	controllerBoardStatusEventSuccess := dtos.Event{
+		DeviceName: ControllerBoardDeviceServiceDeviceName,
+		Readings: []dtos.BaseReading{
 			{
-				Value: controllerBoardStatusSuccessReadingValue,
+				DeviceName: ControllerBoardDeviceServiceDeviceName,
+				SimpleReading: dtos.SimpleReading{
+					Value: controllerBoardStatusSuccessReadingValue,
+				},
 			},
 		},
-	}
-
-	// We have to put the event into a slice, because the
-	// CheckControllerBoardStatus expects variadic interface parameters
-	controllerBoardStatusEventSuccessSlice := []interface{}{
-		controllerBoardStatusEventSuccess,
 	}
 
 	// Similar to above, create an event that contains a reading with an
 	// unmarshalable value
-	controllerBoardStatusEventUnsuccessfulJSON := models.Event{
-		Device: ControllerBoardDeviceServiceDeviceName,
-		Readings: []models.Reading{
+	controllerBoardStatusEventUnsuccessfulJSON := dtos.Event{
+		DeviceName: ControllerBoardDeviceServiceDeviceName,
+		Readings: []dtos.BaseReading{
 			{
-				Value: `invalid json value`,
+				DeviceName: ControllerBoardDeviceServiceDeviceName,
+				SimpleReading: dtos.SimpleReading{
+					Value: `invalid json value`,
+				},
 			},
 		},
 	}
 
-	// Similar to above, put the event into a slice because it is a
-	// variadic interface parameter to CheckControllerBoardStatus
-	controllerBoardStatusEventUnsuccessfulJSONSlice := []interface{}{
-		controllerBoardStatusEventUnsuccessfulJSON,
-	}
-
-	// The empty input parameters slice creates the error condition in
+	// The empty input data creates the error condition in
 	// CheckControllerBoardStatus that intentionally fails if there is no
-	// event contained in the input interface slice
-	emptyInputParamsSlice := []interface{}{}
-
-	// The initial state of the board needs to be controlled. In order to
-	// test the nested functions that will send notifications, we have to
-	// set a specific minimum amount of time in the past for the value of
-	// LastNotified
-	// lastNotified := time.Now().Add(time.Minute * -3)
-
+	// event contained in the input interface
+	var emptyInputData interface{}
 	return []testTableCheckControllerBoardStatusStruct{
 			{
 				TestCaseName:      "Success, no pre-existing measurements, no recent notifications sent",
 				InputEdgexContext: edgexcontextSuccess,
-				InputParams:       controllerBoardStatusEventSuccessSlice,
+				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
 					MinTemperatureThreshold: temp49,
 					MaxTemperatureThreshold: temp51,
@@ -359,6 +226,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 					Measurements:            []TempMeasurement{},
 					LastNotified:            time.Now().Add(time.Minute * -3),
 					Configuration:           configSuccess,
+					NotificationClient:      mockNotificationClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -369,7 +237,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 			{
 				TestCaseName:      "Success, minimum temperature threshold exceeded, no recent notifications sent",
 				InputEdgexContext: edgexcontextSuccessMinThresholdExceeded,
-				InputParams:       controllerBoardStatusEventSuccessSlice,
+				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
 					MinTemperatureThreshold: temp51,
 					MaxTemperatureThreshold: temp52,
@@ -382,8 +250,9 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 						{Timestamp: now.Add(time.Second * time.Duration(-5)), Measurement: temp50},
 						{Timestamp: now.Add(time.Second * time.Duration(-17)), Measurement: temp50},
 					},
-					LastNotified:  time.Now().Add(time.Minute * -3),
-					Configuration: configSuccessMinThresholdExceeded,
+					LastNotified:       time.Now().Add(time.Minute * -3),
+					Configuration:      configSuccessMinThresholdExceeded,
+					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -394,7 +263,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 			{
 				TestCaseName:      "Unsuccessful due to maximum temperature threshold exceeded, no recent notifications sent, NotificationHost not sending HTTP status Accepted",
 				InputEdgexContext: edgexcontextUnacceptingNotificationHostMaxThresholdExceeded,
-				InputParams:       controllerBoardStatusEventSuccessSlice,
+				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
 					MinTemperatureThreshold: temp51,
 					MaxTemperatureThreshold: temp49,
@@ -407,8 +276,9 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 						{Timestamp: now.Add(time.Second * time.Duration(-5)), Measurement: temp50},
 						{Timestamp: now.Add(time.Second * time.Duration(-17)), Measurement: temp50},
 					},
-					LastNotified:  time.Now().Add(time.Minute * -3),
-					Configuration: configUnacceptingNotificationHostMaxThresholdExceeded,
+					LastNotified:       time.Now().Add(time.Minute * -3),
+					Configuration:      configUnacceptingNotificationHostMaxThresholdExceeded,
+					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -419,17 +289,22 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 			{
 				TestCaseName:      "Unsuccessful due to empty params",
 				InputEdgexContext: edgexcontextSuccess,
-				InputParams:       emptyInputParamsSlice,
-				OutputBool:        false,
-				OutputInterface:   nil,
-				OutputLogs:        "",
+				InputData:         emptyInputData,
+				InputCheckBoardStatus: CheckBoardStatus{
+					Configuration:      configSuccess,
+					NotificationClient: mockNotificationClient,
+				},
+				OutputBool:      false,
+				OutputInterface: nil,
+				OutputLogs:      "",
 			},
 			{
 				TestCaseName:      "Unsuccessful due to unserializable controller board status data",
 				InputEdgexContext: edgexcontextSuccess,
-				InputParams:       controllerBoardStatusEventUnsuccessfulJSONSlice,
+				InputData:         controllerBoardStatusEventUnsuccessfulJSON,
 				InputCheckBoardStatus: CheckBoardStatus{
-					Configuration: configSuccess,
+					Configuration:      configSuccess,
+					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:      false,
 				OutputInterface: nil,
@@ -438,50 +313,53 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 			{
 				TestCaseName:      "Unsuccessful due to NotificationHost not responding with HTTP Accepted",
 				InputEdgexContext: edgexcontextBadNotificationHostThresholdsExceeded,
-				InputParams:       controllerBoardStatusEventSuccessSlice,
+				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
-					LastNotified:  time.Now().Add(time.Minute * -3),
-					Configuration: configBadNotificationHostThresholdsExceeded,
+					LastNotified:       time.Now().Add(time.Minute * -3),
+					Configuration:      configBadNotificationHostThresholdsExceeded,
+					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:      true,
 				OutputInterface: controllerBoardStatusEventSuccess,
 				OutputLogs: fmt.Sprintf(
-					`Encountered error while checking temperature thresholds: Failed to send temperature threshold exceeded notification(s) due to error: Encountered error sending the maximum temperature threshold message: Encountered error sending notification for exceeding temperature threshold: Failed to perform REST POST API call to send a notification to \"%v\", error: %v \"%v\": %v`, configBadNotificationHostThresholdsExceeded.NotificationHost, "Post", configBadNotificationHostThresholdsExceeded.NotificationHost, "EOF"),
+					`Encountered error while checking temperature thresholds: Failed to send temperature threshold exceeded notification(s) due to error: Encountered error sending the maximum temperature threshold message: Encountered error sending notification for exceeding temperature threshold: Failed to perform REST POST API call to send a notification to , error: %v : %v`, "Post", "EOF"),
 				ShouldLastNotifiedBeDifferent:             false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
 			{
-				TestCaseName:      "Unsuccessful due to MQTTEndpoint not responding with HTTP 200 OK, no temperature notification sent",
-				InputEdgexContext: edgexcontextBadMQTTEndpoint,
-				InputParams:       controllerBoardStatusEventSuccessSlice,
+				TestCaseName:      "Unsuccessful due to DoorStatusCommandEndpoint not responding with HTTP 200 OK, no temperature notification sent",
+				InputEdgexContext: edgexcontextBadDoorStatusCommandEndpoint,
+				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
-					LastNotified:  time.Now().Add(time.Minute * -3),
-					Configuration: configBadMQTTEndpoint,
+					LastNotified:       time.Now().Add(time.Minute * -3),
+					Configuration:      configBadDoorStatusCommandEndpoint,
+					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
-				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: Failed to submit the vending door state to the MQTT device service: Failed to submit REST PUT request due to error: %v \\\"%v\\\": %v", "Put", configBadMQTTEndpoint.MQTTEndpoint, "EOF"),
+				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the MQTT device service: Failed to submit REST PUT request due to error: %v \\\"%v\\\": %v", "Put", configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint, "EOF"),
 				ShouldLastNotifiedBeDifferent: false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
 			{
 				TestCaseName:      "Unsuccessful due to VendingEndpoint not responding with HTTP 200 OK, no temperature notification sent",
 				InputEdgexContext: edgexcontextBadVendingEndpoint,
-				InputParams:       controllerBoardStatusEventSuccessSlice,
+				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
-					LastNotified:  time.Now().Add(time.Minute * -3),
-					Configuration: configBadVendingEndpoint,
+					LastNotified:       time.Now().Add(time.Minute * -3),
+					Configuration:      configBadVendingEndpoint,
+					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
-				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: Failed to submit the controller board's status to the central vending state service: Failed to submit REST POST request due to error: %v \\\"%v\\\": %v", "Post", configBadVendingEndpoint.VendingEndpoint, "EOF"),
+				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the controller board's status to the central vending state service: Failed to submit REST POST request due to error: %v \\\"%v\\\": %v", "Post", configBadVendingEndpoint.VendingEndpoint, "EOF"),
 				ShouldLastNotifiedBeDifferent: false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
 			{
 				TestCaseName:      "Unsuccessful due to VendingEndpoint not responding with HTTP 200 OK, max temperature threshold exceeded",
 				InputEdgexContext: edgexcontextBadVendingEndpointMaxThresholdExceeded,
-				InputParams:       controllerBoardStatusEventSuccessSlice,
+				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
 					MinTemperatureThreshold: temp51,
 					MaxTemperatureThreshold: temp49,
@@ -494,8 +372,9 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 						{Timestamp: now.Add(time.Second * time.Duration(-5)), Measurement: temp50},
 						{Timestamp: now.Add(time.Second * time.Duration(-17)), Measurement: temp50},
 					},
-					LastNotified:  time.Now().Add(time.Minute * -3),
-					Configuration: configBadVendingEndpointMaxThresholdExceeded,
+					LastNotified:       time.Now().Add(time.Minute * -3),
+					Configuration:      configBadVendingEndpointMaxThresholdExceeded,
+					NotificationClient: mockNotificationClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -508,34 +387,24 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 			testServerThrowError,
 			testServerAccepted,
 			testServer500,
-		}, nil
+		}
 }
 
 // TestCheckControllerBoardStatus validates that the
 // CheckControllerBoardStatus function behaves as expected
 func TestCheckControllerBoardStatus(t *testing.T) {
-	logFileName := checkControllerBoardStatusLogFileName
-	testTable, testServers, err := prepCheckControllerBoardStatusTest()
-	require.NoError(t, err)
+	testTable, testServers := prepCheckControllerBoardStatusTest()
 	for _, testCase := range testTable {
 		ct := testCase // pinning "current test" solves concurrency issues
 		t.Run(testCase.TestCaseName, func(t *testing.T) {
-			// Set up the test assert/require functions
+			// Set up the test assert functions
 			assert := assert.New(t)
-			require := require.New(t)
-			// Attempt to create the log file
-			file, err := os.Create(logFileName)
-			require.NoError(err, "Failed to set up log file")
 
-			// Clear the contents of the log file
-			_, err = file.WriteString("")
-			require.NoError(err, "Failed to clear contents of log file")
-
-			// Pin the test's checkBoardStatus to prevent concurrency issues
-			// cbs := ct.InputCheckBoardStatus
-
+			// this needs to be set for upgraded config value
+			err := ct.InputCheckBoardStatus.ParseStringConfigurations()
+			require.NoError(t, err)
 			// Run the function that needs to be tested
-			testBool, testInterface := ct.InputCheckBoardStatus.CheckControllerBoardStatus(ct.InputEdgexContext, ct.InputParams...)
+			testBool, testInterface := ct.InputCheckBoardStatus.CheckControllerBoardStatus(ct.InputEdgexContext, ct.InputData)
 
 			// Validate the output
 			assert.Equal(ct.OutputBool, testBool, "Expected output boolean to match test boolean")
@@ -544,23 +413,6 @@ func TestCheckControllerBoardStatus(t *testing.T) {
 			if ct.ShouldLastNotifiedBeDifferent {
 				assert.NotEqual(ct.ShouldLastNotifiedBeDifferent, ct.InputCheckBoardStatus.LastNotified, "Expected the CheckBoardStatus.LastNotified value to be different")
 			}
-
-			// Review the logs
-			fileContentsAsBytes, err := ioutil.ReadFile(logFileName)
-			require.NoError(err, "Failed to read from log file")
-			fileContents := string(fileContentsAsBytes)
-
-			// ignore the contents of logs if the expected string is empty
-			if ct.OutputLogs != "" {
-				assert.Contains(fileContents, ct.OutputLogs, "Expected logs to contain expected test case log output")
-			}
-
-			// For each test, reset the contents of the log file to nothing
-			err = os.Remove(logFileName)
-			require.NoError(err, "Failed to clear contents of log file before ending test")
-			err = file.Close()
-			assert.NoError(err, "Failed to close file descriptor for log file")
-
 		})
 	}
 	// We are responsible for closing the test servers

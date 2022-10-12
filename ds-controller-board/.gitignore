@@ -9,7 +9,6 @@
 
 # Test binary, build with `go test -c`
 *.test
-go.sum
 main
 ds-controller-board
 

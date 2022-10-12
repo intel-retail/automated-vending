@@ -1,6 +1,7 @@
+//go:build all || physical
 // +build all physical
 
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -13,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	evdev "github.com/gvalkov/golang-evdev"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
@@ -62,39 +63,6 @@ func doesLogFileContainString(input string) (bool, error) {
 	}
 
 	return false, nil
-}
-
-// TestInitializeCardReader validates that the InitializeCardReader
-// and the physical functions work as expected for a physical card reader
-func TestInitializeCardReader(t *testing.T) {
-	// use community-recommended shorthand (known name clash)
-	assert := assert.New(t)
-	require := require.New(t)
-
-	// create a few essential variables for facilitating tests
-	lc := logger.NewClient(physicalCardReaderDeviceServiceName, false, physicalLogFile, "DEBUG")
-	expectedAsyncCh := make(chan<- *dsModels.AsyncValues, 16)
-	var notExpectedCardReader CardReader
-
-	// run the function
-	cardReader, err := InitializeCardReader(
-		lc,
-		expectedAsyncCh,
-		physicalDeviceSearchPath,
-		physicalDeviceName,
-		physicalVID,
-		physicalPID,
-		false,
-		true,
-	)
-
-	// perform assertions
-	require.NoError(err)
-	assert.NotEqual(notExpectedCardReader, cardReader)
-
-	// release the device so that other testing routines can use it
-	err = cardReader.Release()
-	require.NoError(err)
 }
 
 // TestGrabCardReader validates that the GrabCardReader function handles
@@ -325,7 +293,7 @@ func TestStatus(t *testing.T) {
 	// use community-recommended shorthand (known name clash)
 	assert := assert.New(t)
 
-	lc := logger.NewClient(physicalCardReaderDeviceServiceName, false, physicalLogFile, "DEBUG")
+	lc := logger.NewMockClient()
 
 	// build tests
 	tests := []struct {
@@ -374,7 +342,7 @@ func TestProcessDevReadEvents(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	lc := logger.NewClient(physicalCardReaderDeviceServiceName, false, physicalLogFile, "DEBUG")
+	lc := logger.NewMockClient()
 
 	tests := []struct {
 		Name                         string

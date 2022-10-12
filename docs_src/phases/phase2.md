@@ -88,7 +88,7 @@ ds-card-reader:
   devices:
     - /dev/input:/dev/input
   environment:
-    Driver_SimulateDevice: "false"
+    DRIVERCONFIG_SIMULATEDEVICE: "false"
 ```
 
 We will be adding three environment variables to this service:
@@ -135,10 +135,10 @@ ds-card-reader:
   devices:
     - /dev/input:/dev/input
   environment:
-    Driver_SimulateDevice: "false"
-    Driver_DeviceSearchPath: "/dev/input/event*"
-    Driver_VID: "65535"
-    Driver_PID: "53"
+    DRIVERCONFIG_SIMULATEDEVICE: "false"
+    DRIVERCONFIG_DEVICESEARCHPATH: "/dev/input/event*"
+    DRIVERCONFIG_VID: 65535 # 0xFFFF
+    DRIVERCONFIG_PID: 53    # 0x0035
 ```
 
 ## Run the Automated Checkout reference implementation

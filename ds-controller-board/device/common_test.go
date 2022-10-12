@@ -1,5 +1,7 @@
+//go:build all
 // +build all
-// Copyright © 2020 Intel Corporation. All rights reserved.
+
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -9,6 +11,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	validVID = "2341"
+	validPID = "8037"
+	badVID   = "9999"
+	badPID   = "0000"
 )
 
 func TestParseStatus(t *testing.T) {

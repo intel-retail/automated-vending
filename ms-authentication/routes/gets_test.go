@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -12,10 +12,13 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func setupPeople() People {
@@ -242,6 +245,12 @@ func TestAuthenticationGet(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(currentTest.Name, func(t *testing.T) {
+			mockAppService := &mocks.ApplicationService{}
+			mockAppService.On("LoggingClient").Return(logger.NewMockClient())
+			mockAppService.On("AddRoute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+			c := NewController(mockAppService)
+
 			if currentTest.WriteFiles {
 				err := writeJSONFiles(people, accounts, cards)
 				require.NoError(err, "Failed to write to test file")
@@ -255,7 +264,7 @@ func TestAuthenticationGet(t *testing.T) {
 			req := httptest.NewRequest("GET", "/authentication/"+currentTest.AuthData.CardID, nil)
 			w := httptest.NewRecorder()
 			req = mux.SetURLVars(req, map[string]string{"cardid": currentTest.AuthData.CardID})
-			AuthenticationGet(w, req)
+			c.AuthenticationGet(w, req)
 			resp := w.Result()
 			defer resp.Body.Close()
 

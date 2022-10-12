@@ -1,0 +1,244 @@
+# Copyright © 2022 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+networks:
+  edgex-network:
+    driver: bridge
+services:
+  ms-authentication:
+    container_name: automated-checkout_ms-authentication
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: ms-authentication
+    hostname: ms-authentication
+    image: automated-checkout/ms-authentication:dev
+    networks:
+      edgex-network: {}
+    ports:
+    - 48096:48096/tcp
+    restart: always
+    ipc: none
+    read_only: true
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: 2002:2001
+  ms-inventory:
+    image: "automated-checkout/ms-inventory:dev"
+    container_name: automated-checkout_ms-inventory
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: ms-inventory
+    hostname: ms-inventory
+    networks:
+      edgex-network: {}
+    ports:
+    - 48095:48095/tcp
+    read_only: true
+    volumes:
+      - inventory:/tmp/
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
+  ms-ledger:
+    image: "automated-checkout/ms-ledger:dev"
+    container_name: automated-checkout_ms-ledger
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: ms-ledger
+      APPLICATIONSETTINGS_INVENTORYENDPOINT: "http://ms-inventory:48095/inventory"
+    hostname: ms-ledger
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:48093:48093/tcp
+    read_only: true
+    volumes:
+      - ledger:/tmp/
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
+  ds-card-reader:
+    image: "automated-checkout/ds-card-reader:dev"
+    container_name: automated-checkout_ds-card-reader
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+      consul:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      MESSAGEQUEUE_HOST: edgex-mqtt-broker
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: ds-card-reader
+    hostname: ds-card-reader
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:48098:48098/tcp
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
+  ds-controller-board:
+    image: "automated-checkout/ds-controller-board:dev"
+    container_name: automated-checkout_ds-controller-board
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+      consul:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      MESSAGEQUEUE_HOST: edgex-mqtt-broker
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: ds-controller-board
+    hostname: ds-controller-board
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:48097:48097/tcp
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
+  ds-cv-inference:
+    image: "automated-checkout/ds-cv-inference:dev"
+    container_name: automated-checkout_ds-cv-inference
+    command: ["/go/src/ds-cv-inference/images","mqtt-broker:1883","0.85","/go/src/ds-cv-inference/skumapping.json"]
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+    environment:
+      SERVICE_HOST: ds-cv-inference
+    hostname: ds-cv-inference
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:9005:9005/tcp
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
+  as-vending:
+    image: "automated-checkout/as-vending:dev"
+    container_name: automated-checkout_as-vending
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+      consul:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: as-vending
+      TRIGGER_EDGEXMESSAGEBUS_PUBLISHHOST_HOST: mqtt-broker
+      TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
+      VENDING_AUTHENTICATIONENDPOINT: http://ms-authentication:48096/authentication
+      VENDING_INVENTORYAUDITLOGSERVICE: http://ms-inventory:48095/auditlog
+      VENDING_INVENTORYSERVICE: http://ms-inventory:48095/inventory/delta
+      VENDING_LEDGERSERVICE: http://ms-ledger:48093/ledger
+    hostname: as-vending
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:48099:48099/tcp
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
+  as-controller-board-status:
+    image: "automated-checkout/as-controller-board-status:dev"
+    container_name: automated-checkout_as-controller-board-status
+    depends_on:
+      data:
+        condition: service_started
+      command:
+        condition: service_started
+      consul:
+        condition: service_started
+    environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
+      CLIENTS_CORE_DATA_HOST: edgex-core-data
+      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      TRIGGER_EDGEXMESSAGEBUS_PUBLISHHOST_HOST: mqtt-broker
+      TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
+      REGISTRY_HOST: edgex-core-consul
+      SERVICE_HOST: as-controller-board-status
+      CONTROLLERBOARDSTATUS_DOORSTATUSCOMMANDENDPOINT: "http://edgex-core-command:59882/api/v2/device/name/Inference-device/inferenceDoorStatus"
+      CONTROLLERBOARDSTATUS_VENDINGENDPOINT: "http://as-vending:48099/boardStatus"
+      CONTROLLERBOARDSTATUS_MAXTEMPERATURETHRESHOLD: "83"
+      CONTROLLERBOARDSTATUS_MINTEMPERATURETHRESHOLD: "10"
+    hostname: as-controller-board-status
+    networks:
+      edgex-network: {}
+    ports:
+    - 127.0.0.1:48094:48094/tcp
+    restart: always
+    ipc: none
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      options: { max-file: "5", max-size: 100m }
+    user: "2000:2000"
+version: '3.7'
+volumes:
+  ledger: {}
+  inventory: {}
+
