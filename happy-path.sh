@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright © 2020 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
 cards=("0003293374" "0003278380" "0003292371")
 
 declare -i timeoutCounter=0
