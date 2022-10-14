@@ -397,47 +397,9 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          How to Send Notifications through EdgeX (optional)
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="notifications.html" class="md-nav__link md-nav__link--active">
         How to Send Notifications through EdgeX (optional)
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#step-1-set-environment-variables" class="md-nav__link">
-    Step 1: Set environment variables
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-add-smtp-server-to-compose-file-optional" class="md-nav__link">
-    Step 2: Add SMTP server to compose file (optional)
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -499,28 +461,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#step-1-set-environment-variables" class="md-nav__link">
-    Step 1: Set environment variables
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-add-smtp-server-to-compose-file-optional" class="md-nav__link">
-    Step 2: Add SMTP server to compose file (optional)
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -535,43 +475,7 @@
 
 
 <h1 id="how-to-send-notifications-through-edgex-optional">How to Send Notifications through EdgeX (optional)</h1>
-<p>This section provides instructions to help you configure the EdgeX notifications service to send alerts through SMS, email, REST API calls, and others.</p>
-<p>Notifications work as follows:</p>
-<ol>
-<li>
-<p>When either the minimum or maximum temperature thresholds (defined in <code>as-controller-board-status</code>) have been exceeded (calculated as an average temperature over a configurable duration), the service enters maintenance mode and begins the process of sending an alert</p>
-</li>
-<li>
-<p>The <code>as-controller-board-status</code> service sends these alerts as email messages through the EdgeX notification service using REST API calls</p>
-</li>
-</ol>
-<p>To change the message type from email to a different medium, the <code>as-controller-board-status</code> service should be updated to use a different notification type.</p>
-<h2 id="step-1-set-environment-variables">Step 1: Set environment variables</h2>
-<p>Set environment variable overrides for <code>Smtp_Host</code> and <code>Smtp_Port</code> in the <code>notifications</code> service in the compose file, which will inject these variables into the notification service's registry.</p>
-<p>Additional notification service configuration properties are <a href="https://docs.edgexfoundry.org/1.2/api/supporting/Ch-APISupportingServicesAlerts/" title="EdgeX Alerts &amp; Notifications">here</a>.</p>
-<p>The code snippet below is a docker-compose example that sends an email notification. Add this code to the <code>notifications</code> service's environment section in <code>docker-compose.yml</code>.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*common-variables</span><span class="w"></span>
-<span class="w">  </span><span class="nt">Smtp_Host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;host name&gt;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">Smtp_Port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span><span class="w"></span>
-<span class="w">  </span><span class="nt">Smtp_Password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;password if applicable&gt;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">Smtp_Sender</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;some email&gt;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">Smtp_Subject</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Automated Checkout Notification</span><span class="w"></span>
-</code></pre></div>
-
-<h2 id="step-2-add-smtp-server-to-compose-file-optional">Step 2: Add SMTP server to compose file (optional)</h2>
-<p>The snipped below adds a development SMTP server smtp4dev to your <code>docker-compose.yml</code>.
-Skip this step if you want to use Gmail or another server.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">smtp-server</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rnwood/smtp4dev:linux-amd64-v3</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ports</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;3000:80&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;2525:25&quot;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;on-failure:5&quot;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smtp-server</span><span class="w"></span>
-<span class="w">  </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">automated-checkout_default</span><span class="w"> </span><span class="c1"># the name of this network may be different for your setup</span><span class="w"></span>
-</code></pre></div>
+<p>If you want to send SMS, Email, REST, AMQP, MQTT, or any standard application protocols, you can follow <a href="https://docs.edgexfoundry.org/2.2/microservices/support/notifications/Ch-AlertsNotifications/">EdgeX Ch-AlertsNotifications</a>.</p>
 
 
 

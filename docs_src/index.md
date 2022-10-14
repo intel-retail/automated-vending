@@ -93,7 +93,6 @@ docker images | grep automated-checkout
 
     - `automated-checkout/as-controller-board-status`
     - `automated-checkout/as-vending`
-    - `automated-checkout/build` (latest tag)
     - `automated-checkout/ds-card-reader`
     - `automated-checkout/ds-controller-board`
     - `automated-checkout/ds-cv-inference`

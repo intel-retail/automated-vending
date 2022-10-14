@@ -757,7 +757,7 @@ If you do not see input devices under this path, your Linux kernel or operating 
 
 <h2 id="run-the-automated-checkout-reference-implementation">Run the Automated Checkout reference implementation</h2>
 <p>Run the Automated Checkout reference implementation with the physical card reader component included:</p>
-<div class="codehilite"><pre><span></span><code>make run-physical-card-reader-dev
+<div class="codehilite"><pre><span></span><code>make run-physical-card-reader
 </code></pre></div>
 
 <p>After about a minute or so, the card reader device service (ds-card-reader) will be configured to accept inputs from an external card reader device. Follow the steps outlined in <a href="phase1.html#walkthrough-of-scenarios">phase 1</a> again, <strong>except</strong> instead of performing REST API calls to simulate badge swipe events, replace them with a keyboard inputs that correspond to the same cards ID, press <code>enter</code>, and then continue forward with the REST API calls that simulate door open/closure events, temperature changes, etc.</p>
@@ -846,7 +846,7 @@ If you do not see input devices under this path, your Linux kernel or operating 
 </code></pre></div>
 
 <p>Then, bring up the services using the same command from before:</p>
-<div class="codehilite"><pre><span></span><code>make run-physical-card-reader-dev
+<div class="codehilite"><pre><span></span><code>make run-physical-card-reader
 </code></pre></div>
 
 <div class="admonition note">
@@ -854,11 +854,11 @@ If you do not see input devices under this path, your Linux kernel or operating 
 <p>If this fails to properly update the image, it may be worth running</p>
 <p><code>make down</code></p>
 <p>And then re-running</p>
-<p><code>make run-physical-card-reader-dev</code></p>
+<p><code>make run-physical-card-reader</code></p>
 <p>If there are still issues, consider completely cleaning the Automated Checkout containers and volumes by running</p>
 <p><code>make down &amp;&amp; make clean-docker</code></p>
 <p>And then running</p>
-<p><code>make run-physical-card-reader-dev</code></p>
+<p><code>make run-physical-card-reader</code></p>
 </div>
 <p>The <code>ds-card-reader</code> service should be listening for input events. If your card reader device is a proper RFID USB card reader, swipe the card that corresponds to the card we added, or if it's a USB keyboard, type out the keys and press enter when done, and follow the steps in phase 1 while replacing card reader badge-in events with this method.</p>
 <div class="admonition info">

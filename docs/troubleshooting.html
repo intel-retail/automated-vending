@@ -608,7 +608,7 @@
 <p><img alt="Portainer as-controller-board-status" src="images/as-controller-board-status.png" /></p>
 <p>In the unlikely event that no data is flowing at all to the Controller Board status App Service, this would lead us to an issue with the ZMQ connection from the App Service to Core Data. Double checking the TOML file configuration where the hostname, port, and topic are specified would be a good place to start. You should also check that the App Service is on the same docker network and is accessible via the network.</p>
 <p>Once connectivity issues have been resolved, the next step is to ensure that all filters (i.e. device names) are correct and match what is shown in the database from the previous step. If they do not match, then they will be filtered out and not be processed. One easy way to confirm that data is flowing is to remove filters entirely from the pipeline to see that there is data flowing.</p>
-<p>For further troubleshooting, visit the landing page for the <a href="https://docs.edgexfoundry.org/1.2/">EdgeX documentation</a> to get more help with any issues you may be encountering.</p>
+<p>For further troubleshooting, visit the landing page for the <a href="https://docs.edgexfoundry.org/2.2/">EdgeX documentation</a> to get more help with any issues you may be encountering.</p>
 
 
 

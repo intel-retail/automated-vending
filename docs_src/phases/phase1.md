@@ -12,17 +12,15 @@ The documentation in [phase 2](./phase2.md) and [phase 3](./phase3.md) will disc
 
 This walkthrough completes the following three scenarios:
 
-1. [**Stock the cooler with inventory**](#1-stock-the-cooler-with-inventory)
-    - The cooler is empty - it has no stock in its inventory
-    - A worker swipes their badge
-    - The worker adds stock to the cooler
-1. [**Purchase from the cooler as a customer**](#2-purchase-from-the-cooler-as-a-customer)
-    - Later, a customer swipes their badge to open the cooler
-    - The customer takes item(s) from the inventory
-    - The customer closes the door and gets billed
-1. [**The cooler requires maintenance**](#3-the-cooler-requires-maintenance)
-    - The internal temperature of the cooler has exceeded the maximum temperature threshold
-    - A maintenance worker resolves the issue
+- [Phase 1 - Simulation Mode](#phase-1---simulation-mode)
+  - [Overview](#overview)
+    - [Scenarios](#scenarios)
+  - [Getting started](#getting-started)
+  - [Walkthrough of scenarios](#walkthrough-of-scenarios)
+    - [1. Stock the cooler with inventory](#1-stock-the-cooler-with-inventory)
+    - [2. Purchase from the cooler as a customer](#2-purchase-from-the-cooler-as-a-customer)
+    - [3. The cooler requires maintenance](#3-the-cooler-requires-maintenance)
+  - [Summary](#summary)
 
 ## Getting started
 
@@ -45,16 +43,16 @@ Verify the output and make sure that `maintenanceMode` value is set to false.
 }
 ```
 
-If `maintenanceMode` is set to true, run the following command to reset maintenance mode back to false:
+If `maintenanceMode` is set to true, run the following command to reset state machine:
 
 ``` bash
-docker-compose restart as-vending ds-controller-board as-controller-board-status
+docker-compose -f docker-compose.ac.yml restart as-vending ds-controller-board as-controller-board-status
 ```
 
 1. In a separate terminal window, watch the logs for a few Automated Checkout services, so that incoming events can be seen:
 
 ```bash
-docker-compose logs -f ds-card-reader ds-controller-board ms-authentication as-vending as-controller-board-status device-mqtt
+docker-compose -f docker-compose.ac.yml logs -f ds-card-reader ds-controller-board ms-authentication as-vending as-controller-board-status
 ```
 
 !!! info

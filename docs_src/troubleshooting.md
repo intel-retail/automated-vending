@@ -79,4 +79,4 @@ In the unlikely event that no data is flowing at all to the Controller Board sta
 
 Once connectivity issues have been resolved, the next step is to ensure that all filters (i.e. device names) are correct and match what is shown in the database from the previous step. If they do not match, then they will be filtered out and not be processed. One easy way to confirm that data is flowing is to remove filters entirely from the pipeline to see that there is data flowing.
 
-For further troubleshooting, visit the landing page for the [EdgeX documentation](https://docs.edgexfoundry.org/1.2/) to get more help with any issues you may be encountering.
+For further troubleshooting, visit the landing page for the [EdgeX documentation](https://docs.edgexfoundry.org/2.2/) to get more help with any issues you may be encountering.

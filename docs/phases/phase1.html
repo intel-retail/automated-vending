@@ -649,25 +649,21 @@
 <p>The documentation in <a href="phase2.html">phase 2</a> and <a href="phase3.html">phase 3</a> will discuss more advanced methods of adding physical hardware and customized device services.</p>
 <h3 id="scenarios">Scenarios</h3>
 <p>This walkthrough completes the following three scenarios:</p>
-<ol>
-<li><a href="#1-stock-the-cooler-with-inventory"><strong>Stock the cooler with inventory</strong></a><ul>
-<li>The cooler is empty - it has no stock in its inventory</li>
-<li>A worker swipes their badge</li>
-<li>The worker adds stock to the cooler</li>
+<ul>
+<li><a href="#phase-1---simulation-mode">Phase 1 - Simulation Mode</a></li>
+<li><a href="#overview">Overview</a><ul>
+<li><a href="#scenarios">Scenarios</a></li>
 </ul>
 </li>
-<li><a href="#2-purchase-from-the-cooler-as-a-customer"><strong>Purchase from the cooler as a customer</strong></a><ul>
-<li>Later, a customer swipes their badge to open the cooler</li>
-<li>The customer takes item(s) from the inventory</li>
-<li>The customer closes the door and gets billed</li>
+<li><a href="#getting-started">Getting started</a></li>
+<li><a href="#walkthrough-of-scenarios">Walkthrough of scenarios</a><ul>
+<li><a href="#1-stock-the-cooler-with-inventory">1. Stock the cooler with inventory</a></li>
+<li><a href="#2-purchase-from-the-cooler-as-a-customer">2. Purchase from the cooler as a customer</a></li>
+<li><a href="#3-the-cooler-requires-maintenance">3. The cooler requires maintenance</a></li>
 </ul>
 </li>
-<li><a href="#3-the-cooler-requires-maintenance"><strong>The cooler requires maintenance</strong></a><ul>
-<li>The internal temperature of the cooler has exceeded the maximum temperature threshold</li>
-<li>A maintenance worker resolves the issue</li>
+<li><a href="#summary">Summary</a></li>
 </ul>
-</li>
-</ol>
 <h2 id="getting-started">Getting started</h2>
 <ol>
 <li>Complete steps 1-4 in <a href="../index.html#step-1-clone-the-repository">Getting Started</a>.</li>
@@ -686,14 +682,14 @@
 <span class="p">}</span><span class="w"></span>
 </code></pre></div>
 
-<p>If <code>maintenanceMode</code> is set to true, run the following command to reset maintenance mode back to false:</p>
-<div class="codehilite"><pre><span></span><code>docker-compose restart as-vending ds-controller-board as-controller-board-status
+<p>If <code>maintenanceMode</code> is set to true, run the following command to reset state machine:</p>
+<div class="codehilite"><pre><span></span><code>docker-compose -f docker-compose.ac.yml restart as-vending ds-controller-board as-controller-board-status
 </code></pre></div>
 
 <ol>
 <li>In a separate terminal window, watch the logs for a few Automated Checkout services, so that incoming events can be seen:</li>
 </ol>
-<div class="codehilite"><pre><span></span><code>docker-compose logs -f ds-card-reader ds-controller-board ms-authentication as-vending as-controller-board-status device-mqtt
+<div class="codehilite"><pre><span></span><code>docker-compose -f docker-compose.ac.yml logs -f ds-card-reader ds-controller-board ms-authentication as-vending as-controller-board-status
 </code></pre></div>
 
 <div class="admonition info">

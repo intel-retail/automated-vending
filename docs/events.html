@@ -582,7 +582,7 @@
 <li><code>setDoorClosed</code></li>
 </ul>
 <h2 id="computer-vision-inference-events">Computer vision inference events</h2>
-<p>The <a href="automated-checkout-services/device_services.html#cv-inference"><code>ds-cv-inference</code></a> uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file <code>./res/device-mqtt/inference.mqtt.device.profile.yml</code>, in the root of this GitHub repository.</p>
+<p>The <a href="automated-checkout-services/device_services.html#cv-inference"><code>ds-cv-inference</code></a> uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file <code>./res/device-mqtt/profile/inference-mqtt-device-profile.yml</code>, in the root of this GitHub repository.</p>
 <p><code>inferenceHeartbeat</code> is an asynchronous event that is pushed to EdgeX Core Data when the inference is pinged by another service to verify it is functioning. If the inference is working properly the <code>inferencePong</code> response is sent as the event reading.</p>
 <div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="s2">&quot;inferencePong&quot;</span><span class="w"></span>

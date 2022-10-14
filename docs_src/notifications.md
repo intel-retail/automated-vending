@@ -1,46 +1,4 @@
 # How to Send Notifications through EdgeX (optional)
 
-This section provides instructions to help you configure the EdgeX notifications service to send alerts through SMS, email, REST API calls, and others.
+If you want to send SMS, Email, REST, AMQP, MQTT, or any standard application protocols, you can follow [EdgeX Ch-AlertsNotifications]( https://docs.edgexfoundry.org/2.2/microservices/support/notifications/Ch-AlertsNotifications/).
 
-Notifications work as follows:
-
-1. When either the minimum or maximum temperature thresholds (defined in `as-controller-board-status`) have been exceeded (calculated as an average temperature over a configurable duration), the service enters maintenance mode and begins the process of sending an alert
-
-2. The `as-controller-board-status` service sends these alerts as email messages through the EdgeX notification service using REST API calls
-
-To change the message type from email to a different medium, the `as-controller-board-status` service should be updated to use a different notification type.
-
-## Step 1: Set environment variables
-
-Set environment variable overrides for `Smtp_Host` and `Smtp_Port` in the `notifications` service in the compose file, which will inject these variables into the notification service's registry.
-
-Additional notification service configuration properties are [here](https://docs.edgexfoundry.org/1.2/api/supporting/Ch-APISupportingServicesAlerts/ "EdgeX Alerts & Notifications").
-
-The code snippet below is a docker-compose example that sends an email notification. Add this code to the `notifications` service's environment section in `docker-compose.yml`.
-
-```yaml
-environment:
-  <<: *common-variables
-  Smtp_Host: <host name>
-  Smtp_Port: 25
-  Smtp_Password: <password if applicable>
-  Smtp_Sender: <some email>
-  Smtp_Subject: Automated Checkout Notification
-```
-
-## Step 2: Add SMTP server to compose file (optional)
-
-The snipped below adds a development SMTP server smtp4dev to your `docker-compose.yml`.
-Skip this step if you want to use Gmail or another server.
-
-```yaml
-smtp-server:
-  image: rnwood/smtp4dev:linux-amd64-v3
-  ports:
-    - "3000:80"
-    - "2525:25"
-  restart: "on-failure:5"
-  container_name: smtp-server
-  networks:
-    - automated-checkout_default # the name of this network may be different for your setup
-```
