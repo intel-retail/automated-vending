@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2022 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -58,8 +58,14 @@ func main() {
 func updateMjpegServer() {
 
 	for img := range inference.StreamChannel {
-		buf, _ := gocv.IMEncode(".jpg", img)
-		inference.Stream.UpdateJPEG(buf)
+		buf, err := gocv.IMEncode(".jpg", img)
+		if err != nil {
+			fmt.Println("error on IMEncode JPG with image: ", err.Error())
+			os.Exit(1)
+		}
+		defer buf.Close()
+
+		inference.Stream.UpdateJPEG(buf.GetBytes())
 
 	}
 }

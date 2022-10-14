@@ -95,6 +95,8 @@ func StartInference(inferenceDeltasChannel chan []byte, InferenceDoorOpenChannel
 	}
 	defer net.Close()
 
+	fmt.Println("gocv ReadNet successfully")
+
 	// OpenVINO backend
 	if err := net.SetPreferableBackend(gocv.NetBackendOpenVINO); err != nil {
 		fmt.Printf("Unable to set Net backend: %v\n", gocv.NetBackendOpenVINO)
