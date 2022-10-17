@@ -696,8 +696,8 @@
 <li><code>VirtualControllerBoard</code> - the boolean value that tells this device service to expect an input device to dictate inputs (<code>false</code>), or if a simulated device will be used (and REST API calls will control it) (<code>true</code>) - if <code>true</code></li>
 </ul>
 <h2 id="edgex-mqtt-device-service">EdgeX MQTT device service</h2>
-<p>This reference implementation uses the <a href="https://github.com/edgexfoundry/device-mqtt-go">MQTT Device Service</a> from EdgeX with custom device profiles. These device profiles YAML files are located <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker">here</a> and are volume mounted into the device service's running Docker container.</p>
-<p>The following items can be configured via <code>MQTTBrokerInfo</code> section of the service's <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker/configuration.toml">configuration.toml</a> file. All values are strings.</p>
+<p>This reference implementation uses the <a href="https://github.com/edgexfoundry/device-mqtt-go">MQTT Device Service</a> from EdgeX with custom device profiles. These device profiles YAML files are located <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/profiles/inference-mqtt-device-profile.yml">here</a> and are volume mounted into the device service's running Docker container.</p>
+<p>The following items can be configured via <code>MQTTBrokerInfo</code> section of the service's <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/configuration.toml">configuration.toml</a> file. All values are strings.</p>
 <p><code>MQTTBrokerInfo</code></p>
 <ul>
 <li><code>Schema</code> - Data schema type, aka protocol</li>
