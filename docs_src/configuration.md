@@ -58,9 +58,9 @@ The following items can be configured via the `DriverConfig` section of the serv
 
 ## EdgeX MQTT device service
 
-This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker) and are volume mounted into the device service's running Docker container.
+This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/profiles/inference-mqtt-device-profile.yml) and are volume mounted into the device service's running Docker container.
 
-The following items can be configured via `MQTTBrokerInfo` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/docker/configuration.toml) file. All values are strings.
+The following items can be configured via `MQTTBrokerInfo` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/configuration.toml) file. All values are strings.
 
 `MQTTBrokerInfo`
 
