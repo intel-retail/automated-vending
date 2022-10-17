@@ -44,7 +44,7 @@ The following commands are also available to the ds-controller-board. More detai
 
 ## Computer vision inference events
 
-The [`ds-cv-inference`](./automated-checkout-services/device_services.md#cv-inference) uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file `./res/device-mqtt/inference.mqtt.device.profile.yml`, in the root of this GitHub repository.
+The [`ds-cv-inference`](./automated-checkout-services/device_services.md#cv-inference) uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file `./res/device-mqtt/profile/inference-mqtt-device-profile.yml`, in the root of this GitHub repository.
 
 `inferenceHeartbeat` is an asynchronous event that is pushed to EdgeX Core Data when the inference is pinged by another service to verify it is functioning. If the inference is working properly the `inferencePong` response is sent as the event reading.
 

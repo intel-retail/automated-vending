@@ -146,7 +146,7 @@ ds-card-reader:
 Run the Automated Checkout reference implementation with the physical card reader component included:
 
 ```bash
-make run-physical-card-reader-dev
+make run-physical-card-reader
 ```
 
 After about a minute or so, the card reader device service (ds-card-reader) will be configured to accept inputs from an external card reader device. Follow the steps outlined in [phase 1](./phase1.md#walkthrough-of-scenarios) again, **except** instead of performing REST API calls to simulate badge swipe events, replace them with a keyboard inputs that correspond to the same cards ID, press `enter`, and then continue forward with the REST API calls that simulate door open/closure events, temperature changes, etc.
@@ -258,7 +258,7 @@ docker rm -f container_name
 Then, bring up the services using the same command from before:
 
 ```bash
-make run-physical-card-reader-dev
+make run-physical-card-reader
 ```
 
 !!! note
@@ -271,7 +271,7 @@ make run-physical-card-reader-dev
     And then re-running
 
     ```
-    make run-physical-card-reader-dev
+    make run-physical-card-reader
     ```
 
     If there are still issues, consider completely cleaning the Automated Checkout containers and volumes by running
@@ -283,7 +283,7 @@ make run-physical-card-reader-dev
     And then running
 
     ```
-    make run-physical-card-reader-dev
+    make run-physical-card-reader
     ```
 
 The `ds-card-reader` service should be listening for input events. If your card reader device is a proper RFID USB card reader, swipe the card that corresponds to the card we added, or if it's a USB keyboard, type out the keys and press enter when done, and follow the steps in phase 1 while replacing card reader badge-in events with this method.
