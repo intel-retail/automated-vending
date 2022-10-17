@@ -9,7 +9,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.0, mkdocs-material-8.5.6">
+      <meta name="generator" content="mkdocs-1.4.1, mkdocs-material-8.5.6">
     
     
       
@@ -390,8 +390,8 @@
   
   
     <li class="md-nav__item">
-      <a href="phases/phase3.html" class="md-nav__link">
-        Phase 3 - Bring Your Own Hardware and Software
+      <a href="phases/phase3.md" class="md-nav__link">
+        None
       </a>
     </li>
   
@@ -464,8 +464,8 @@
   
   
     <li class="md-nav__item">
-      <a href="automated-checkout-services/device_services.html" class="md-nav__link">
-        Device Services
+      <a href="automated-checkout-services/device_services.md" class="md-nav__link">
+        None
       </a>
     </li>
   
@@ -478,8 +478,8 @@
   
   
     <li class="md-nav__item">
-      <a href="automated-checkout-services/application_services.html" class="md-nav__link">
-        Application Services
+      <a href="automated-checkout-services/application_services.md" class="md-nav__link">
+        None
       </a>
     </li>
   
@@ -492,8 +492,8 @@
   
   
     <li class="md-nav__item">
-      <a href="automated-checkout-services/micro_services.html" class="md-nav__link">
-        Other Microservices
+      <a href="automated-checkout-services/micro_services.md" class="md-nav__link">
+        None
       </a>
     </li>
   
@@ -541,8 +541,8 @@
   
   
     <li class="md-nav__item">
-      <a href="modifying_source_code.html" class="md-nav__link">
-        Modifying source code
+      <a href="modifying_source_code.md" class="md-nav__link">
+        None
       </a>
     </li>
   
@@ -569,8 +569,8 @@
   
   
     <li class="md-nav__item">
-      <a href="references.html" class="md-nav__link">
-        References
+      <a href="references.md" class="md-nav__link">
+        None
       </a>
     </li>
   
@@ -789,14 +789,14 @@
 
 <h3 id="block-diagram">Block diagram</h3>
 <p>The high-level diagram below shows the sensors and services used with the Automated Checkout Reference Implementation. The diagram shows the sensors and services, and how they communicate through EdgeX. Intel provides the services outlined in blue, the purple services are provided by EdgeX, and the black services are either simulated or can interface with real hardware.</p>
-<p><img alt="Automated Checkout Reference Implementation Diagram" src="images/automated-checkout-reference-implementation.png" /></p>
+<p><img alt="Automated Checkout Reference Implementation Diagram" src="./images/automated-checkout-reference-implementation.png" /></p>
 <h3 id="prerequisites">Prerequisites</h3>
 <p>The following items are required to build the Automated Checkout Reference Implementation. You will need additional hardware and software when you are ready to build your own solution.</p>
 <ul>
-<li><strong>A deep learning model for CV inferencing.</strong> Intel provides a reference inference service using openVINO that produces inventory changes based on preloaded images. See <a href="automated-checkout-services/device_services.html#cv-inference">cv inference service</a> for information on this process.</li>
-<li><strong>A device that allows badging-in to the Automated Checkout.</strong> Intel provides a card reader service that can be simulated or integrated with a physical USB device. See the <a href="automated-checkout-services/device_services.html#card-reader">Card Reader</a> device service page for information on this service.</li>
+<li><strong>A deep learning model for CV inferencing.</strong> Intel provides a reference inference service using openVINO that produces inventory changes based on preloaded images. See <a href="./automated-checkout-services/device_services.md#cv-inference">cv inference service</a> for information on this process.</li>
+<li><strong>A device that allows badging-in to the Automated Checkout.</strong> Intel provides a card reader service that can be simulated or integrated with a physical USB device. See the <a href="./automated-checkout-services/device_services.md#card-reader">Card Reader</a> device service page for information on this service.</li>
 <li>
-<p><strong>A controller device that locks the door to the Automated Checkout</strong>, as well as providing readouts (such as a small text-based LCD screen) to display authorization state, items purchased, and other sensor readings. This could be an Arduino-powered circuit. Intel provides a display service that can run in a simulated mode or with a physical USB/serial interface. See the <a href="automated-checkout-services/device_services.html#controller-board">Controller Board</a> device service page for implementation details.</p>
+<p><strong>A controller device that locks the door to the Automated Checkout</strong>, as well as providing readouts (such as a small text-based LCD screen) to display authorization state, items purchased, and other sensor readings. This could be an Arduino-powered circuit. Intel provides a display service that can run in a simulated mode or with a physical USB/serial interface. See the <a href="./automated-checkout-services/device_services.md#controller-board">Controller Board</a> device service page for implementation details.</p>
 </li>
 <li>
 <p><a href="https://releases.ubuntu.com/20.04.5/" rel="noopener noreferrer" target="_blank">Ubuntu 20.04.5</a></p>
@@ -972,12 +972,12 @@ sudo apt-get install -y git curl build-essential
 <ul>
 <li><a href="phases/phase1.html">Phase 1</a> - Simulate data and inferencing, and simulate events</li>
 <li><a href="phases/phase2.html">Phase 2</a> - Add Card Reader Device</li>
-<li><a href="phases/phase3.html">Phase 3</a> - Bring Your Own Hardware and Software</li>
+<li><a href="./phases/phase3.md">Phase 3</a> - Bring Your Own Hardware and Software</li>
 </ul>
 <h2 id="general-guidance">General Guidance</h2>
 <p>After completing the steps in the Getting Started section, it may be helpful to read through the remainder of this document for some further guidance on the Automated Checkout reference implementation.</p>
 <h3 id="how-to-use-the-compose-files">How to use the Compose Files</h3>
-<p>The <code>docker-compose.yml</code> files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/Makefile"><code>makefile</code></a> to manage the various compose files:</p>
+<p>The docker-compose files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/Makefile"><code>makefile</code></a> to manage the various compose files:</p>
 <table>
 <thead>
 <tr>
@@ -993,7 +993,7 @@ sudo apt-get install -y git curl build-essential
 <td><code>make run-portainer</code></td>
 </tr>
 <tr>
-<td>All Services</td>
+<td>All Services (simulated)</td>
 <td>Automated Checkout and EdgeX services</td>
 <td><code>make run</code></td>
 </tr>
@@ -1030,11 +1030,11 @@ sudo apt-get install -y git curl build-essential
 </tr>
 <tr>
 <td>Micro-controller board</td>
-<td>A controller board device service is provided for an Arduino based micro-controller. This micro-controller is in charge of controlling the locks of the automated checkout door and the LED display. Also, it uses modules such as temperature and humidity. See <em><a href="phases/phase3.html">Phase 3 - Bring Your Own Hardware and Software</a></em> for more information.</td>
+<td>A controller board device service is provided for an Arduino based micro-controller. This micro-controller is in charge of controlling the locks of the automated checkout door and the LED display. Also, it uses modules such as temperature and humidity. See <em><a href="./phases/phase3.md">Phase 3 - Bring Your Own Hardware and Software</a></em> for more information.</td>
 </tr>
 <tr>
 <td>Deep learning model</td>
-<td>The Automated Checkout reference implementation provides a computer vision inference service using openVINO inference engine and openVINO product detection model for demonstration purposes. See more information <a href="automated-checkout-services/device_services.html#cv-inference">here</a>. You can create your own service and send events to EdgeX using the <a href="https://github.com/edgexfoundry/device-mqtt-go">EdgeX MQTT Device Service</a>.</td>
+<td>The Automated Checkout reference implementation provides a computer vision inference service using openVINO inference engine and openVINO product detection model for demonstration purposes. See more information <a href="./automated-checkout-services/device_services.md#cv-inference">here</a>. You can create your own service and send events to EdgeX using the <a href="https://github.com/edgexfoundry/device-mqtt-go">EdgeX MQTT Device Service</a>.</td>
 </tr>
 </tbody>
 </table>
