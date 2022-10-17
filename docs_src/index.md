@@ -175,12 +175,12 @@ After completing the steps in the Getting Started section, it may be helpful to 
 
 ### How to use the Compose Files
 
-The `docker-compose.yml` files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the [`makefile`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/Makefile) to manage the various compose files:
+The docker-compose files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the [`makefile`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/Makefile) to manage the various compose files:
 
 | Compose file              | Purpose                                         | Makefile Command                     |
 |---------------------------|-------------------------------------------------|--------------------------------------|
 | Portainer                 | Container management                            | `make run-portainer`                 |
-| All Services              | Automated Checkout and EdgeX services           | `make run`                           |
+| All Services (simulated)  | Automated Checkout and EdgeX services           | `make run`                           |
 | Physical Environment      | Mounts physical devices                         | `make run-physical`                  |
 | Physical Card Reader      | Allows just the card reader to be physical      | `make run-physical-card-reader`      |
 | Physical Controller Board | Allows just the controller board to be physical | `make run-physical-controller-board` |
