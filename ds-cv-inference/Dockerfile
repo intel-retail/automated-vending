@@ -21,7 +21,7 @@ ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-RUN apt update && apt install libgtk2.0-dev libgtk-3-dev libjpeg62 -y
+RUN apt-get update && apt-get install libgtk2.0-dev libgtk-3-dev libjpeg62 -y
 WORKDIR /go/src/ds-cv-inference
 
 COPY go.* /go/src/ds-cv-inference/
@@ -29,7 +29,7 @@ RUN go mod download
 
 COPY . /go/src/ds-cv-inference
 
-RUN /bin/bash -c "source /opt/intel/openvino/setupvars.sh && echo building ds-cv-inference... && go build -o ds-cv-inference"
-RUN chmod +x entrypoint.sh
+RUN /bin/bash -c "source /opt/intel/openvino/setupvars.sh && echo building ds-cv-inference... && go build -o ds-cv-inference" && \
+      chmod +x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
