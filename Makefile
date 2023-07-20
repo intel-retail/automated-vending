@@ -58,7 +58,7 @@ clean: down docker-rm
 	docker volume prune -f && \
 	docker network prune -f
 
-build: 
+docker: 
 	for repo in ${REPOS}; do \
 		echo $$repo; \
 		cd $$repo; \
