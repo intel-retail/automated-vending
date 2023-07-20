@@ -10,7 +10,7 @@ ARCH=$(shell uname -m)
 tidy:
 	go mod tidy
 
-build: tidy
+docker: 
 	docker build --rm \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
@@ -33,11 +33,11 @@ gorun:
 stop:
 	docker rm -f $(MICROSERVICE):dev
 
-test: lint
-	go test -test.v -cover ./...
+test:
+	go test -tags no_zmq -test.v -cover ./...
 
 testHTML:
-	go test -test.v -coverprofile=test_coverage.out ./... && \
+	go test -tags no_zmq -test.v -coverprofile=test_coverage.out ./... && \
 	go tool cover -html=test_coverage.out
 
 lint:

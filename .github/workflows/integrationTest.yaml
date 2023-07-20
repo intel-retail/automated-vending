@@ -1,6 +1,10 @@
 name: Integration Test
-
 on: workflow_dispatch
+# on:
+#   push:
+#     branches:
+#     - master
+#   pull_request:
 
 permissions:
   contents: read
@@ -18,9 +22,9 @@ jobs:
           - name: Make Docker images
             run: |
               make docker
-              make run-base
+              make run
               sleep 15
-              cd automated-vending && mkdir -p "$PWD"/test_results && go run main.go > "$PWD"/test_results/results.txt
+              mkdir -p "$PWD"/test_results && bash smoke-test.sh > "$PWD"/test_results/results.txt
           - uses: actions/upload-artifact@v3
             with:
               name: test_results

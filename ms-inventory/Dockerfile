@@ -17,6 +17,7 @@ WORKDIR /usr/local/bin/
 # Update the go.mod file in this repo when a new package is added to one of the services.
 # This will be obvious when building a service and the un-cached package it loaded every build.
 COPY go.mod .
+RUN go mod tidy
 RUN go mod download
 
 RUN mkdir ms-inventory

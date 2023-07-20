@@ -5,8 +5,11 @@
 
 name: trivy_image_scan
 
-on: workflow_dispatch
-
+on:
+  push:
+    branches:
+    - master
+  pull_request:
 
 permissions:
   contents: read
@@ -17,18 +20,18 @@ jobs:
         contents: read # for actions/checkout to fetch code
         security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
         actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+      # as-vending
       name: trivy_image_scan-as-vending
       runs-on: "ubuntu-latest"
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
-          with:
-            ref: main
+
         - name: Build an image from Dockerfile
           run: |
-            echo "running make build benchmark"
+            echo "running make docker as-vending"
+            cd as-vending
             make docker
-        # as-vending
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
@@ -41,7 +44,7 @@ jobs:
           uses: github/codeql-action/upload-sarif@v2
           with:
             sarif_file: 'trivy-results-as-vending.sarif'
-
+    # as-controller-board-status
     trivy_image_scan-as-controller-board-status:
       permissions:
         contents: read # for actions/checkout to fetch code
@@ -52,13 +55,12 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
-          with:
-            ref: main
+
         - name: Build an image from Dockerfile
           run: |
-            echo "running make build benchmark"
+            echo "running make docker as-controller-board-status"
+            cd as-controller-board-status
             make docker
-        # as-controller-board-status
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
@@ -71,7 +73,7 @@ jobs:
           uses: github/codeql-action/upload-sarif@v2
           with:
             sarif_file: 'trivy-results-as-controller-board-status.sarif'
-
+    # ds-card-reader
     trivy_image_scan-ds-card-reader:
       permissions:
         contents: read # for actions/checkout to fetch code
@@ -82,13 +84,12 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
-          with:
-            ref: main
+
         - name: Build an image from Dockerfile
           run: |
-            echo "running make build benchmark"
+            echo "running make docker ds-card-reader"
+            cd ds-card-reader
             make docker
-        # ds-card-reader
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
@@ -101,7 +102,7 @@ jobs:
           uses: github/codeql-action/upload-sarif@v2
           with:
             sarif_file: 'trivy-results-ds-card-reader.sarif'
-
+    # ds-controller-board
     trivy_image_scan-ds-controller-board:
       permissions:
         contents: read # for actions/checkout to fetch code
@@ -112,13 +113,12 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
-          with:
-            ref: main
+
         - name: Build an image from Dockerfile
           run: |
-            echo "running make build benchmark"
+            echo "running make docker ds-controller-board"
+            cd ds-controller-board
             make docker
-        # ds-controller-board
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
@@ -131,7 +131,7 @@ jobs:
           uses: github/codeql-action/upload-sarif@v2
           with:
             sarif_file: 'trivy-results-ds-controller-board.sarif'
-
+    # ms-authentication
     trivy_image_scan-ms-authentication:
       permissions:
         contents: read # for actions/checkout to fetch code
@@ -142,13 +142,12 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
-          with:
-            ref: main
+
         - name: Build an image from Dockerfile
           run: |
-            echo "running make build benchmark"
+            echo "running make docker ms-authentication"
+            cd ms-authentication
             make docker
-        # ms-authentication
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
@@ -161,7 +160,7 @@ jobs:
           uses: github/codeql-action/upload-sarif@v2
           with:
             sarif_file: 'trivy-results-ms-authentication.sarif'
-
+    # ms-inventory
     trivy_image_scan-ms-inventory:
       permissions:
         contents: read # for actions/checkout to fetch code
@@ -172,13 +171,12 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
-          with:
-            ref: main
+
         - name: Build an image from Dockerfile
           run: |
-            echo "running make build benchmark"
+            echo "running make docker ms-inventory"
+            cd ms-inventory
             make docker
-        # ms-inventory
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
@@ -191,7 +189,7 @@ jobs:
           uses: github/codeql-action/upload-sarif@v2
           with:
             sarif_file: 'trivy-results-ms-inventory.sarif'
-
+    # ms-ledger
     trivy_image_scan-ms-ledger:
       permissions:
         contents: read # for actions/checkout to fetch code
@@ -202,13 +200,12 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
-          with:
-            ref: main
+
         - name: Build an image from Dockerfile
           run: |
-            echo "running make build benchmark"
+            echo "running make docker ms-ledger"
+            cd ms-ledger
             make docker
-        # ms-ledger
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:

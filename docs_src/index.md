@@ -74,7 +74,7 @@ git clone https://github.com/intel-iot-devkit/automated-checkout.git && cd ./aut
 You must build the provided component services and create local docker images. To do so, run:
 
 ```bash
-make build
+make docker
 ```
 
 !!! note
