@@ -12,4 +12,5 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v3
-    - run: make go-test 
+    - run:
+        sudo apt-get install libzmq3-dev -y && make go-test 

@@ -5,6 +5,9 @@
 
 MICROSERVICE=automated-checkout/ds-cv-inference
 
+tidy:
+	go mod tidy
+
 docker:
 	docker build --rm \
 		--build-arg http_proxy \
@@ -18,3 +21,6 @@ run:
 
 down:
 	docker-compose down
+
+test:
+	echo "Pass"

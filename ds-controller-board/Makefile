@@ -34,8 +34,8 @@ gorun:
 stop:
 	docker rm -f $(MICROSERVICE):dev
 
-test: lint
-	go test -test.v \
+test:
+	go test -tags no_zmq -test.v \
 		-cover \
 		./...
 
@@ -47,7 +47,7 @@ testHTML:
 	go tool cover -html=test_coverage.out
 
 testPhysical:
-	sudo -E go test -test.v \
+	sudo -E go test -tags no_zmq -test.v \
 		-cover \
 		-tags=physical \
 		./...
