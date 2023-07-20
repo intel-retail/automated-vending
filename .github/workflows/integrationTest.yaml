@@ -20,7 +20,7 @@ jobs:
               make docker
               make run-base
               sleep 15
-              cd automated-vending && mkdir -p "$PWD"/test_results && go run main.go > "$PWD"/test_results/results.txt
+              cd automated-vending && mkdir -p "$PWD"/test_results && sh smoke-test.sh > "$PWD"/test_results/results.txt
           - uses: actions/upload-artifact@v3
             with:
               name: test_results
