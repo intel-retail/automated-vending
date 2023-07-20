@@ -5,8 +5,11 @@
 
 name: trivy_image_scan
 
-on: workflow_dispatch
-
+on:
+  push:
+    branches:
+    - master
+  pull_request:
 
 permissions:
   contents: read
