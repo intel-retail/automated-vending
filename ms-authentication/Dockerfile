@@ -13,6 +13,7 @@ ENV GO111MODULE=on
 WORKDIR /usr/local/bin/
 
 COPY go.mod .
+RUN go mod tidy
 RUN go mod download
 
 RUN mkdir ms-authentication

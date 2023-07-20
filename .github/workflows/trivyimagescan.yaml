@@ -105,7 +105,7 @@ jobs:
           uses: github/codeql-action/upload-sarif@v2
           with:
             sarif_file: 'trivy-results-ds-card-reader.sarif'
-    # # ds-controller-board
+    # ds-controller-board
     trivy_image_scan-ds-controller-board:
       permissions:
         contents: read # for actions/checkout to fetch code

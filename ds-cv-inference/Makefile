@@ -5,7 +5,7 @@
 
 MICROSERVICE=automated-checkout/ds-cv-inference
 
-build:
+docker:
 	docker build --rm \
 		--build-arg http_proxy \
 		--build-arg https_proxy \

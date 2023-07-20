@@ -10,7 +10,7 @@
 		down \
 		build-image \
 
-DOCKERS= \
+GOREPOS= \
 		as-vending \
 		as-controller-board-status \
 		ds-card-reader \
@@ -21,7 +21,7 @@ DOCKERS= \
 		ms-ledger \
 
 
-.PHONY: $(DOCKERS)
+.PHONY: $(GOREPOS)
 
 getlatest:
 	git submodule update --init --recursive --remote
@@ -59,10 +59,10 @@ clean: down docker-rm
 	docker network prune -f
 
 docker: 
-	for repo in ${REPOS}; do \
+	for repo in ${GOREPOS}; do \
 		echo $$repo; \
 		cd $$repo; \
-		make build || exit 1; \
+		make docker || exit 1; \
 		cd ..; \
 	done
 

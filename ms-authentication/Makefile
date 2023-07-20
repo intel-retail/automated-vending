@@ -10,7 +10,7 @@ ARCH=$(shell uname -m)
 tidy:
 	go mod tidy
 
-build: tidy
+docker: 
 	docker build --rm \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
