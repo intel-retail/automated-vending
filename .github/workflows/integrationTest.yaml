@@ -24,7 +24,7 @@ jobs:
               make docker
               make run
               sleep 15
-              mkdir -p "$PWD"/test_results && sh smoke-test.sh > "$PWD"/test_results/results.txt
+              mkdir -p "$PWD"/test_results && bash smoke-test.sh > "$PWD"/test_results/results.txt
           - uses: actions/upload-artifact@v3
             with:
               name: test_results
