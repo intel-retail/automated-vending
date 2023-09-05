@@ -2,11 +2,11 @@
 <!-- Please check if your PR fulfills the following requirements: -->
 
 - [ ] Added label to the Pull Request for easier discoverability and search
-- [ ] Commit Message meets guidelines as indicated in the URL https://github.com/edgexfoundry/edgex-go/blob/main/.github/Contributing.md
+- [ ] Commit Message meets guidelines as indicated in the URL https://github.com/intel-retail/automated-vending/blob/main/.github/CONTRIBUTING.md
 - [ ] Every commit is a single defect fix and does not mix feature addition or changes
 - [ ] Unit Tests have been added for new changes
 - [ ] Updated Documentation as relevant to the changes
-- [ ] All commented code has been removed
+- [ ] All commented out code has been removed
 - [ ] If you've added a dependency, you've ensured license is compatible with repository license and clearly outlined the added dependency.
 - [ ] PR change contains code related to security
 - [ ] PR introduces changes that breaks compatibility with other modules (If YES, please provide details below)
