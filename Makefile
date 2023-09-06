@@ -39,6 +39,9 @@ run-portainer:
 run:
 	docker compose -f docker-compose.ac.yml -f docker-compose.edgex.yml up -d
 
+run-edgex:
+	docker compose -f docker-compose.edgex.yml up -d
+
 run-physical:
 	docker compose -f docker-compose.ac.yml -f docker-compose.edgex.yml -f docker-compose.physical.card-reader.yml -f docker-compose.physical.controller-board.yml up -d
 
