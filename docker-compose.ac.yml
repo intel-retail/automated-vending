@@ -8,13 +8,12 @@ services:
   ms-authentication:
     container_name: automated-checkout_ms-authentication
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
     environment:
       EDGEX_SECURITY_SECRET_STORE: "false"
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: ms-authentication
     hostname: ms-authentication
     image: automated-checkout/ms-authentication:dev

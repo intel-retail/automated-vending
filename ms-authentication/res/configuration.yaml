@@ -1,0 +1,13 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+Writable:
+  LogLevel: INFO
+
+Service:
+  Host: localhost
+  Port: 48096
+  StartupMsg: This microservice checks if ID numbers from REST requests are authenticated
+
+Trigger:
+  Type: http
