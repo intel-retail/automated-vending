@@ -1,13 +1,14 @@
-# Copyright © 2022 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM golang:1.18-alpine3.16 AS builder
+FROM golang:1.20-alpine3.17 AS builder
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2022: Intel'
+  copyright='Copyright (c) 2023: Intel'
 
 # add git for go modules
-RUN apk update && apk add --no-cache make git gcc libc-dev zeromq-dev linux-headers
+# hadolint ignore=DL3018
+RUN apk update && apk add --no-cache make git linux-headers
 
 ENV GO111MODULE=on
 WORKDIR /usr/local/bin/
@@ -24,13 +25,12 @@ COPY . .
 RUN make gobuild
 
 # Next image - Copy built Go binary into new workspace
-FROM alpine
+FROM alpine:3.17
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2022: Intel'
+  copyright='Copyright (c) 2023: Intel'
 
-RUN apk --no-cache add zeromq
-COPY --from=builder /usr/local/bin/ms-authentication/res/configuration.toml /res/configuration.toml
+COPY --from=builder /usr/local/bin/ms-authentication/res/configuration.yaml /res/configuration.yaml
 COPY --from=builder /usr/local/bin/ms-authentication/main /ms-authentication
 COPY --from=builder /usr/local/bin/ms-authentication/cards.json /cards.json
 COPY --from=builder /usr/local/bin/ms-authentication/accounts.json /accounts.json
