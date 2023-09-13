@@ -221,6 +221,8 @@ services:
       EDGEX_SECURITY_SECRET_STORE: "false"
       MQTTBROKERINFO_HOST: edgex-mqtt-broker
       SERVICE_HOST: edgex-device-mqtt
+      MQTTBROKERINFO_INCOMINGTOPIC: Inference/DataTopic
+      MQTTBROKERINFO_RESPONSETOPIC: Inference/ResponseTopic
     hostname: edgex-device-mqtt
     image: edgexfoundry/device-mqtt:3.0.0
     networks:
@@ -237,7 +239,8 @@ services:
       - no-new-privileges:true
     user: 2002:2001
     volumes:
-      - ./res/device-mqtt:/res
+      - ./res/device-mqtt/devices:/res/devices
+      - ./res/device-mqtt/profiles:/res/profiles
 
 volumes:
   consul-config:
