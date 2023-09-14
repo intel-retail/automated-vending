@@ -33,13 +33,12 @@ services:
     image: "automated-checkout/ms-inventory:dev"
     container_name: automated-checkout_ms-inventory
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
     environment:
       EDGEX_SECURITY_SECRET_STORE: "false"
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: ms-inventory
     hostname: ms-inventory
     networks:

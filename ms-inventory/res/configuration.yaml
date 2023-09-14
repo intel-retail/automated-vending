@@ -1,0 +1,18 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+Writable:
+  LogLevel: DEBUG
+
+Service:
+  Host: localhost
+  Port: 48095
+  StartupMsg: This microservice exposes a CRUD interface for an inventory of items in a Automated Checkout
+
+Trigger:
+  Type: http
+
+ApplicationSettings:
+  AuditLogFileName: /tmp/auditlog.json
+  InventoryFileName: /tmp/inventory.json
+
