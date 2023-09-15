@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 Writable:
-  LogLevel: DEBUG
+  LogLevel: INFO
 
 Service:
   Host: localhost
