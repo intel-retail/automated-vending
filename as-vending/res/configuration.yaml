@@ -8,7 +8,11 @@ Service:
   Host: localhost
   Port: 48099
   StartupMsg: This microservice checks if ID numbers from REST requests are authenticated
-
+Clients:
+    core-command:
+      Protocol: "http"
+      Host: "localhost"
+      Port: 59882
 MessageBus:
   Optional:
     ClientId: "app-mqtt-export"
