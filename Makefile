@@ -100,4 +100,7 @@ hadolint:
 
 gobuild:
 	cd ms-authentication && \
-	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo main.go
+	cp -r *.json .. && \
+	cp ./res/configuration.toml ../res/configuration.toml && \
+	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo main.go && \
+	cp main ..
