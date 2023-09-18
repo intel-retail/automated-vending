@@ -177,12 +177,8 @@ services:
         condition: service_started
     environment:
       CLIENTS_CORE_COMMAND_HOST: edgex-core-command
-      CLIENTS_CORE_DATA_HOST: edgex-core-data
-      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
       EDGEX_SECURITY_SECRET_STORE: "false"
       SERVICE_HOST: as-vending
-      TRIGGER_EDGEXMESSAGEBUS_PUBLISHHOST_HOST: mqtt-broker
-      TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
       VENDING_AUTHENTICATIONENDPOINT: http://ms-authentication:48096/authentication
       VENDING_INVENTORYAUDITLOGSERVICE: http://ms-inventory:48095/auditlog
       VENDING_INVENTORYSERVICE: http://ms-inventory:48095/inventory/delta
