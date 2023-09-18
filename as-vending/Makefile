@@ -3,7 +3,7 @@
 
 .PHONY: build gobuild run gorun stop test lint
 
-MICROSERVICE=automated-checkout/as-vending
+MICROSERVICE=automated-vending/as-vending
 
 ARCH=$(shell uname -m)
 
