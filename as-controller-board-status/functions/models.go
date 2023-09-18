@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces"
 )
 
 // ControllerBoardStatusAppSettings is a data structure that holds the

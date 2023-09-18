@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -9,10 +9,10 @@ import (
 	"as-controller-board-status/routes"
 	"os"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/transforms"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/transforms"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 )
 
 const (
@@ -92,7 +92,7 @@ func (app *boardStatusAppService) CreateAndRunAppService(serviceKey string, newS
 	app.boardStatus.MinTemperatureThreshold = app.boardStatus.Configuration.MinTemperatureThreshold
 
 	// Create the function pipeline to run when an event is read on the device channels
-	err = app.service.SetFunctionsPipeline(
+	err = app.service.SetDefaultFunctionsPipeline(
 		transforms.NewFilterFor([]string{app.boardStatus.Configuration.DeviceName}).FilterByDeviceName,
 		app.boardStatus.CheckControllerBoardStatus,
 	)
@@ -110,9 +110,9 @@ func (app *boardStatusAppService) CreateAndRunAppService(serviceKey string, newS
 	}
 
 	// Tell the SDK to "start" and begin listening for events to trigger the pipeline
-	err = app.service.MakeItRun()
+	err = app.service.Run()
 	if err != nil {
-		app.lc.Errorf("MakeItRun returned error: %s", err.Error())
+		app.lc.Errorf("Run returned error: %s", err.Error())
 		return 1
 	}
 

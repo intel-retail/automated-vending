@@ -10,8 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
-	edgex_errors "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces/mocks"
+	edgex_errors "github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
