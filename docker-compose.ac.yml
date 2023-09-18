@@ -169,9 +169,9 @@ services:
     image: "automated-checkout/as-vending:dev"
     container_name: automated-checkout_as-vending
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
       consul:
         condition: service_started
@@ -180,7 +180,6 @@ services:
       CLIENTS_CORE_DATA_HOST: edgex-core-data
       CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
       EDGEX_SECURITY_SECRET_STORE: "false"
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: as-vending
       TRIGGER_EDGEXMESSAGEBUS_PUBLISHHOST_HOST: mqtt-broker
       TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker

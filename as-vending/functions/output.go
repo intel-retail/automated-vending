@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -453,7 +453,7 @@ func (vendingState *VendingState) SendCommand(lc logger.LoggingClient, actionNam
 	case http.MethodGet:
 		lc.Infof("executing %s action", actionName)
 		lc.Infof("Issuing GET command '%s' for device '%s'", commandName, deviceName)
-		response, err := vendingState.CommandClient.IssueGetCommandByName(context.Background(), deviceName, commandName, "no", "yes")
+		response, err := vendingState.CommandClient.IssueGetCommandByName(context.Background(), deviceName, commandName, false, true)
 		if err != nil {
 			return fmt.Errorf("failed to issue '%s' get command to '%s' device: %s", commandName, deviceName, err.Error())
 		}
