@@ -9,5 +9,8 @@ Service:
   Port: 48099
   StartupMsg: This microservice checks if ID numbers from REST requests are authenticated
 
-Trigger:
-  Type: http
+MessageBus:
+  Optional:
+    ClientId: "app-mqtt-export"
+
+# Using default Trigger config from common config
