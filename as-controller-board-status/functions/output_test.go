@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
+	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -29,12 +29,12 @@ func getCommonApplicationSettingsTyped() *config.ControllerBoardStatusConfig {
 		DeviceName:                                        "controller-board",
 		MaxTemperatureThreshold:                           temp51,
 		MinTemperatureThreshold:                           temp49,
-		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v2/device/name/Inference-device/vendingDoorStatus",
+		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v3/device/name/Inference-device/vendingDoorStatus",
 		NotificationCategory:                              "HW_HEALTH",
 		NotificationEmailAddresses:                        "test@site.com,test@site.com",
 		NotificationLabels:                                "HW_HEALTH",
 		NotificationReceiver:                              "System Administrator",
-		NotificationSender:                                "Automated Checkout Maintenance Notification",
+		NotificationSender:                                "Automated Vending Maintenance Notification",
 		NotificationSeverity:                              "CRITICAL",
 		NotificationName:                                  "maintenance-notification",
 		NotificationSubscriptionMaxRESTRetries:            10,
@@ -83,9 +83,12 @@ const (
 // x failure to run ProcessApplicationSettings due to missing config option
 // x failure to unmarshal ControllerBoardStatus from event reading
 // x failure to call processTemperature, which can be created by sending a
-//   status other than "Accepted" via the NotificationHost
+//
+// status other than "Accepted" via the NotificationHost
+//
 // x failure to call processVendingDoorState, which can be created by
-//   sending a status other than status OK to the DoorStatusCommandEndpoint
+//
+// sending a status other than status OK to the DoorStatusCommandEndpoint
 //
 // = 6 test cases total, 3 httptest servers
 //

@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -9,8 +9,8 @@ import (
 
 	"as-controller-board-status/functions"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
@@ -38,7 +38,7 @@ func (c *Controller) AddAllRoutes() error {
 }
 
 // GetStatus is a REST API endpoint that enables a web UI or some other downstream
-// service to inquire about the status of the upstream Automated Checkout hardware interface(s).
+// service to inquire about the status of the upstream Automated Vending hardware interface(s).
 func (c *Controller) GetStatus(writer http.ResponseWriter, req *http.Request) {
 	controllerBoardStatusJSON, err := utilities.GetAsJSON(c.boardStatus.ControllerBoardStatus)
 	if err != nil {

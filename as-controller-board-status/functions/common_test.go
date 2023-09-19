@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -43,12 +43,12 @@ func GetCommonSuccessConfig() *config.ControllerBoardStatusConfig {
 		DeviceName:                                        "controller-board",
 		MaxTemperatureThreshold:                           83.0,
 		MinTemperatureThreshold:                           10.0,
-		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v2/device/name/Inference-device/vendingDoorStatus",
+		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v3/device/name/Inference-device/vendingDoorStatus",
 		NotificationCategory:                              "HW_HEALTH",
 		NotificationEmailAddresses:                        "test@site.com,test@site.com",
 		NotificationLabels:                                "HW_HEALTH",
 		NotificationReceiver:                              "System Administrator",
-		NotificationSender:                                "Automated Checkout Maintenance Notification",
+		NotificationSender:                                "Automated Vending Maintenance Notification",
 		NotificationSeverity:                              "CRITICAL",
 		NotificationName:                                  "maintenance-notification",
 		NotificationSubscriptionMaxRESTRetries:            10,
