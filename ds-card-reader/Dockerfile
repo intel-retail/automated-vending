@@ -34,6 +34,7 @@ FROM alpine:3.17
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2023: Intel'
 
+# hadolint ignore=DL3018
 RUN apk add --update --no-cache dumb-init
 
 COPY --from=builder /usr/local/bin/ds-card-reader/res/profiles/ds-card-reader.yaml /res/profiles/ds-card-reader.yaml
