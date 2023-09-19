@@ -34,10 +34,10 @@ stop:
 	docker rm -f $(MICROSERVICE):latest
 
 test:
-	go test -tags no_zmq -test.v -cover -count=1 ./... 
+	go test -test.v -cover -count=1 ./... 
 
 testHTML:
-	go test -tags no_zmq -test.v -coverprofile=test_coverage.out ./... && \
+	go test -test.v -coverprofile=test_coverage.out ./... && \
 	go tool cover -html=test_coverage.out
 
 lint:
