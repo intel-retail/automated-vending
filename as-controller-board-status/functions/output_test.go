@@ -84,11 +84,11 @@ const (
 // x failure to unmarshal ControllerBoardStatus from event reading
 // x failure to call processTemperature, which can be created by sending a
 //
-//	status other than "Accepted" via the NotificationHost
+// status other than "Accepted" via the NotificationHost
 //
 // x failure to call processVendingDoorState, which can be created by
 //
-//	sending a status other than status OK to the DoorStatusCommandEndpoint
+// sending a status other than status OK to the DoorStatusCommandEndpoint
 //
 // = 6 test cases total, 3 httptest servers
 //

@@ -3,7 +3,7 @@
 
 module as-controller-board-status
 
-go 1.18
+go 1.20
 
 require (
 	github.com/edgexfoundry/app-functions-sdk-go/v3 v3.0.1
