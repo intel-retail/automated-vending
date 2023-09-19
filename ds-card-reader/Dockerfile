@@ -8,6 +8,7 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
 
 
 # add git for go modules
+# hadolint ignore=DL3018
 RUN apk update && apk add --no-cache make git gcc libc-dev linux-headers
 
 ENV GO111MODULE=on

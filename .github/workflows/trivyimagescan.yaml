@@ -93,7 +93,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/ds-card-reader:dev'
+            image-ref: 'automated-vending/ds-card-reader:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-ds-card-reader.sarif'
