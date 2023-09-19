@@ -9,6 +9,12 @@ Service:
   Port: 48094
   StartupMsg: This EdgeX application service reads events from a controller board device service and propagates the information from the controller board to other services and API endpoints
 
+Clients:
+  support-notifications:
+    Protocol: http
+    Host: localhost
+    Port: 59860
+
 MessageBus:
   Optional:
     ClientId: as-controller-board-status
