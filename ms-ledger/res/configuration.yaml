@@ -1,0 +1,17 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+Writable:
+  LogLevel: INFO
+
+Service:
+  Host: localhost
+  Port: 48093
+  StartupMsg: This microservice exposes a CRUD interface for financial transactions in a ledger
+
+Trigger:
+  Type: http
+
+ApplicationSettings:
+  InventoryEndpoint: http://localhost:48095/inventory
+  LedgerFileName: /tmp/ledger.json
