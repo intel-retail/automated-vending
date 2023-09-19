@@ -34,7 +34,6 @@ FROM alpine:3.17
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2023: Intel'
 
-RUN apk --no-cache add zeromq
 COPY --from=builder /usr/local/bin/as-vending/res/configuration.yaml /res/configuration.yaml
 COPY --from=builder /usr/local/bin/as-vending/main /as-vending
 
