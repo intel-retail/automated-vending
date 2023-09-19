@@ -23,7 +23,7 @@ ControllerBoardStatus:
   NotificationEmailAddresses: your-email@site.com
   NotificationLabels: HW_HEALTH
   NotificationReceiver: SystemAdministrator
-  NotificationSender: AutomatedCheckoutMaintenanceNotification
+  NotificationSender: AutomatedVendingMaintenanceNotification
   NotificationSeverity: CRITICAL
   NotificationName: maintenance-notification
   NotificationSubscriptionMaxRESTRetries: 10

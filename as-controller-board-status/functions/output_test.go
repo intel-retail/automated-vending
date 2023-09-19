@@ -34,7 +34,7 @@ func getCommonApplicationSettingsTyped() *config.ControllerBoardStatusConfig {
 		NotificationEmailAddresses:                        "test@site.com,test@site.com",
 		NotificationLabels:                                "HW_HEALTH",
 		NotificationReceiver:                              "System Administrator",
-		NotificationSender:                                "Automated Checkout Maintenance Notification",
+		NotificationSender:                                "Automated Vending Maintenance Notification",
 		NotificationSeverity:                              "CRITICAL",
 		NotificationName:                                  "maintenance-notification",
 		NotificationSubscriptionMaxRESTRetries:            10,

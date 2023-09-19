@@ -28,7 +28,7 @@ const (
 // It is a decision function that allows for multiple devices to have their events processed
 // correctly by this application service. In this case, only one unique type of EdgeX device will come
 // through to this function, but in general this is basically a template function that is also followed
-// in other services in the Automated Checkout project.
+// in other services in the Automated Vending project.
 func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.AppFunctionContext, data interface{}) (bool, interface{}) {
 	if data == nil {
 		// We didn't receive a result
@@ -121,7 +121,7 @@ func getTempThresholdExceededMessage(minOrMax string, avgTemp float64, tempThres
 	if minOrMax != maximum && minOrMax != minimum {
 		return "", fmt.Errorf("Please specify minOrMax as \"%v\" or \"%v\", the value given was \"%v\"", maximum, minimum, minOrMax)
 	}
-	resultMessage := fmt.Sprintf("The internal automated checkout's temperature is currently %.2f, and this temperature exceeds the configured %v temperature threshold of %v degrees. The automated checkout needs maintenance as of: %s", avgTemp, minOrMax, tempThreshold, time.Now().Format("_2 Jan, Mon | 3:04PM MST"))
+	resultMessage := fmt.Sprintf("The internal automated vending's temperature is currently %.2f, and this temperature exceeds the configured %v temperature threshold of %v degrees. The automated vending needs maintenance as of: %s", avgTemp, minOrMax, tempThreshold, time.Now().Format("_2 Jan, Mon | 3:04PM MST"))
 	return resultMessage, nil
 }
 
