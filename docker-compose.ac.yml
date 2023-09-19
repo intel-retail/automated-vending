@@ -30,8 +30,8 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: 2002:2001
   ms-inventory:
-    image: "automated-checkout/ms-inventory:dev"
-    container_name: automated-checkout_ms-inventory
+    image: "automated-vending/ms-inventory:dev"
+    container_name: automated-vending_ms-inventory
     depends_on:
       core-data:
         condition: service_started

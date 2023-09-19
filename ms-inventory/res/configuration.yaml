@@ -7,7 +7,7 @@ Writable:
 Service:
   Host: localhost
   Port: 48095
-  StartupMsg: This microservice exposes a CRUD interface for an inventory of items in a Automated Checkout
+  StartupMsg: This microservice exposes a CRUD interface for an inventory of items in an Automated Vending system
 
 Trigger:
   Type: http
