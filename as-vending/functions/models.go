@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	clientInterfaces "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
+	clientInterfaces "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces"
 )
 
 // VendingState is a representation of the entire state of vending workflow.

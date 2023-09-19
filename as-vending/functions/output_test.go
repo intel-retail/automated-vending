@@ -12,12 +12,12 @@ import (
 	"os"
 	"testing"
 
-	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-	edgexError "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	client_mocks "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
+	edgexError "github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 
 	"github.com/stretchr/testify/assert"

@@ -1,0 +1,43 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+Writable:
+  LogLevel: INFO
+
+Service:
+  Host: localhost
+  Port: 48099
+  StartupMsg: This microservice checks if ID numbers from REST requests are authenticated
+
+Clients:
+  core-command:
+    Protocol: "http"
+    Host: "localhost"
+    Port: 59882
+
+MessageBus:
+  Optional:
+    ClientId: "as-vending"
+
+# Using default Trigger config from common config
+Vending:
+  AuthenticationEndpoint: "http://localhost:48096/authentication"
+  ControllerBoardDisplayResetCmd: "displayReset"
+  ControllerBoardDisplayRow0Cmd: "displayRow0"
+  ControllerBoardDisplayRow1Cmd: "displayRow1"
+  ControllerBoardDisplayRow2Cmd: "displayRow2"
+  ControllerBoardDisplayRow3Cmd: "displayRow3"
+  ControllerBoardLock1Cmd: "lock1"
+  ControllerBoardLock2Cmd: "lock2"
+  CardReaderDeviceName  : "card-reader"
+  InferenceDeviceName: "Inference-device"
+  ControllerBoardDeviceName: "controller-board"
+  DoorCloseStateTimeoutDuration: "20s"
+  DoorOpenStateTimeoutDuration: "15s"
+  InferenceDoorStatusCmd: "inferenceDoorStatus"
+  InferenceHeartbeatCmd: "inferenceHeartbeat"
+  InferenceTimeoutDuration: "20s"
+  InventoryAuditLogService: "http://localhost:48095/auditlog"
+  InventoryService: "http://localhost:48095/inventory/delta"
+  LCDRowLength: 19
+  LedgerService: "http://localhost:48093/ledger"

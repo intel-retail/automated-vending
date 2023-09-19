@@ -1,9 +1,9 @@
-# Copyright © 2022 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
 .PHONY: build gobuild run gorun stop test lint
 
-MICROSERVICE=automated-checkout/as-vending
+MICROSERVICE=automated-vending/as-vending
 
 ARCH=$(shell uname -m)
 
@@ -19,7 +19,7 @@ docker:
 		.
 
 gobuild: tidy
-	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo main.go
+	CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -a main.go
 
 run:
 	docker run \
@@ -34,10 +34,10 @@ stop:
 	docker rm -f $(MICROSERVICE):latest
 
 test:
-	go test -tags no_zmq -test.v -cover -count=1 ./... 
+	go test -test.v -cover -count=1 ./... 
 
 testHTML:
-	go test -tags no_zmq -test.v -coverprofile=test_coverage.out ./... && \
+	go test -test.v -coverprofile=test_coverage.out ./... && \
 	go tool cover -html=test_coverage.out
 
 lint:

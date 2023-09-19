@@ -166,24 +166,19 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
   as-vending:
-    image: "automated-checkout/as-vending:dev"
-    container_name: automated-checkout_as-vending
+    image: "automated-vending/as-vending:dev"
+    container_name: automated-vending_as-vending
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
       consul:
         condition: service_started
     environment:
       CLIENTS_CORE_COMMAND_HOST: edgex-core-command
-      CLIENTS_CORE_DATA_HOST: edgex-core-data
-      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
       EDGEX_SECURITY_SECRET_STORE: "false"
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: as-vending
-      TRIGGER_EDGEXMESSAGEBUS_PUBLISHHOST_HOST: mqtt-broker
-      TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
       VENDING_AUTHENTICATIONENDPOINT: http://ms-authentication:48096/authentication
       VENDING_INVENTORYAUDITLOGSERVICE: http://ms-inventory:48095/auditlog
       VENDING_INVENTORYSERVICE: http://ms-inventory:48095/inventory/delta
