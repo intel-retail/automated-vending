@@ -1,10 +1,10 @@
-# Copyright © 2022 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
 .PHONY: build gobuild run gorun stop test lint
 
 
-MICROSERVICE=automated-checkout/ds-controller-board
+MICROSERVICE=automated-vending/ds-controller-board
 
 ARCH=$(shell uname -m)
 
@@ -20,7 +20,7 @@ docker:
 		.
 
 gobuild: tidy
-	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo -o ds-controller-board
+	CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -a -o ds-controller-board
 
 run:
 	docker run \
@@ -35,7 +35,7 @@ stop:
 	docker rm -f $(MICROSERVICE):dev
 
 test:
-	go test -tags no_zmq -test.v \
+	go test -test.v \
 		-cover \
 		./...
 
@@ -47,7 +47,7 @@ testHTML:
 	go tool cover -html=test_coverage.out
 
 testPhysical:
-	sudo -E go test -tags no_zmq -test.v \
+	sudo -E go test -test.v \
 		-cover \
 		-tags=physical \
 		./...
