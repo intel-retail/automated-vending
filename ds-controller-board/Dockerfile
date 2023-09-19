@@ -32,7 +32,8 @@ FROM alpine:3.17
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
   copyright='Copyright (c) 2023: Intel'
 
-RUN apk add --update --no-cache zeromq dumb-init
+# hadolint ignore=DL3018
+RUN apk add --update --no-cache dumb-init
 
 COPY --from=builder /app/res/profiles/ds-controller-board.yaml /res/profiles/ds-controller-board.yaml
 COPY --from=builder /app/res/devices/device-list.toml /res/devices/device-list.toml
