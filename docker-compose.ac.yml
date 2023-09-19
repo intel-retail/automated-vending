@@ -57,8 +57,8 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
   ms-ledger:
-    image: "automated-checkout/ms-ledger:dev"
-    container_name: automated-checkout_ms-ledger
+    image: "automated-vending/ms-ledger:dev"
+    container_name: automated-vending_ms-ledger
     depends_on:
       data:
         condition: service_started
