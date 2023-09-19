@@ -38,7 +38,7 @@ func (c *Controller) AddAllRoutes() error {
 }
 
 // GetStatus is a REST API endpoint that enables a web UI or some other downstream
-// service to inquire about the status of the upstream Automated Checkout hardware interface(s).
+// service to inquire about the status of the upstream Automated Vending hardware interface(s).
 func (c *Controller) GetStatus(writer http.ResponseWriter, req *http.Request) {
 	controllerBoardStatusJSON, err := utilities.GetAsJSON(c.boardStatus.ControllerBoardStatus)
 	if err != nil {
