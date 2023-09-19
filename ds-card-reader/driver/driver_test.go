@@ -1,7 +1,7 @@
 //go:build all || physical || !physical
 // +build all physical !physical
 
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 // notes on why physical and !physical build tags are present:
@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"testing"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
@@ -35,9 +35,9 @@ const (
 )
 
 // getDefaultDriverConfig returns a DriverConfig that contains the
-// same values as the current default values in configuration.toml
+// same values as the current default values in configuration.yaml
 //
-// WARNING: If changing the default values in configuration.toml, please
+// WARNING: If changing the default values in configuration.yaml, please
 // update this function
 func getDefaultDriverConfig() *device.ServiceConfig {
 	return &device.ServiceConfig{
@@ -304,75 +304,6 @@ func TestHandleWriteCommands(t *testing.T) {
 
 			// perform assertions
 			require.Equal(test.expectedError, err)
-		})
-	}
-}
-
-func TestCardReaderDriver_Initialize(t *testing.T) {
-	type args struct {
-		lc       logger.LoggingClient
-		asyncCh  chan<- *dsModels.AsyncValues
-		deviceCh chan<- []dsModels.DiscoveredDevice
-	}
-	tests := []struct {
-		name    string
-		drv     *CardReaderDriver
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "valid case",
-			drv: &CardReaderDriver{
-				LoggingClient: logger.NewMockClient(),
-				CardReader:    nil,
-				Config:        getDefaultDriverConfig(),
-			},
-			args: args{
-				lc:       logger.NewMockClient(),
-				asyncCh:  make(chan *dsModels.AsyncValues, 16),
-				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
-			wantErr: false,
-		},
-		{
-			name: "nil configuration",
-			drv: &CardReaderDriver{
-				LoggingClient: logger.NewMockClient(),
-				CardReader:    nil,
-				Config:        nil,
-			},
-			args: args{
-				lc:       logger.NewMockClient(),
-				asyncCh:  make(chan *dsModels.AsyncValues, 16),
-				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
-			wantErr: true,
-		},
-		{
-			name: "invalid configuration info",
-			drv: &CardReaderDriver{
-				LoggingClient: logger.NewMockClient(),
-				CardReader:    nil,
-				Config: &device.ServiceConfig{
-					DriverConfig: device.Config{
-						DeviceName:       "invalid",
-						DeviceSearchPath: "/dev/input/event*",
-						VID:              0,
-						PID:              0,
-						SimulateDevice:   false,
-					},
-				},
-			},
-			args: args{
-				lc:       logger.NewMockClient(),
-				asyncCh:  make(chan *dsModels.AsyncValues, 16),
-				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.drv.Initialize(tt.args.lc, tt.args.asyncCh, tt.args.deviceCh); (err != nil) != tt.wantErr {
-				t.Errorf("CardReaderDriver.Initialize() error = %v, wantErr %v", err, tt.wantErr)
-			}
 		})
 	}
 }

@@ -1,47 +1,55 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package driver
 
 import (
-	"errors"
 	"fmt"
+	"sync"
 
 	common "ds-card-reader/common"
 	device "ds-card-reader/device"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/device-sdk-go/v3/pkg/interfaces"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
 
 // CardReaderDriver represents the EdgeX driver that interfaces with the
 // underlying device
 type CardReaderDriver struct {
 	LoggingClient logger.LoggingClient
+	asyncCh       chan<- *dsModels.AsyncValues
 	CardReader    device.CardReader
 	Config        *device.ServiceConfig
 
-	svc *service.DeviceService
+	sdk interfaces.DeviceServiceSDK
+}
+
+var once sync.Once
+var cardReaderDriver *CardReaderDriver
+
+func NewCardReaderDriver() interfaces.ProtocolDriver {
+	once.Do(func() {
+		cardReaderDriver = new(CardReaderDriver)
+	})
+	return cardReaderDriver
 }
 
 // Initialize initializes the card reader device within EdgeX. This is the
 // main entrypoint of this application
-func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice) (err error) {
+func (drv *CardReaderDriver) Initialize(sdk interfaces.DeviceServiceSDK) (err error) {
 	// propagate the logging client to the driver so it can use it too
-	drv.LoggingClient = lc
+	drv.sdk = sdk
+	drv.LoggingClient = sdk.LoggingClient()
+	drv.asyncCh = sdk.AsyncValuesChannel()
 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.Config == nil {
-		drv.svc = service.RunningService()
-		if drv.svc == nil {
-			return errors.New("custom card reader driver service is nil")
-		}
-
 		drv.Config = &device.ServiceConfig{}
 
-		err := drv.svc.LoadCustomConfig(drv.Config, "DriverConfig")
+		err := sdk.LoadCustomConfig(drv.Config, "DriverConfig")
 		if err != nil {
 			return fmt.Errorf("custom card reader configuration failed to load: %v", err)
 		}
@@ -52,8 +60,8 @@ func (drv *CardReaderDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- 
 	// initialize the card reader device so that it can be controlled by our
 	// EdgeX driver, and so that it can store configuration values
 	drv.CardReader, err = device.InitializeCardReader(
-		lc,
-		asyncCh,
+		drv.LoggingClient,
+		drv.asyncCh,
 		drv.Config.DriverConfig.DeviceSearchPath,
 		drv.Config.DriverConfig.DeviceName,
 		drv.Config.DriverConfig.VID,
@@ -144,12 +152,25 @@ func (drv *CardReaderDriver) RemoveDevice(deviceName string, protocols map[strin
 	return nil
 }
 
+// DisconnectDevice allows EdgeX to emulate disconnection
+func (drv *CardReaderDriver) DisconnectDevice(deviceName string, protocols map[string]models.ProtocolProperties) error {
+	return nil
+}
+
 // Stop allows EdgeX to emulate stopping the device
 func (drv *CardReaderDriver) Stop(force bool) error {
 	return nil
 }
 
-// DisconnectDevice allows EdgeX to emulate disconnection
-func (drv *CardReaderDriver) DisconnectDevice(deviceName string, protocols map[string]models.ProtocolProperties) error {
+func (drv *CardReaderDriver) Start() error {
+	return nil
+}
+
+func (drv *CardReaderDriver) Discover() error {
+	return fmt.Errorf("driver's Discover function isn't implemented")
+}
+
+func (drv *CardReaderDriver) ValidateDevice(device models.Device) error {
+	drv.LoggingClient.Debug("Driver's ValidateDevice function isn't implemented")
 	return nil
 }
