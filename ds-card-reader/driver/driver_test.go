@@ -20,11 +20,13 @@ import (
 	"fmt"
 	"testing"
 
+	sdkMocks "github.com/edgexfoundry/device-sdk-go/v3/pkg/interfaces/mocks"
 	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 	assert "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	require "github.com/stretchr/testify/require"
 )
 
@@ -35,9 +37,9 @@ const (
 )
 
 // getDefaultDriverConfig returns a DriverConfig that contains the
-// same values as the current default values in configuration.yaml
+// same values as the current default values in configuration.toml
 //
-// WARNING: If changing the default values in configuration.yaml, please
+// WARNING: If changing the default values in configuration.toml, please
 // update this function
 func getDefaultDriverConfig() *device.ServiceConfig {
 	return &device.ServiceConfig{
@@ -304,6 +306,79 @@ func TestHandleWriteCommands(t *testing.T) {
 
 			// perform assertions
 			require.Equal(test.expectedError, err)
+		})
+	}
+}
+
+func TestCardReaderDriver_Initialize(t *testing.T) {
+	type args struct {
+		lc       logger.LoggingClient
+		asyncCh  chan<- *dsModels.AsyncValues
+		deviceCh chan<- []dsModels.DiscoveredDevice
+	}
+	tests := []struct {
+		name    string
+		drv     *CardReaderDriver
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "valid case",
+			drv: &CardReaderDriver{
+				LoggingClient: logger.NewMockClient(),
+				CardReader:    nil,
+				Config:        getDefaultDriverConfig(),
+			},
+			args: args{
+				lc:       logger.NewMockClient(),
+				asyncCh:  make(chan *dsModels.AsyncValues, 16),
+				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
+			wantErr: false,
+		},
+		{
+			name: "nil configuration",
+			drv: &CardReaderDriver{
+				LoggingClient: logger.NewMockClient(),
+				CardReader:    nil,
+				Config:        nil,
+			},
+			args: args{
+				lc:       logger.NewMockClient(),
+				asyncCh:  make(chan *dsModels.AsyncValues, 16),
+				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
+			wantErr: true,
+		},
+		{
+			name: "invalid configuration info",
+			drv: &CardReaderDriver{
+				LoggingClient: logger.NewMockClient(),
+				CardReader:    nil,
+				Config: &device.ServiceConfig{
+					DriverConfig: device.Config{
+						DeviceName:       "invalid",
+						DeviceSearchPath: "/dev/input/event*",
+						VID:              0,
+						PID:              0,
+						SimulateDevice:   false,
+					},
+				},
+			},
+			args: args{
+				lc:       logger.NewMockClient(),
+				asyncCh:  make(chan *dsModels.AsyncValues, 16),
+				deviceCh: make(chan []dsModels.DiscoveredDevice, 16)},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSDK := &sdkMocks.DeviceServiceSDK{}
+			mockSDK.On("LoggingClient").Return(tt.args.lc)
+			mockSDK.On("AsyncValuesChannel").Return(nil)
+			mockSDK.On("LoadCustomConfig", mock.Anything, mock.Anything).Return(nil)
+			if err := tt.drv.Initialize(mockSDK); (err != nil) != tt.wantErr {
+				t.Errorf("CardReaderDriver.Initialize() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }
