@@ -1,14 +1,14 @@
 # Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-DeviceList:
-  - Name: card-reader
-    ProfileName: rfid-card-reader
-    Protocols:
+deviceList:
+  - name: card-reader
+    profileName: rfid-card-reader
+    protocols:
       other:
         Address: simple01
         Port: 300
-    AutoEvents:
-      - Interval: 3s
-        OnChange: true
-        SourceName: status
+    autoEvents:
+      - interval: 3s
+        onChange: true
+        sourceName: status
