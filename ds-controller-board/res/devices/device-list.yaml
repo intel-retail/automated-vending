@@ -6,7 +6,7 @@ deviceList:
   name: controller-board
   profileName: ds-controller-board
   protocols: 
-    autoEvents:
-      interval: 3s
-      onChange: true
-      sourceName: controller-board-status
+  autoEvents:
+    interval: 3s
+    onChange: true
+    sourceName: controller-board-status
