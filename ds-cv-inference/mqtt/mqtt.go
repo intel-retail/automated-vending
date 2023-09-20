@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package mqtt
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -56,7 +57,7 @@ func NewMqttConnection(connectionString string) Connection {
 	return mc
 }
 
-//define a function for the default message handler
+// define a function for the default message handler
 var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 
 	var edgeXMessage map[string]string
@@ -67,7 +68,12 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 
 	fmt.Printf("received message: %v+", edgeXMessage)
 
-	switch edgeXMessage["cmd"] {
+	words := strings.Split(msg.Topic(), "/")
+	cmd := words[2]
+	uuid := words[4]
+	publishTopic := fmt.Sprintf("%s/%s", responseTopic, uuid)
+
+	switch cmd {
 	case "inferenceHeartbeat":
 		{
 			pingMessage := edgeXMessage
@@ -77,7 +83,7 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 			if err != nil {
 				fmt.Println("Failed to marshal mqtt message")
 			}
-			token := client.Publish(responseTopic, 0, false, pongMessage)
+			token := client.Publish(publishTopic, 0, false, pongMessage)
 			token.Wait()
 		}
 	case "inferenceDoorStatus":
@@ -90,7 +96,7 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 			if err != nil {
 				fmt.Println("Failed to marshal mqtt message")
 			}
-			token := client.Publish(responseTopic, 0, false, pongMessage)
+			token := client.Publish(publishTopic, 0, false, pongMessage)
 			token.Wait()
 			checkDoorStatus(isDoorClosed, client)
 		}
@@ -141,16 +147,14 @@ func checkDoorStatus(isDoorClosed string, client MQTT.Client) {
 func SendDeltaData(client MQTT.Client, delta []byte) {
 
 	cmdSKUDelta := "inferenceSkuDelta"
-
+	publishTopic := fmt.Sprintf("%s/%s/%s", dataTopic, "Inference-device", cmdSKUDelta)
 	edgeXMessage := make(map[string]string)
-	edgeXMessage["name"] = "Inference-device"
-	edgeXMessage["cmd"] = cmdSKUDelta
 	edgeXMessage["method"] = "get"
 	edgeXMessage[cmdSKUDelta] = string(delta)
 
 	deltaMessage, _ := json.Marshal(edgeXMessage)
 	fmt.Println("Final deltaMessage is ", string(deltaMessage))
-	token := client.Publish(dataTopic, 0, false, deltaMessage)
+	token := client.Publish(publishTopic, 0, false, deltaMessage)
 	token.Wait()
 }
 
@@ -173,7 +177,7 @@ func (mqttCon *Connection) Connect(connectionString string) {
 	}
 }
 
-func (mqttCon *Connection) SubscribeToAutomatedCheckout() {
+func (mqttCon *Connection) SubscribeToAutomatedVending() {
 	//subscribe to the topic inference/CommandTopic and handle messages in the commandTopicFunction
 	attempts := 0
 	for attempts < retryCount {

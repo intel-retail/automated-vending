@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -38,12 +38,12 @@ func main() {
 	}
 	defer skuMappingJSONFile.Close()
 
-	skuMappingJSONByte, _ := ioutil.ReadAll(skuMappingJSONFile)
+	skuMappingJSONByte, _ := io.ReadAll(skuMappingJSONFile)
 
 	inferenceInit(*directory, *model, *configFile, *confidence, skuMappingJSONByte)
 
 	mqttConnection := mqtt.NewMqttConnection(*mqttAddress)
-	mqttConnection.SubscribeToAutomatedCheckout()
+	mqttConnection.SubscribeToAutomatedVending()
 	defer mqttConnection.Disconnect()
 
 	inference.Stream = mjpeg.NewStream()

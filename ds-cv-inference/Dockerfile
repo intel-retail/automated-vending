@@ -1,4 +1,4 @@
-# Copyright © 2022 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
 ARG OPENVINO_BASE=ubuntu20_dev
@@ -28,6 +28,7 @@ COPY go.* /go/src/ds-cv-inference/
 RUN go mod download
 
 COPY . /go/src/ds-cv-inference
+RUN go mod tidy
 
 RUN /bin/bash -c "source /opt/intel/openvino/setupvars.sh && echo building ds-cv-inference... && go build -o ds-cv-inference" && \
       chmod +x entrypoint.sh
