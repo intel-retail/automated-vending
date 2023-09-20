@@ -3,7 +3,7 @@
 
 # Pre-define Devices
 deviceList:
-  dame: controller-board
+  name: controller-board
   profileName: ds-controller-board
   protocols: 
     autoEvents:
