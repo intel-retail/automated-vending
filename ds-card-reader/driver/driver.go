@@ -5,7 +5,6 @@ package driver
 
 import (
 	"fmt"
-	"sync"
 
 	common "ds-card-reader/common"
 	device "ds-card-reader/device"
@@ -27,14 +26,8 @@ type CardReaderDriver struct {
 	sdk interfaces.DeviceServiceSDK
 }
 
-var once sync.Once
-var cardReaderDriver *CardReaderDriver
-
 func NewCardReaderDriver() interfaces.ProtocolDriver {
-	once.Do(func() {
-		cardReaderDriver = new(CardReaderDriver)
-	})
-	return cardReaderDriver
+	return &CardReaderDriver{}
 }
 
 // Initialize initializes the card reader device within EdgeX. This is the
@@ -171,6 +164,5 @@ func (drv *CardReaderDriver) Discover() error {
 }
 
 func (drv *CardReaderDriver) ValidateDevice(device models.Device) error {
-	drv.LoggingClient.Debug("Driver's ValidateDevice function isn't implemented")
 	return nil
 }

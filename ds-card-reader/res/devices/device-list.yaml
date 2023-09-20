@@ -12,5 +12,3 @@ DeviceList:
       - Interval: 3s
         OnChange: true
         SourceName: status
-    Properties:
-    Tags:

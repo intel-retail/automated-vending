@@ -1,24 +1,12 @@
 # Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-MaxEventSize: 0
 Writable:
   LogLevel: INFO
-  Reading:
-    ReadingUnits: true
 Service:
   Host: localhost
   Port: 48098
   StartupMsg: Card Reader device service started
-Clients:
-  core-data:
-    Protocol: http
-    Host: localhost
-    Port: 59880
-  core-metadata:
-    Protocol: http
-    Host: localhost
-    Port: 59881
 DriverConfig:
   DeviceName: card-reader
   DeviceSearchPath: ''
@@ -26,17 +14,8 @@ DriverConfig:
   PID: 0
   SimulateDevice: true
 Device:
-  DataTransform: true
-  MaxCmdOps: 128
-  MaxCmdValueLen: 256
   ProfilesDir: ./res/profiles
   DevicesDir: ./res/devices
-  EnableAsyncReadings: true
-  AsyncBufferSize: 16
-  Labels: []
-  Discovery:
-    Enabled: false
-    Interval: 30s
 MessageBus:
   Optional:
     ClientId: ds-card-reader
