@@ -8,7 +8,7 @@ import (
 
 	"os"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg"
 )
 
 const (
@@ -52,8 +52,8 @@ func main() {
 		lc.Errorf("failed to add all Routes: %s", err.Error())
 		os.Exit(1)
 	}
-	if err := service.MakeItRun(); err != nil {
-		lc.Errorf("MakeItRun returned error: %s", err.Error())
+	if err := service.Run(); err != nil {
+		lc.Errorf("Run returned error: %s", err.Error())
 		os.Exit(1)
 	}
 
