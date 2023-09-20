@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -6,7 +6,7 @@ package main
 import (
 	"ds-card-reader/driver"
 
-	"github.com/edgexfoundry/device-sdk-go/v2/pkg/startup"
+	"github.com/edgexfoundry/device-sdk-go/v3/pkg/startup"
 )
 
 const (
@@ -15,5 +15,6 @@ const (
 )
 
 func main() {
-	startup.Bootstrap(serviceName, version, new(driver.CardReaderDriver))
+	drv := driver.NewCardReaderDriver()
+	startup.Bootstrap(serviceName, version, drv)
 }

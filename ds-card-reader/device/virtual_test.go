@@ -1,7 +1,7 @@
 //go:build all || !physical
 // +build all !physical
 
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -12,18 +12,18 @@ import (
 
 	"ds-card-reader/common"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	logger "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	logger "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
 
 const (
-	virtualDeviceSearchPath            = ""
-	virtualDeviceName                  = "ds-card-reader"
-	virtualVID                         = uint16(0x0000)
-	virtualPID                         = uint16(0x0000)
-	expectedCardNumberVirtual          = "0123456789"
+	virtualDeviceSearchPath   = ""
+	virtualDeviceName         = "ds-card-reader"
+	virtualVID                = uint16(0x0000)
+	virtualPID                = uint16(0x0000)
+	expectedCardNumberVirtual = "0123456789"
 )
 
 // TestVirtualCardReader validates that the InitializeCardReader
