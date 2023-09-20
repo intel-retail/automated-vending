@@ -115,8 +115,8 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
   ds-controller-board:
-    image: "automated-checkout/ds-controller-board:dev"
-    container_name: automated-checkout_ds-controller-board
+    image: "automated-vending/ds-controller-board:dev"
+    container_name: automated-vending-controller-board
     depends_on:
       data:
         condition: service_started

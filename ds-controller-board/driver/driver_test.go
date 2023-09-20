@@ -1,7 +1,7 @@
 //go:build all || !physical
 // +build all !physical
 
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package driver
@@ -14,10 +14,11 @@ import (
 	"reflect"
 	"testing"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	sdkMocks "github.com/edgexfoundry/device-sdk-go/v3/pkg/interfaces/mocks"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -150,7 +151,11 @@ func CreateControllerBoardDriver(t *testing.T, virtual bool, initialize bool, ex
 	}
 
 	if initialize {
-		err = target.Initialize(lc, make(chan *dsModels.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
+		mockSDK := &sdkMocks.DeviceServiceSDK{}
+		mockSDK.On("LoggingClient").Return(lc)
+		mockSDK.On("AsyncValuesChannel").Return(nil)
+		mockSDK.On("LoadCustomConfig", mock.Anything, mock.Anything).Return(nil)
+		err = target.Initialize(mockSDK)
 		require.NoError(err)
 
 		virtual, ok := target.controllerBoard.(*device.ControllerBoardVirtual)
@@ -206,7 +211,11 @@ func TestControllerBoardDriver_Initialize(t *testing.T) {
 				config: tt.config,
 			}
 
-			err := drv.Initialize(tt.lc, make(chan *dsModels.AsyncValues), make(chan<- []dsModels.DiscoveredDevice))
+			mockSDK := &sdkMocks.DeviceServiceSDK{}
+			mockSDK.On("LoggingClient").Return(mocklc)
+			mockSDK.On("AsyncValuesChannel").Return(nil)
+			mockSDK.On("LoadCustomConfig", mock.Anything, mock.Anything).Return(nil)
+			err := drv.Initialize(mockSDK)
 			if tt.wantErr {
 				require.Error(t, err)
 				return

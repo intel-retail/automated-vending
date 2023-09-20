@@ -1,0 +1,26 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+Writable:
+  LogLevel: INFO
+
+Service:
+  Host: localhost
+  Port: 48097
+  StartupMsg: Device controller board started
+
+Device:
+  ProfilesDir: ./res/profiles
+  DevicesDir: ./res/devices
+
+MessageBus:
+  Optional:
+    ClientId: ds-controller-board
+
+DriverConfig:
+  DeviceName: controller-board
+  VID: 0000
+  PID: 0000
+  DisplayTimeout: 10s
+  LockTimeout: 30s
+  VirtualControllerBoard: true
