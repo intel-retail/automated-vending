@@ -9,7 +9,7 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
 
 # add git for go modules
 # hadolint ignore=DL3018
-RUN apk update && apk add --no-cache make git linux-headers
+RUN apk update && apk add --no-cache make git
 
 ENV GO111MODULE=on
 WORKDIR /usr/local/bin/
