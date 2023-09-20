@@ -4,38 +4,12 @@
 MaxEventSize: 0
 Writable:
   LogLevel: INFO
-  InsecureSecrets:
-    DB:
-      path: redisdb
-      Secrets:
-        username: ''
-        password: ''
   Reading:
     ReadingUnits: true
 Service:
-  HealthCheckInterval: 10s
   Host: localhost
-  ServerBindAddr: ''
   Port: 48098
   StartupMsg: Card Reader device service started
-  MaxRequestSize: 0
-  RequestTimeout: 5s
-  CORSConfiguration:
-    EnableCORS: false
-    CORSAllowCredentials: false
-    CORSAllowedOrigin: 'https://localhost'
-    CORSAllowedMethods: 'GET, POST, PUT, PATCH, DELETE'
-    CORSAllowedHeaders: >-
-      Authorization, Accept, Accept-Language, Content-Language, Content-Type,
-      X-Correlation-ID
-    CORSExposeHeaders: >-
-      Cache-Control, Content-Language, Content-Length, Content-Type, Expires,
-      Last-Modified, Pragma, X-Correlation-ID
-    CORSMaxAge: 3600
-Registry:
-  Host: localhost
-  Port: 8500
-  Type: consul
 Clients:
   core-data:
     Protocol: http
@@ -64,17 +38,5 @@ Device:
     Enabled: false
     Interval: 30s
 MessageBus:
-  Protocol: tcp
-  Host: localhost
-  Port: 1883
-  Type: mqtt
-  AuthMode: none
-  BaseTopicPrefix: edgex
   Optional:
     ClientId: ds-card-reader
-    Qos: '0'
-    KeepAlive: '10'
-    Retained: 'false'
-    AutoReconnect: 'true'
-    ConnectTimeout: '5'
-    SkipCertVerify: 'false'
