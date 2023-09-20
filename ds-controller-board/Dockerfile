@@ -37,7 +37,7 @@ LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
 RUN apk add --update --no-cache dumb-init
 
 COPY --from=builder /app/res/profiles/ds-controller-board.yaml /res/profiles/ds-controller-board.yaml
-COPY --from=builder /app/res/devices/device-list.toml /res/devices/device-list.toml
+COPY --from=builder /app/res/devices/device-list.yaml /res/devices/device-list.yaml
 COPY --from=builder /app/res/configuration.yaml /res/configuration.yaml
 COPY --from=builder /app/ds-controller-board /ds-controller-board
 
