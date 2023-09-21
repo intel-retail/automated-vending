@@ -69,6 +69,10 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 	fmt.Printf("received message: %v+", edgeXMessage)
 
 	words := strings.Split(msg.Topic(), "/")
+	if len(words) != 5 {
+		fmt.Println(http.StatusBadRequest, fmt.Sprintf("mqtt command topic not formatted for EdgeX 3.0: %s", msg.Topic()))
+		return
+	}
 	cmd := words[2]
 	uuid := words[4]
 	publishTopic := fmt.Sprintf("%s/%s", responseTopic, uuid)
