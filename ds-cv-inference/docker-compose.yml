@@ -1,6 +1,6 @@
 ---
 
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
 version: '3.4'
@@ -8,7 +8,7 @@ version: '3.4'
 services:
 
   ds-cv-inference:
-    image: automated-checkout/ds-cv-inference:dev
+    image: automated-vending/ds-cv-inference:dev
     command: ["/go/src/ds-cv-inference/images","127.0.0.1:1883","0.85","/go/src/ds-cv-inference/skumapping.json"]
     ports:
       - "127.0.0.1:9005:9005"

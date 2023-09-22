@@ -1,9 +1,9 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 module ds-cv-inference
 
-go 1.18
+go 1.20
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.2.0
