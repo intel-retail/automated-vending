@@ -6,6 +6,7 @@ package functions
 import (
 	"as-controller-board-status/config"
 	"fmt"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -121,6 +122,12 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	mockNotificationClient := &client_mocks.NotificationClient{}
 	mockNotificationClient.On("SendNotification", mock.Anything, mock.Anything).Return(nil, nil)
 
+	resp := common.BaseResponse{
+		StatusCode: http.StatusOK,
+	}
+	mockCommandClient := &client_mocks.CommandClient{}
+	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
+
 	// The success condition is ideal, and is configured to use URL's that all
 	// respond with responses that correspond to successful scenarios.
 	edgexcontextSuccess := pkg.NewAppFuncContextForTest(correlationID, lc)
@@ -165,9 +172,8 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	configBadNotificationHostThresholdsExceeded.VendingEndpoint = testServerStatusOK.URL
 	configBadNotificationHostThresholdsExceeded.MaxTemperatureThreshold = temp49
 
-	// Set bad MQTT and Vending endpoints to produce specific error conditions
-	// in processTemperature, which first sends a request to MQTT, then
-	// another request to the vending endpoint
+	// Set bad Vending endpoint to produce specific error conditions
+	// in processTemperature, which sends a request to the vending endpoint
 	//edgexcontextBadDoorStatusCommandEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadDoorStatusCommandEndpoint := getCommonApplicationSettingsTyped()
 	//configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint = testServerThrowError.URL
@@ -232,6 +238,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 					LastNotified:            time.Now().Add(time.Minute * -3),
 					Configuration:           configSuccess,
 					NotificationClient:      mockNotificationClient,
+					CommandClient:           mockCommandClient,
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
@@ -323,6 +330,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 					LastNotified:       time.Now().Add(time.Minute * -3),
 					Configuration:      configBadNotificationHostThresholdsExceeded,
 					NotificationClient: mockNotificationClient,
+					CommandClient:      mockCommandClient,
 				},
 				OutputBool:      true,
 				OutputInterface: controllerBoardStatusEventSuccess,
