@@ -61,21 +61,24 @@ func NewMqttConnection(connectionString string) Connection {
 var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 
 	var edgeXMessage map[string]string
-	if err := json.Unmarshal(msg.Payload(), &edgeXMessage); err != nil {
-		fmt.Println(http.StatusBadRequest, "Failed to unmarshal body")
-		return
-	}
 
-	fmt.Printf("received message: %v+", edgeXMessage)
+	fmt.Printf("received message on topic: %s", msg.Topic())
 
 	words := strings.Split(msg.Topic(), "/")
-	if len(words) != 5 {
+	numWords := len(words)
+	if numWords > 5 {
 		fmt.Println(http.StatusBadRequest, fmt.Sprintf("mqtt command topic not formatted for EdgeX 3.0: %s", msg.Topic()))
 		return
 	}
-	cmd := words[2]
-	uuid := words[4]
+	cmd := words[numWords-3]
+	method := words[numWords-2]
+	uuid := words[numWords-1]
 	publishTopic := fmt.Sprintf("%s/%s", responseTopic, uuid)
+
+	if !strings.EqualFold(method, "get") {
+		fmt.Println(http.StatusBadRequest, fmt.Sprintf("expected mqtt to have the method GET, got %s in the topic, %s", method, msg.Topic()))
+		return
+	}
 
 	switch cmd {
 	case "inferenceHeartbeat":
@@ -153,7 +156,6 @@ func SendDeltaData(client MQTT.Client, delta []byte) {
 	cmdSKUDelta := "inferenceSkuDelta"
 	publishTopic := fmt.Sprintf("%s/%s/%s", dataTopic, "Inference-device", cmdSKUDelta)
 	edgeXMessage := make(map[string]string)
-	edgeXMessage["method"] = "get"
 	edgeXMessage[cmdSKUDelta] = string(delta)
 
 	deltaMessage, _ := json.Marshal(edgeXMessage)
