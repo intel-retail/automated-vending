@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -13,7 +13,7 @@ import (
 	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
-const(
+const (
 	connectionTimeout = 15
 )
 
