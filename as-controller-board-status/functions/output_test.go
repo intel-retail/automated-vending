@@ -25,11 +25,13 @@ var now = time.Now()
 
 func getCommonApplicationSettingsTyped() *config.ControllerBoardStatusConfig {
 	return &config.ControllerBoardStatusConfig{
-		AverageTemperatureMeasurementDuration:             "-15s",
-		DeviceName:                                        "controller-board",
-		MaxTemperatureThreshold:                           temp51,
-		MinTemperatureThreshold:                           temp49,
-		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v3/device/name/Inference-device/vendingDoorStatus",
+		AverageTemperatureMeasurementDuration: "-15s",
+		DeviceName:                            "controller-board",
+		MaxTemperatureThreshold:               temp51,
+		MinTemperatureThreshold:               temp49,
+		//DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v3/device/name/Inference-device/vendingDoorStatus",
+		InferenceDeviceName:                               "Inference-device",
+		InferenceDoorStatusCmd:                            "inferenceDoorStatus",
 		NotificationCategory:                              "HW_HEALTH",
 		NotificationEmailAddresses:                        "test@site.com,test@site.com",
 		NotificationLabels:                                "HW_HEALTH",
@@ -123,7 +125,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// respond with responses that correspond to successful scenarios.
 	edgexcontextSuccess := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configSuccess := getCommonApplicationSettingsTyped()
-	configSuccess.DoorStatusCommandEndpoint = testServerStatusOK.URL
+	//configSuccess.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configSuccess.VendingEndpoint = testServerStatusOK.URL
 	configSuccess.MinTemperatureThreshold = temp51
 	configSuccess.MaxTemperatureThreshold = temp49
@@ -133,7 +135,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// board state that has more measurements than the cutoff
 	edgexcontextSuccessMinThresholdExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configSuccessMinThresholdExceeded := getCommonApplicationSettingsTyped()
-	configSuccessMinThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
+	//configSuccessMinThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configSuccessMinThresholdExceeded.VendingEndpoint = testServerStatusOK.URL
 	configSuccessMinThresholdExceeded.MinTemperatureThreshold = temp51
 
@@ -141,7 +143,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// and make the VendingEndpoint throw an error.
 	edgexcontextBadVendingEndpointMaxThresholdExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadVendingEndpointMaxThresholdExceeded := getCommonApplicationSettingsTyped()
-	configBadVendingEndpointMaxThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
+	//configBadVendingEndpointMaxThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configBadVendingEndpointMaxThresholdExceeded.VendingEndpoint = testServerThrowError.URL
 	configBadVendingEndpointMaxThresholdExceeded.MaxTemperatureThreshold = temp49
 
@@ -150,7 +152,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// we want. We want Accepted, but we're going to get 500
 	edgexcontextUnacceptingNotificationHostMaxThresholdExceeded := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configUnacceptingNotificationHostMaxThresholdExceeded := getCommonApplicationSettingsTyped()
-	configUnacceptingNotificationHostMaxThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
+	//configUnacceptingNotificationHostMaxThresholdExceeded.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configUnacceptingNotificationHostMaxThresholdExceeded.VendingEndpoint = testServerStatusOK.URL
 	configUnacceptingNotificationHostMaxThresholdExceeded.MaxTemperatureThreshold = temp49
 
@@ -166,9 +168,9 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// Set bad MQTT and Vending endpoints to produce specific error conditions
 	// in processTemperature, which first sends a request to MQTT, then
 	// another request to the vending endpoint
-	edgexcontextBadDoorStatusCommandEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
+	//edgexcontextBadDoorStatusCommandEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadDoorStatusCommandEndpoint := getCommonApplicationSettingsTyped()
-	configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint = testServerThrowError.URL
+	//configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint = testServerThrowError.URL
 	configBadDoorStatusCommandEndpoint.VendingEndpoint = testServerStatusOK.URL
 
 	// As described above, in order to produce the error condition for
@@ -176,7 +178,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	// the DoorStatusCommandEndpoint successfully first
 	edgexcontextBadVendingEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadVendingEndpoint := getCommonApplicationSettingsTyped()
-	configBadVendingEndpoint.DoorStatusCommandEndpoint = testServerStatusOK.URL
+	//configBadVendingEndpoint.DoorStatusCommandEndpoint = testServerStatusOK.URL
 	configBadVendingEndpoint.VendingEndpoint = testServerThrowError.URL
 
 	// The expected incoming event reading from the controller board device
@@ -329,21 +331,21 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				ShouldLastNotifiedBeDifferent:             false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
-			{
-				TestCaseName:      "Unsuccessful due to DoorStatusCommandEndpoint not responding with HTTP 200 OK, no temperature notification sent",
-				InputEdgexContext: edgexcontextBadDoorStatusCommandEndpoint,
-				InputData:         controllerBoardStatusEventSuccess,
-				InputCheckBoardStatus: CheckBoardStatus{
-					LastNotified:       time.Now().Add(time.Minute * -3),
-					Configuration:      configBadDoorStatusCommandEndpoint,
-					NotificationClient: mockNotificationClient,
-				},
-				OutputBool:                    true,
-				OutputInterface:               controllerBoardStatusEventSuccess,
-				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the MQTT device service: Failed to submit REST PUT request due to error: %v \\\"%v\\\": %v", "Put", configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint, "EOF"),
-				ShouldLastNotifiedBeDifferent: false,
-				ExpectedTemperatureMeasurementSliceLength: 1,
-			},
+			//{
+			//	TestCaseName:      "Unsuccessful due to DoorStatusCommandEndpoint not responding with HTTP 200 OK, no temperature notification sent",
+			//	InputEdgexContext: edgexcontextBadDoorStatusCommandEndpoint,
+			//	InputData:         controllerBoardStatusEventSuccess,
+			//	InputCheckBoardStatus: CheckBoardStatus{
+			//		LastNotified:       time.Now().Add(time.Minute * -3),
+			//		Configuration:      configBadDoorStatusCommandEndpoint,
+			//		NotificationClient: mockNotificationClient,
+			//	},
+			//	OutputBool:                    true,
+			//	OutputInterface:               controllerBoardStatusEventSuccess,
+			//	OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the MQTT device service: Failed to submit REST PUT request due to error: %v \\\"%v\\\": %v", "Put", configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint, "EOF"),
+			//	ShouldLastNotifiedBeDifferent: false,
+			//	ExpectedTemperatureMeasurementSliceLength: 1,
+			//},
 			{
 				TestCaseName:      "Unsuccessful due to VendingEndpoint not responding with HTTP 200 OK, no temperature notification sent",
 				InputEdgexContext: edgexcontextBadVendingEndpoint,

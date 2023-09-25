@@ -15,11 +15,11 @@ import (
 // ControllerBoardStatusAppSettings is a data structure that holds the
 // validated application settings (loaded from configuration.toml).
 type ControllerBoardStatusAppSettings struct {
-	AverageTemperatureMeasurementDuration     time.Duration
-	DeviceName                                string
-	MaxTemperatureThreshold                   float64
-	MinTemperatureThreshold                   float64
-	DoorStatusCommandEndpoint                 string
+	AverageTemperatureMeasurementDuration time.Duration
+	DeviceName                            string
+	MaxTemperatureThreshold               float64
+	MinTemperatureThreshold               float64
+	//DoorStatusCommandEndpoint                 string
 	NotificationCategory                      string
 	NotificationEmailAddresses                []string
 	NotificationLabels                        []string
@@ -70,6 +70,7 @@ type CheckBoardStatus struct {
 	Configuration                             *config.ControllerBoardStatusConfig
 	SubscriptionClient                        interfaces.SubscriptionClient
 	NotificationClient                        interfaces.NotificationClient
+	CommandClient                             interfaces.CommandClient
 	ControllerBoardStatus                     *ControllerBoardStatus
 	averageTemperatureMeasurement             time.Duration
 	notificationSubscriptionRESTRetryInterval time.Duration

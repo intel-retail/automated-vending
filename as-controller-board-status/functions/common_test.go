@@ -16,11 +16,11 @@ import (
 // These constants are used to simplify code repetition when working with the
 // config map/struct
 const (
-	AverageTemperatureMeasurementDuration     = "AverageTemperatureMeasurementDuration"
-	DeviceName                                = "DeviceName"
-	MaxTemperatureThreshold                   = "MaxTemperatureThreshold"
-	MinTemperatureThreshold                   = "MinTemperatureThreshold"
-	DoorStatusCommandEndpoint                 = "DoorStatusCommandEndpoint"
+	AverageTemperatureMeasurementDuration = "AverageTemperatureMeasurementDuration"
+	DeviceName                            = "DeviceName"
+	MaxTemperatureThreshold               = "MaxTemperatureThreshold"
+	MinTemperatureThreshold               = "MinTemperatureThreshold"
+	//DoorStatusCommandEndpoint                 = "DoorStatusCommandEndpoint"
 	NotificationCategory                      = "NotificationCategory"
 	NotificationEmailAddresses                = "NotificationEmailAddresses"
 	NotificationLabels                        = "NotificationLabels"
@@ -39,11 +39,13 @@ const (
 // an example of a successful ControllerBoardStatusAppSettings configuration
 func GetCommonSuccessConfig() *config.ControllerBoardStatusConfig {
 	return &config.ControllerBoardStatusConfig{
-		AverageTemperatureMeasurementDuration:             "-15s",
-		DeviceName:                                        "controller-board",
-		MaxTemperatureThreshold:                           83.0,
-		MinTemperatureThreshold:                           10.0,
-		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v3/device/name/Inference-device/vendingDoorStatus",
+		AverageTemperatureMeasurementDuration: "-15s",
+		DeviceName:                            "controller-board",
+		MaxTemperatureThreshold:               83.0,
+		MinTemperatureThreshold:               10.0,
+		//DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v3/device/name/Inference-device/vendingDoorStatus",
+		InferenceDeviceName:                               "Inference-device",
+		InferenceDoorStatusCmd:                            "inferenceDoorStatus",
 		NotificationCategory:                              "HW_HEALTH",
 		NotificationEmailAddresses:                        "test@site.com,test@site.com",
 		NotificationLabels:                                "HW_HEALTH",
