@@ -60,8 +60,6 @@ func NewMqttConnection(connectionString string) Connection {
 // define a function for the default message handler
 var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 
-	var edgeXMessage map[string]string
-
 	fmt.Printf("received message on topic: %s", msg.Topic())
 
 	words := strings.Split(msg.Topic(), "/")
@@ -70,6 +68,7 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 		fmt.Println(http.StatusBadRequest, fmt.Sprintf("mqtt command topic not formatted for EdgeX 3.0: %s", msg.Topic()))
 		return
 	}
+	
 	cmd := words[numWords-3]
 	method := words[numWords-2]
 	uuid := words[numWords-1]
@@ -80,6 +79,7 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 		return
 	}
 
+	var edgeXMessage map[string]string
 	switch cmd {
 	case "inferenceHeartbeat":
 		{
