@@ -34,7 +34,6 @@ type ControllerBoardStatusConfig struct {
 	RESTCommandTimeoutDuration                        string
 	VendingEndpoint                                   string
 	SubscriptionAdminState                            string
-	//DoorStatusCommandEndpoint                         string
 }
 
 // UpdateFromRaw updates the service's full configuration from raw data received from

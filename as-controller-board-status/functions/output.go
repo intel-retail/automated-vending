@@ -256,16 +256,6 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 		if err != nil {
 			return fmt.Errorf("failed to submit the vending door state to the command client: %v", err.Error())
 		}
-
-		// Prepare a message to be sent to the MQTT bus. Depending on the state
-		// of the door, this message may trigger a CV inference
-		//err = boardStatus.RESTCommandJSON(boardStatus.Configuration.DoorStatusCommandEndpoint, http.MethodPut, VendingDoorStatus{
-		//	VendingDoorStatus: strconv.FormatBool(doorClosed),
-		//})
-		//if err != nil {
-		//	return fmt.Errorf("failed to submit the vending door state to the MQTT device service: %v", err.Error())
-		//}
-
 	}
 
 	return nil

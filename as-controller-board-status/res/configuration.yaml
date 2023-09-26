@@ -24,7 +24,6 @@ ControllerBoardStatus:
   DeviceName: controller-board
   MaxTemperatureThreshold: 83.0
   MinTemperatureThreshold: 10.0
-  #DoorStatusCommandEndpoint: http://localhost:59882/api/v3/device/name/Inference-device/inferenceDoorStatus
   InferenceDeviceName: "Inference-device"
   InferenceDoorStatusCmd: "inferenceDoorStatus"
   NotificationCategory: HW_HEALTH
