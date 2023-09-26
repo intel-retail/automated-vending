@@ -128,6 +128,12 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	mockCommandClient := &client_mocks.CommandClient{}
 	mockCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
 
+	resp = common.BaseResponse{
+		StatusCode: http.StatusBadRequest,
+	}
+	mockErrCommandClient := &client_mocks.CommandClient{}
+	mockErrCommandClient.On("IssueSetCommandByName", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(resp, nil)
+
 	// The success condition is ideal, and is configured to use URL's that all
 	// respond with responses that correspond to successful scenarios.
 	edgexcontextSuccess := pkg.NewAppFuncContextForTest(correlationID, lc)
@@ -174,9 +180,8 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 
 	// Set bad Vending endpoint to produce specific error conditions
 	// in processTemperature, which sends a request to the vending endpoint
-	//edgexcontextBadDoorStatusCommandEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
+	edgexcontextBadDoorStatusCommandEndpoint := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadDoorStatusCommandEndpoint := getCommonApplicationSettingsTyped()
-	//configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint = testServerThrowError.URL
 	configBadDoorStatusCommandEndpoint.VendingEndpoint = testServerStatusOK.URL
 
 	// As described above, in order to produce the error condition for
@@ -339,21 +344,22 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				ShouldLastNotifiedBeDifferent:             false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
-			//{
-			//	TestCaseName:      "Unsuccessful due to DoorStatusCommandEndpoint not responding with HTTP 200 OK, no temperature notification sent",
-			//	InputEdgexContext: edgexcontextBadDoorStatusCommandEndpoint,
-			//	InputData:         controllerBoardStatusEventSuccess,
-			//	InputCheckBoardStatus: CheckBoardStatus{
-			//		LastNotified:       time.Now().Add(time.Minute * -3),
-			//		Configuration:      configBadDoorStatusCommandEndpoint,
-			//		NotificationClient: mockNotificationClient,
-			//	},
-			//	OutputBool:                    true,
-			//	OutputInterface:               controllerBoardStatusEventSuccess,
-			//	OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the MQTT device service: Failed to submit REST PUT request due to error: %v \\\"%v\\\": %v", "Put", configBadDoorStatusCommandEndpoint.DoorStatusCommandEndpoint, "EOF"),
-			//	ShouldLastNotifiedBeDifferent: false,
-			//	ExpectedTemperatureMeasurementSliceLength: 1,
-			//},
+			{
+				TestCaseName:      "Unsuccessful due to Command not responding with HTTP 200 OK, no temperature notification sent",
+				InputEdgexContext: edgexcontextBadDoorStatusCommandEndpoint,
+				InputData:         controllerBoardStatusEventSuccess,
+				InputCheckBoardStatus: CheckBoardStatus{
+					LastNotified:       time.Now().Add(time.Minute * -3),
+					Configuration:      configBadDoorStatusCommandEndpoint,
+					NotificationClient: mockNotificationClient,
+					CommandClient:      mockErrCommandClient,
+				},
+				OutputBool:                    true,
+				OutputInterface:               controllerBoardStatusEventSuccess,
+				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the command client: Failed to submit REST PUT request due to error: %v : %v", "Put", "EOF"),
+				ShouldLastNotifiedBeDifferent: false,
+				ExpectedTemperatureMeasurementSliceLength: 1,
+			},
 			{
 				TestCaseName:      "Unsuccessful due to VendingEndpoint not responding with HTTP 200 OK, no temperature notification sent",
 				InputEdgexContext: edgexcontextBadVendingEndpoint,
