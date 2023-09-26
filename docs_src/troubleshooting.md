@@ -4,12 +4,12 @@ The following guide will help walk you through the flow of data to address poten
 
 ## Ensuring your device services receive data
 
-All sensor data that is ingested in Automated Checkout flows through a device service as the first step. These device services are the first place we should check to ensure they are both running and ingesting data. One of the best ways to do to this is to leverage Portainer (included in EdgeX Releases).
+All sensor data that is ingested in Automated Vending flows through a device service as the first step. These device services are the first place we should check to ensure they are both running and ingesting data. One of the best ways to do to this is to leverage Portainer (included in EdgeX Releases).
 
 !!!info
     *Portainer is a tool to help manage Docker containers. To learn more visit: [https://www.portainer.io/overview/](https://www.portainer.io/overview/)*
 
-We have 3 device services of note in Automated Checkout:
+We have 3 device services of note in Automated Vending:
 
 - Controller board – Handles the interface between Arduino firmware and EdgeX.
 - Card reader – Handles the interface between an RFID card reader and EdgeX.
@@ -50,13 +50,13 @@ After ensuring that data is flowing properly to the device services, the next pl
 
     *Redis Desktop Manager is another tool to manage Redis databases: [https://redisdesktop.com/](https://redisdesktop.com/)*
 
-Redis Commander can be run in Docker by simply executing the following shell command (you may need to change the name of the `automated-checkout_default` network):
+Redis Commander can be run in Docker by simply executing the following shell command (you may need to change the name of the `automated-vending_default` network):
 
 ```bash
 docker run --rm --name redis-commander -d \
     -p 8081:8081 \
     --env REDIS_HOSTS=edgex-redis \
-    --network automated-checkout_default \
+    --network automated-vending_default \
     rediscommander/redis-commander:latest
 ```
 

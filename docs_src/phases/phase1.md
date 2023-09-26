@@ -2,9 +2,9 @@
 
 ## Overview
 
-This document aims to help provide a simple introduction to how we interact with the various microservices in the Automated Checkout reference implementation, as well as demonstrating how EdgeX command API's are leveraged.
+This document aims to help provide a simple introduction to how we interact with the various microservices in the Automated Vending reference implementation, as well as demonstrating how EdgeX command API's are leveraged.
 
-The steps in this guide show how to simulate the automated checkout workflow using [`curl`](https://github.com/curl/curl) REST API calls. It is a step-by-step walkthrough with specific commands to run on the command line.
+The steps in this guide show how to simulate the automated Vending workflow using [`curl`](https://github.com/curl/curl) REST API calls. It is a step-by-step walkthrough with specific commands to run on the command line.
 
 The documentation in [phase 2](./phase2.md) and [phase 3](./phase3.md) will discuss more advanced methods of adding physical hardware and customized device services.
 
@@ -49,7 +49,7 @@ If `maintenanceMode` is set to true, run the following command to reset state ma
 docker-compose -f docker-compose.ac.yml restart as-vending ds-controller-board as-controller-board-status
 ```
 
-1. In a separate terminal window, watch the logs for a few Automated Checkout services, so that incoming events can be seen:
+1. In a separate terminal window, watch the logs for a few Automated Vending services, so that incoming events can be seen:
 
 ```bash
 docker-compose -f docker-compose.ac.yml logs -f ds-card-reader ds-controller-board ms-authentication as-vending as-controller-board-status
@@ -74,7 +74,7 @@ Each section below contains specific steps and expected output for each of the s
 
 ### 1. Stock the cooler with inventory
 
-In order to fill up the cooler with inventory, someone acting as a "stocker" must swipe their card and proceed to fill the Automated Checkout with products.
+In order to fill up the cooler with inventory, someone acting as a "stocker" must swipe their card and proceed to fill the Automated Vending with products.
 
 However, before we get started, it's important to keep a few things in mind. We will perform a very specific sequence of events:
 
@@ -99,7 +99,7 @@ For visualization purposes, the CV inference service serves the post-processed i
 
     It's OK to run the commands without critically analyzing them _in the moment_. You may find it most useful to review them in advance.
 
-    If you mess up, you should start fresh. Run the command `make down && make clean-docker && make run` to scrub the Automated Checkout data and containers, wait approximately one minute after all services have started, and begin again. This scenario does not have any dependencies on the other scenarios in phase 1.
+    If you mess up, you should start fresh. Run the command `make down && make clean-docker && make run` to scrub the Automated Vending data and containers, wait approximately one minute after all services have started, and begin again. This scenario does not have any dependencies on the other scenarios in phase 1.
 
 The following diagram represents the flow for swiping your badge and unlocking the door:
 
@@ -117,7 +117,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003293374"}
     There should not be any response message when running this EdgeX command successfully.
 
 !!! info
-    By default, the card number `0003293374` corresponds to a card in the [`ms-authentication/cards.json`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-authentication/cards.json) file that has the "stocker" role associated to it.
+    By default, the card number `0003293374` corresponds to a card in the [`ms-authentication/cards.json`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-authentication/cards.json) file that has the "stocker" role associated to it.
 
 JSON object for `cardId` 0003293374.
 
@@ -207,7 +207,7 @@ curl -X GET http://localhost:48095/inventory
   <summary><i>(Click to Expand)</i> Inventory API Response Example</summary>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -235,7 +235,7 @@ curl -X GET http://localhost:48095/auditlog
   <summary><i>(Click to Expand)</i> Audit Log API Response Example</summary>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -261,11 +261,11 @@ Since this a stocking event and not a customer transaction, there is no ledger e
 </p>
 
 <p>
-By default, the ledger service has six registered accounts (accounts 1-6) for consumers. The valid accounts match the account ID's that have authorized access to the cooler through the <code>ms-authentication</code> service (see the <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-authentication/accounts.json"><code>ms-authentication/accounts.json</code></a> file).
+By default, the ledger service has six registered accounts (accounts 1-6) for consumers. The valid accounts match the account ID's that have authorized access to the cooler through the <code>ms-authentication</code> service (see the <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-authentication/accounts.json"><code>ms-authentication/accounts.json</code></a> file).
 </p>
 
 <p>
-The (unaltered) contents of <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
+The (unaltered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -296,7 +296,7 @@ Now that the cooler's inventory has been stocked, we can simulate a customer swi
 !!! warning
     If you have not already populated the inventory as described in the [Stock the Cooler with Inventory](#Stock-the-Cooler-with-Inventory) section, do not proceed. The inferencing service follows a specific sequence for changes in inventory. The first transaction in the sequence is always a _gain_ of inventory, corresponding to the stocker adding items to inventory. The following transactions are _removal_ of inventory, corresponding to customers _taking_ items from inventory.
 
-    If you mess up, you should start fresh. Run the command `make down && make clean-docker && make run` to scrub the Automated Checkout data and containers, wait approximately one minute after all services have started, and begin again. This scenario relies on the stocking scenario in phase 1 - if the stocking scenario is skipped, it is still OK, but the randomized sequence of transactions will yield inventory/audit log/ledger changes that differ from the expected examples shown throughout this scenario.
+    If you mess up, you should start fresh. Run the command `make down && make clean-docker && make run` to scrub the Automated Vending data and containers, wait approximately one minute after all services have started, and begin again. This scenario relies on the stocking scenario in phase 1 - if the stocking scenario is skipped, it is still OK, but the randomized sequence of transactions will yield inventory/audit log/ledger changes that differ from the expected examples shown throughout this scenario.
 
 In a manner similar to the previous section (where we stocked our inventory), the following steps are taken when simulating a customer:
 
@@ -370,7 +370,7 @@ The following command makes a REST API call to the `ds-controller-board` service
 curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
 ```
 
-At this point we are done simulating customer interactions with the Automated Checkout. The next steps are to get the inventory, ledger, and audit logs, and verify that they all show consistent information ***(not time sensitive, but may need to wait 20-30 seconds for background processing)***:
+At this point we are done simulating customer interactions with the Automated Vending. The next steps are to get the inventory, ledger, and audit logs, and verify that they all show consistent information ***(not time sensitive, but may need to wait 20-30 seconds for background processing)***:
 
 ```bash
 curl -X GET http://localhost:48095/inventory
@@ -384,7 +384,7 @@ A few items have been removed from the inventory in the below API response. Care
 </p>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -419,7 +419,7 @@ The audit log has a new transaction that corresponds to this customer interactio
 </p>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -447,7 +447,7 @@ Note that this API response now includes a financial transaction indicating what
 </p>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -486,7 +486,7 @@ From the ledger data, notice the transaction done by accountID 1.
 
 ### 3. The cooler requires maintenance
 
-In this scenario, all Automated Checkout services are operating as usual, except the following conditions are present:
+In this scenario, all Automated Vending services are operating as usual, except the following conditions are present:
 
 - The cooler has exceeded the maximum allowable temperature threshold of 83 degrees Fahrenheit
 - It has stayed at or above this temperature threshold for more than 15 seconds
@@ -508,7 +508,7 @@ If the temperature temporarily exceeds the maximum or minimum allowable temperat
 
 </details>
 
-When the Automated Checkout is in an unstable state such as the one presented above, it enters _maintenance mode_. When the Automated Checkout is in this state, it automatically denies access to everyone except individuals that possess badges that are associated with the maintenance worker role.
+When the Automated Vending is in an unstable state such as the one presented above, it enters _maintenance mode_. When the Automated Vending is in this state, it automatically denies access to everyone except individuals that possess badges that are associated with the maintenance worker role.
 
 !!! note
     Maintenance mode is triggered in a few conditions:
@@ -533,7 +533,7 @@ This scenario walks through the following steps:
 
     It's OK to run the commands without critically analyzing them _in the moment_. You may find it most useful to review them in advance.
 
-    If you mess up, you should start fresh. Run the command `make down && make clean-docker && make run` to scrub the Automated Checkout data and containers, wait approximately one minute after all services have started, and begin again. This scenario does not have any dependencies on the other scenarios in phase 1.
+    If you mess up, you should start fresh. Run the command `make down && make clean-docker && make run` to scrub the Automated Vending data and containers, wait approximately one minute after all services have started, and begin again. This scenario does not have any dependencies on the other scenarios in phase 1.
 
 To begin the scenario, first start by setting the temperature of the cooler to `99.00` degrees Fahrenheit. The following command will make a REST API call to the `ds-controller-board` service ***(time sensitive)***:
 
@@ -627,8 +627,8 @@ The value of <code>maintenanceMode</code> will switch to <code>true</code> from 
 
 </details>
 
-This is the end of the scenario, and should provide an essential understanding of maintenance mode as well as temperature reactions in the Automated Checkout reference implementation.
+This is the end of the scenario, and should provide an essential understanding of maintenance mode as well as temperature reactions in the Automated Vending reference implementation.
 
 ## Summary
 
-You have successfully run through a typical Automated Checkout workflow using simulated interactions and devices. In the other phases of this reference implementation, we ramp up to using physical devices and provide guidance on writing new services for your custom devices and needs.
+You have successfully run through a typical Automated Vending workflow using simulated interactions and devices. In the other phases of this reference implementation, we ramp up to using physical devices and provide guidance on writing new services for your custom devices and needs.

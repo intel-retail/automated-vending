@@ -1,11 +1,11 @@
 # Other Microservices
 
-The Automated Checkout reference implementation utilizes three services that expose REST API endpoints. These three services handle business logic for the Automated Checkout reference implementation, and are somewhat generic in their design patterns, so for the purposes of the reference implementation, we simply refer to them  "microservices".
+The Automated Vending reference implementation utilizes three services that expose REST API endpoints. These three services handle business logic for the Automated Vending reference implementation, and are somewhat generic in their design patterns, so for the purposes of the reference implementation, we simply refer to them  "microservices".
 
 ## List of microservices
 
 - [Authentication](#authentication-service) - Service that takes a card ID number and returns authentication/authorization status for the card number.
-- [Inventory](#inventory-service) - Service that manages changes to the Automated Checkout's inventory, including storing transactions in an audit log.
+- [Inventory](#inventory-service) - Service that manages changes to the Automated Vending's inventory, including storing transactions in an audit log.
 - [Ledger](#ledger-service) - Service that stores customer financial transactions.
 
 ## Authentication service
@@ -16,7 +16,7 @@ The `ms-authentication` microservice is a service that works with EdgeX to expos
 
 This repository contains logic for working within the following schemas:
 
-- _Card/Cards_ - swiping a card is what allows the Automated Checkout automation to proceed with its workflow. A card can be associated with one of 3 roles:
+- _Card/Cards_ - swiping a card is what allows the Automated Vending automation to proceed with its workflow. A card can be associated with one of 3 roles:
   - Consumer - a typical customer; is expected to open the vending machine door, remove an item, close the door and be charged accordingly
   - Stocker - a person that is authorized to re-stock the vending machine with new products
   - Maintainer - a person that is authorized to fix the software/hardware
@@ -78,7 +78,7 @@ This repository contains logic for working within the following schemas:
   - `minRestockingLevel` - the minimum allowable number of units of this type to be stored in the vending machine
   - `createdAt` - the date the inventory item was created and catalogued
   - `updatedAt` - the date the inventory item was last updated (either via a transaction or something else)
-  - `isActive` - whether or not the inventory item is "active", which is not currently actively used by the Automated Checkout reference implementation for any specific purposes
+  - `isActive` - whether or not the inventory item is "active", which is not currently actively used by the Automated Vending reference implementation for any specific purposes
 - _Audit Log_ - an audit log entry contains the following attributes:
   - `cardId` - card number
   - `accountId` - account number

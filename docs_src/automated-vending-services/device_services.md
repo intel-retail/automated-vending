@@ -1,6 +1,6 @@
 # Device Services
 
-The **Automated Checkout** reference implementation utilizes three device services that are used to communicate hardware event data to underlying EdgeX framework.
+The **Automated Vending** reference implementation utilizes three device services that are used to communicate hardware event data to underlying EdgeX framework.
 
 ## List of device services
 
@@ -12,7 +12,7 @@ The **Automated Checkout** reference implementation utilizes three device servic
 
 ### Card reader description
 
-The `ds-card-reader` device service is an EdgeX device service that allows a USB-based RFID card reader to grant access to the Automated Checkout. At a high level, this device service is responsible for discovering a specific card reader device, watching for input from that device, parsing that input, and then forwarding the input into the EdgeX framework.
+The `ds-card-reader` device service is an EdgeX device service that allows a USB-based RFID card reader to grant access to the Automated Vending. At a high level, this device service is responsible for discovering a specific card reader device, watching for input from that device, parsing that input, and then forwarding the input into the EdgeX framework.
 
 There are two different modes available to this device service:
 
@@ -118,7 +118,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{"lock1":"0"}' http://localh
 This `PUT` command will operate magnetic `lock2`. Depending on the numeric value of `lock2` (boolean `0/1`), the lock state will either be locked or unlocked.
 
 !!! note
-    Currently `lock2` has no purpose. During the initial architect/design phase of Automated Checkout, there were two locks. This was later reduced to a single mag-lock.
+    Currently `lock2` has no purpose. During the initial architect/design phase of Automated Vending, there were two locks. This was later reduced to a single mag-lock.
 
 Sample usage:
 
@@ -265,12 +265,12 @@ The following picture illustrates the flow to calculate the inventory deltas bet
     <img src="../images/delta.png">
 </p>
 
-The Automated Checkout architecture uses three MQTT topics:
+The Automated Vending architecture uses three MQTT topics:
 
 | Topic                       | Description                                                                                             |
 | ----------------------------- | ------------------------------------------------------------------------------------------------ |
 | Inference/CommandTopic                  | All events pushed from EdgeX's command API are fed into this topic. The [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) and [`as-controller-board-status`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-controller-board-status) are two services that make requests to this API, typically for making door close/open and heartbeat events. |
-| Inference/ResponseTopic  | The Automated Checkout cv inference service will respond to published messages on the `Inference/CommandTopic` topic on the `Inference/ResponseTopic` topic. |
+| Inference/ResponseTopic  | The Automated Vending cv inference service will respond to published messages on the `Inference/CommandTopic` topic on the `Inference/ResponseTopic` topic. |
 | Inference/DataTopic                | The cv inference service publishes delta SKUs on this topic, then the MQTT device service converts them into EdgeX event readings, and finally the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service processes the event readings and pushes them to downstream services. |
 
 ### CV inference APIs
@@ -279,7 +279,7 @@ The Automated Checkout architecture uses three MQTT topics:
 
 #### `GET`: `http://localhost:59982/api/v2/device/name/Inference-device/inferenceHeartbeat`
 
-The `GET` call to the EdgeX MQTT device service's `inferenceHearbeat` command will act as a health-check for the Automated Checkout cv inference service. It must return `200 OK` upon swiping an RFID card in order for the vending workflow to begin. If it does not, the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service will enter maintenance mode.
+The `GET` call to the EdgeX MQTT device service's `inferenceHearbeat` command will act as a health-check for the Automated Vending cv inference service. It must return `200 OK` upon swiping an RFID card in order for the vending workflow to begin. If it does not, the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service will enter maintenance mode.
 
 Simple usage example:
 

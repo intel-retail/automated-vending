@@ -1,10 +1,10 @@
-# Automated Checkout Events
+# Automated Vending Events
 
-The following are the different events used in the Automated Checkout reference implementation.
+The following are the different events used in the Automated Vending reference implementation.
 
 ## Card reader events
 
-[`ds-card-reader`](./automated-checkout-services/device_services.md#card-reader) uses the EdgeX events pattern to send the card information into EdgeX Core Data as well as maintain a healthy state.
+[`ds-card-reader`](./automated-vending-services/device_services.md#card-reader) uses the EdgeX events pattern to send the card information into EdgeX Core Data as well as maintain a healthy state.
 
 `card-number` is an asynchronous event sent when a card is scanned by the card reader device. The event reading value is a string containing a 10-digit number and is placed into EdgeX Core Data as an event reading.
 
@@ -16,7 +16,7 @@ The following are the different events used in the Automated Checkout reference 
 
 ## Controller board events
 
-[`ds-controller-board`](./automated-checkout-services/device_services.md#controller-board) uses the EdgeX events pattern to send the card information into EdgeX Core Data.
+[`ds-controller-board`](./automated-vending-services/device_services.md#controller-board) uses the EdgeX events pattern to send the card information into EdgeX Core Data.
 
 `controller-board-status` is an auto-event used to send the current state of the controller board and all of its periferals to EdgeX Core Data. This data is used by the as-controller-board-status application service to determine the state of the system. The information included in the status are the door lock states, door state, temperature, and humidity. The EdgeX Reading value is a string containing the following JSON:
 
@@ -30,7 +30,7 @@ The following are the different events used in the Automated Checkout reference 
 }
 ```
 
-The following commands are also available to the ds-controller-board. More details can be found [`here`](./automated-checkout-services/device_services.md#controller-board).
+The following commands are also available to the ds-controller-board. More details can be found [`here`](./automated-vending-services/device_services.md#controller-board).
 
 - `lock1`
 - `lock2`
@@ -44,7 +44,7 @@ The following commands are also available to the ds-controller-board. More detai
 
 ## Computer vision inference events
 
-The [`ds-cv-inference`](./automated-checkout-services/device_services.md#cv-inference) uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file `./res/device-mqtt/profile/inference-mqtt-device-profile.yml`, in the root of this GitHub repository.
+The [`ds-cv-inference`](./automated-vending-services/device_services.md#cv-inference) uses the EdgeX MQTT Device Service to send status updates and inference deltas to the EdgeX Core Data. The MQTT device service profile can be found in the file `./res/device-mqtt/profile/inference-mqtt-device-profile.yml`, in the root of this GitHub repository.
 
 `inferenceHeartbeat` is an asynchronous event that is pushed to EdgeX Core Data when the inference is pinged by another service to verify it is functioning. If the inference is working properly the `inferencePong` response is sent as the event reading.
 
@@ -63,4 +63,4 @@ The [`ds-cv-inference`](./automated-checkout-services/device_services.md#cv-infe
 ]
 ```
 
-Finally the `inferenceDoorStatus` command is defined by the custom device profile for the EdgeX MQTT Device Service which sends the ping request to the CV inference service. More details can be found [here](./automated-checkout-services/device_services.md#cv-inference).
+Finally the `inferenceDoorStatus` command is defined by the custom device profile for the EdgeX MQTT Device Service which sends the ping request to the CV inference service. More details can be found [here](./automated-vending-services/device_services.md#cv-inference).

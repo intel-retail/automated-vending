@@ -13,9 +13,9 @@ nav:
     - './phases/phase3.md'
   - Additional Documentation:
     - Automated Checkout Services:
-      - './automated-checkout-services/device_services.md'
-      - './automated-checkout-services/application_services.md'
-      - './automated-checkout-services/micro_services.md'
+      - './automated-vending-services/device_services.md'
+      - './automated-vending-services/application_services.md'
+      - './automated-vending-services/micro_services.md'
     - 'events.md'
     - 'configuration.md'
     - 'modifying_source_code.md'

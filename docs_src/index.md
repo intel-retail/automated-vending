@@ -1,33 +1,33 @@
-# Automated Checkout Reference Implementation
+# Automated Vending Reference Implementation
 
 ## Introduction
 
-This guide helps you build and run the Automated Checkout Reference Implementation.
+This guide helps you build and run the Automated Vending Reference Implementation.
 
 Upon completing the steps in this guide, you will be ready to integrate sensors and services to build your own complete solution.
 
 !!! info
-    This guide does not create a complete, ready-to-use solution. Instead, upon completing the steps in this guide, you will be ready to integrate sensors and services to build your own Automated Checkout solution.
+    This guide does not create a complete, ready-to-use solution. Instead, upon completing the steps in this guide, you will be ready to integrate sensors and services to build your own Automated Vending solution.
 
     Certain third-party software or hardware identified in this document only may be used upon securing a license directly from the third-party software or hardware owner. The identification of non-Intel software, tools, or services in this document does not constitute a sponsorship, endorsement, or warranty by Intel.
 
 <p align="center">
-    <img src="./images/automated-checkout.png">
+    <img src="./images/automated-vending.png">
 </p>
 
 ### Block diagram
 
-The high-level diagram below shows the sensors and services used with the Automated Checkout Reference Implementation. The diagram shows the sensors and services, and how they communicate through EdgeX. Intel provides the services outlined in blue, the purple services are provided by EdgeX, and the black services are either simulated or can interface with real hardware.
+The high-level diagram below shows the sensors and services used with the Automated Vending Reference Implementation. The diagram shows the sensors and services, and how they communicate through EdgeX. Intel provides the services outlined in blue, the purple services are provided by EdgeX, and the black services are either simulated or can interface with real hardware.
 
-![Automated Checkout Reference Implementation Diagram](./images/automated-checkout-reference-implementation.png)
+![Automated Vending Reference Implementation Diagram](./images/automated-vending-reference-implementation.png)
 
 ### Prerequisites
 
-The following items are required to build the Automated Checkout Reference Implementation. You will need additional hardware and software when you are ready to build your own solution.
+The following items are required to build the Automated Vending Reference Implementation. You will need additional hardware and software when you are ready to build your own solution.
 
-- **A deep learning model for CV inferencing.** Intel provides a reference inference service using openVINO that produces inventory changes based on preloaded images. See [cv inference service](./automated-checkout-services/device_services.md#cv-inference) for information on this process.
-- **A device that allows badging-in to the Automated Checkout.** Intel provides a card reader service that can be simulated or integrated with a physical USB device. See the [Card Reader](./automated-checkout-services/device_services.md#card-reader) device service page for information on this service.
-- **A controller device that locks the door to the Automated Checkout**, as well as providing readouts (such as a small text-based LCD screen) to display authorization state, items purchased, and other sensor readings. This could be an Arduino-powered circuit. Intel provides a display service that can run in a simulated mode or with a physical USB/serial interface. See the [Controller Board](./automated-checkout-services/device_services.md#controller-board) device service page for implementation details.
+- **A deep learning model for CV inferencing.** Intel provides a reference inference service using openVINO that produces inventory changes based on preloaded images. See [cv inference service](./automated-vending-services/device_services.md#cv-inference) for information on this process.
+- **A device that allows badging-in to the Automated Vending.** Intel provides a card reader service that can be simulated or integrated with a physical USB device. See the [Card Reader](./automated-vending-services/device_services.md#card-reader) device service page for information on this service.
+- **A controller device that locks the door to the Automated Vending**, as well as providing readouts (such as a small text-based LCD screen) to display authorization state, items purchased, and other sensor readings. This could be an Arduino-powered circuit. Intel provides a display service that can run in a simulated mode or with a physical USB/serial interface. See the [Controller Board](./automated-vending-services/device_services.md#controller-board) device service page for implementation details.
 
 - <a href="https://releases.ubuntu.com/20.04.5/" rel="noopener noreferrer" target="_blank">Ubuntu 20.04.5</a>
 - <a href="https://docs.docker.com/install/" rel="noopener noreferrer" target="_blank">Docker</a>
@@ -52,21 +52,21 @@ Additionally, frequently throughout this documentation, we will refer to a "cool
 
 ### Recommended domain knowledge
 
-- <a href="https://www.edgexfoundry.org/" rel="noopener noreferrer" target="_blank">EdgeX</a> - the Automated Checkout reference implementation utilizes the EdgeX framework
+- <a href="https://www.edgexfoundry.org/" rel="noopener noreferrer" target="_blank">EdgeX</a> - the Automated Vending reference implementation utilizes the EdgeX framework
 - <a href="https://mqtt.org" rel="noopener noreferrer" target="_blank">MQTT</a>
 - <a href="https://en.wikipedia.org/wiki/Representational_state_transfer" rel="noopener noreferrer" target="_blank">REST</a>
 - <a href="https://en.wikipedia.org/wiki/Evdev" rel="noopener noreferrer" target="_blank">evdev</a>, if reading input events from a USB input device, such as a card reader that inputs key strokes upon scanning a card
 - Communication over serial on Linux, if using serial devices such as Arduino
 - Computer Vision concepts, if using CV inferencing components
 - Basic RFID concepts, if using RFID components (i.e. for badge-in card reader)
-- <a href="https://www.portainer.io/" rel="noopener noreferrer" target="_blank">Portainer</a> - included with the Automated Checkout reference implementation. Usage is optional, but this is a highly recommended utility for managing Docker containers, and we provide easy ways to run it.
+- <a href="https://www.portainer.io/" rel="noopener noreferrer" target="_blank">Portainer</a> - included with the Automated Vending reference implementation. Usage is optional, but this is a highly recommended utility for managing Docker containers, and we provide easy ways to run it.
 
 ## Getting started
 
 ### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/intel-iot-devkit/automated-checkout.git && cd ./automated-checkout
+git clone https://github.com/intel-retail/automated-vending.git && cd ./automated-vending
 ```
 
 ### Step 2: Build the reference implementation
@@ -85,20 +85,20 @@ make docker
 Make sure the command was successful. To do so, run:
 
 ```bash
-docker images | grep automated-checkout
+docker images | grep automated-vending
 ```
 
 !!! success
     The results are:
 
-    - `automated-checkout/as-controller-board-status`
-    - `automated-checkout/as-vending`
-    - `automated-checkout/ds-card-reader`
-    - `automated-checkout/ds-controller-board`
-    - `automated-checkout/ds-cv-inference`
-    - `automated-checkout/ms-authentication`
-    - `automated-checkout/ms-inventory`
-    - `automated-checkout/ms-ledger`
+    - `automated-vending/as-controller-board-status`
+    - `automated-vending/as-vending`
+    - `automated-vending/ds-card-reader`
+    - `automated-vending/ds-controller-board`
+    - `automated-vending/ds-cv-inference`
+    - `automated-vending/ms-authentication`
+    - `automated-vending/ms-inventory`
+    - `automated-vending/ms-ledger`
 
 !!! failure
     If you do not see all of the above docker images, look through the console output for errors. Sometimes dependencies fail to resolve and must be run again. Address obvious issues. To try again, repeat step 2.
@@ -111,7 +111,7 @@ Use Docker Compose to start the reference implementation suite. To do so, run:
 make run
 ```
 
-This command starts the EdgeX Device Services and then starts all the Automated Checkout Reference Implementation Services.
+This command starts the EdgeX Device Services and then starts all the Automated Vending Reference Implementation Services.
 
 #### Check for success
 
@@ -126,21 +126,21 @@ docker ps --format 'table{{.Image}}\t{{.Status}}'
 
     | IMAGE                                                | STATUS            |
     |------------------------------------------------------|-------------------|
-    | automated-checkout/ms-ledger:dev                     | Up 53 seconds     |
+    | automated-vending/ms-ledger:dev                     | Up 53 seconds     |
     | eclipse-mosquitto:2.0.14                             | Up 52 seconds     |
-    | automated-checkout/as-vending:dev                    | Up 52 seconds     |
-    | automated-checkout/ms-inventory:dev                  | Up 52 seconds     |
-    | automated-checkout/ds-controller-board:dev           | Up 52 seconds     |
-    | automated-checkout/ms-authentication:dev             | Up 55 seconds     |
+    | automated-vending/as-vending:dev                    | Up 52 seconds     |
+    | automated-vending/ms-inventory:dev                  | Up 52 seconds     |
+    | automated-vending/ds-controller-board:dev           | Up 52 seconds     |
+    | automated-vending/ms-authentication:dev             | Up 55 seconds     |
     | edgexfoundry/device-mqtt:2.2.0                       | Up 53 seconds     |
-    | automated-checkout/ds-card-reader:dev                | Up 53 seconds     |
-    | automated-checkout/as-controller-board-status:dev    | Up 52 seconds     |
+    | automated-vending/ds-card-reader:dev                | Up 53 seconds     |
+    | automated-vending/as-controller-board-status:dev    | Up 52 seconds     |
     | edgexfoundry/core-command:2.2.0                      | Up About a minute |
     | edgexfoundry/core-data:2.2.0                         | Up About a minute |
     | edgexfoundry/core-metadata:2.2.0                     | Up About a minute |
     | edgexfoundry/support-notifications:2.2.0             | Up About a minute |
     | edgexfoundry/consul:1.10.10                          | Up About a minute |
-    | automated-checkout/ds-cv-inference:dev               | Up 51 seconds     |
+    | automated-vending/ds-cv-inference:dev               | Up 51 seconds     |
     | redis:6.2-alpine                                     | Up About a minute |
 
 You can also use Portainer to check the status of the services. You must run Portainer service first:
@@ -155,15 +155,15 @@ Then, navigate to the following Portainer URL and create an admin account:
     <a href="http://127.0.0.1:9000" rel="noopener noreferrer" target="_blank"><code>http://127.0.0.1:9000</code></a>
 </p>
 
-After, navigate to the following URL to list all of the containers running under the `automated-checkout` stack:
+After, navigate to the following URL to list all of the containers running under the `automated-vending` stack:
 
 <p>
-    <a href="http://127.0.0.1:9000/#/stacks/automated-checkout?type=2&external=true" rel="noopener noreferrer" target="_blank"><code>http://127.0.0.1:9000/#/stacks/automated-checkout?type=2&external=true</code></a>
+    <a href="http://127.0.0.1:9000/#/stacks/automated-vending?type=2&external=true" rel="noopener noreferrer" target="_blank"><code>http://127.0.0.1:9000/#/stacks/automated-vending?type=2&external=true</code></a>
 </p>
 
 ### Step 4: Dive in
 
-All of the core components of Automated Checkout are up and running, and you are ready to begin going through the following phases.
+All of the core components of Automated Vending are up and running, and you are ready to begin going through the following phases.
 
 - [Phase 1](./phases/phase1.md) - Simulate data and inferencing, and simulate events
 - [Phase 2](./phases/phase2.md) - Add Card Reader Device
@@ -171,26 +171,26 @@ All of the core components of Automated Checkout are up and running, and you are
 
 ## General Guidance
 
-After completing the steps in the Getting Started section, it may be helpful to read through the remainder of this document for some further guidance on the Automated Checkout reference implementation.
+After completing the steps in the Getting Started section, it may be helpful to read through the remainder of this document for some further guidance on the Automated Vending reference implementation.
 
 ### How to use the Compose Files
 
-The docker-compose files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the [`makefile`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/Makefile) to manage the various compose files:
+The docker-compose files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the [`makefile`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/Makefile) to manage the various compose files:
 
 | Compose file              | Purpose                                         | Makefile Command                     |
 |---------------------------|-------------------------------------------------|--------------------------------------|
 | Portainer                 | Container management                            | `make run-portainer`                 |
-| All Services (simulated)  | Automated Checkout and EdgeX services           | `make run`                           |
+| All Services (simulated)  | Automated Vending and EdgeX services           | `make run`                           |
 | Physical Environment      | Mounts physical devices                         | `make run-physical`                  |
 | Physical Card Reader      | Allows just the card reader to be physical      | `make run-physical-card-reader`      |
 | Physical Controller Board | Allows just the controller board to be physical | `make run-physical-controller-board` |
 
 ### Expanding the Reference Implementation
 
-The reference implementation you created is not a complete solution. It provides the base components for creating a framework to run a CV-powered Automated Checkout. It is your choice on how many and which sensors and devices to include. This section provides information about components you might want to include or replace.
+The reference implementation you created is not a complete solution. It provides the base components for creating a framework to run a CV-powered Automated Vending. It is your choice on how many and which sensors and devices to include. This section provides information about components you might want to include or replace.
 
 | Component                        | Description                                                                                                                                                                                                                                                                                                                                                         |
 |----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | RFID card reader                 | A card reader device service is provided for a USB based RFID card reader. As an alternative, you can also use a regular USB keyboard to enter 10-digit number. See *[Phase 2 - Add Card Reader Device](./phases/phase2.md)* for more information.                                                                                                                  |
-| Micro-controller board           | A controller board device service is provided for an Arduino based micro-controller. This micro-controller is in charge of controlling the locks of the automated checkout door and the LED display. Also, it uses modules such as temperature and humidity. See *[Phase 3 - Bring Your Own Hardware and Software](./phases/phase3.md)* for more information.       |
-| Deep learning model | The Automated Checkout reference implementation provides a computer vision inference service using openVINO inference engine and openVINO product detection model for demonstration purposes. See more information [here](./automated-checkout-services/device_services.md#cv-inference). You can create your own service and send events to EdgeX using the [EdgeX MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go). |
+| Micro-controller board           | A controller board device service is provided for an Arduino based micro-controller. This micro-controller is in charge of controlling the locks of the automated vending door and the LED display. Also, it uses modules such as temperature and humidity. See *[Phase 3 - Bring Your Own Hardware and Software](./phases/phase3.md)* for more information.       |
+| Deep learning model | The Automated Vending reference implementation provides a computer vision inference service using openVINO inference engine and openVINO product detection model for demonstration purposes. See more information [here](./automated-vending-services/device_services.md#cv-inference). You can create your own service and send events to EdgeX using the [EdgeX MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go). |
