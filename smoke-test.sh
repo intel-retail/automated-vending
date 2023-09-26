@@ -34,7 +34,7 @@ do
     echo $i
     echo 
     
-    curl -X PUT -H "Content-Type: application/json" -d "{\"card-number\":\"$i\"}" http://localhost:48098/api/v2/device/name/card-reader/card-number | jq .
+    curl -X PUT -H "Content-Type: application/json" -d "{\"card-number\":\"$i\"}" http://localhost:48098/api/v3/device/name/card-reader/card-number | jq .
     echo
     echo "card read!!!!!!!!!!!!!"
     sleep 5
@@ -43,7 +43,7 @@ do
     echo
     echo "Card status!!!!!!!!!!!!!"
     # open door
-    curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed | jq .
+    curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed | jq .
     echo
     echo "open door!!!!!!!!!!!!!"
     sleep 4
@@ -51,7 +51,7 @@ do
     # should show door:false
     echo
     echo "open door status!!!!!!!!!!!!!"
-    curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed | jq .
+    curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed | jq .
     echo
     echo "close door !!!!!!!!!!!!!"
     sleep 4
