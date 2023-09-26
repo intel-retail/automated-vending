@@ -173,7 +173,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	configBadNotificationHostThresholdsExceeded.VendingEndpoint = testServerStatusOK.URL
 	configBadNotificationHostThresholdsExceeded.MaxTemperatureThreshold = temp49
 
-	// Set Command client to throw error to produce specific error conditions
+	// Set Device Command to throw error to produce specific error conditions
 	// in processTemperature, which sends a request to the vending endpoint
 	edgexcontextBadDoorStatusCommand := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadDoorStatusCommand := getCommonApplicationSettingsTyped()
@@ -338,7 +338,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
 			{
-				TestCaseName:      "Unsuccessful due to Command client not responding with HTTP 200 OK, no temperature notification sent",
+				TestCaseName:      "Unsuccessful due to Device Command not responding with HTTP 200 OK, no temperature notification sent",
 				InputEdgexContext: edgexcontextBadDoorStatusCommand,
 				InputData:         controllerBoardStatusEventSuccess,
 				InputCheckBoardStatus: CheckBoardStatus{
@@ -349,7 +349,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 				},
 				OutputBool:                    true,
 				OutputInterface:               controllerBoardStatusEventSuccess,
-				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the command client: Failed to submit REST PUT request due to error: %v : %v", "Put", "EOF"),
+				OutputLogs:                    fmt.Sprintf("Encountered error while checking the open/closed state of the door: failed to submit the vending door state to the device command: Failed to submit REST PUT request due to error: %v : %v", "Put", "EOF"),
 				ShouldLastNotifiedBeDifferent: false,
 				ExpectedTemperatureMeasurementSliceLength: 1,
 			},
