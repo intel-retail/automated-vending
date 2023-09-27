@@ -56,8 +56,7 @@ down:
 	-docker compose -f docker-compose.av.yml -f docker-compose.edgex.yml down
 
 clean: down docker-rm
-	docker rmi -f $$(docker images | grep '<none>' | awk '{print $$3}') && \
-	docker rmi -f $$(docker images | grep automated-checkout | awk '{print $$3}') && \
+	docker rmi -f $$(docker images | grep 'automated-vending' | awk '{print $$3}') && \
 	docker volume prune -f && \
 	docker network prune -f
 
