@@ -8,7 +8,7 @@ type ServiceConfig struct {
 	DriverConfig Config
 }
 
-// DriverConfig holds the configurable options for a automated checkout
+// DriverConfig holds the configurable options for an automated vending solution
 // card reader device
 type Config struct {
 	DeviceName       string
