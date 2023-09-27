@@ -173,7 +173,7 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 	configBadNotificationHostThresholdsExceeded.VendingEndpoint = testServerStatusOK.URL
 	configBadNotificationHostThresholdsExceeded.MaxTemperatureThreshold = temp49
 
-	// Set Device Command to throw error to produce specific error conditions
+	// Setup for Device Command (mockErrCommandClient used in one of the below testcases) to throw error to produce specific error conditions
 	// in processTemperature, which sends a request to the vending endpoint
 	edgexcontextBadDoorStatusCommand := pkg.NewAppFuncContextForTest(correlationID, lc)
 	configBadDoorStatusCommand := getCommonApplicationSettingsTyped()
