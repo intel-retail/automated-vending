@@ -15,10 +15,10 @@ The simplest way to change one of the configuration values described below is vi
     devices:
       - /dev/input:/dev/input
     environment:
-      DRIVER_SIMULATEDEVICE: "false"
-      DRIVER_DEVICESEARCHPATH: "/dev/input/event*"
-      DRIVER_VID: 65535 # 0xFFFF
-      DRIVER_PID: 53    # 0x0035
+      DRIVERCONFIG_SIMULATEDEVICE: "false"
+      DRIVERCONFIG__DEVICESEARCHPATH: "/dev/input/event*"
+      DRIVERCONFIG_VID: 65535 # 0xFFFF
+      DRIVERCONFIG_PID: 53    # 0x0035
 ```
 
 ## Card reader device service
