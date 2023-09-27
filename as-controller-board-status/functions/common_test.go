@@ -20,7 +20,6 @@ const (
 	DeviceName                                = "DeviceName"
 	MaxTemperatureThreshold                   = "MaxTemperatureThreshold"
 	MinTemperatureThreshold                   = "MinTemperatureThreshold"
-	DoorStatusCommandEndpoint                 = "DoorStatusCommandEndpoint"
 	NotificationCategory                      = "NotificationCategory"
 	NotificationEmailAddresses                = "NotificationEmailAddresses"
 	NotificationLabels                        = "NotificationLabels"
@@ -43,7 +42,8 @@ func GetCommonSuccessConfig() *config.ControllerBoardStatusConfig {
 		DeviceName:                                        "controller-board",
 		MaxTemperatureThreshold:                           83.0,
 		MinTemperatureThreshold:                           10.0,
-		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v3/device/name/Inference-device/vendingDoorStatus",
+		InferenceDeviceName:                               "Inference-device",
+		InferenceDoorStatusCmd:                            "inferenceDoorStatus",
 		NotificationCategory:                              "HW_HEALTH",
 		NotificationEmailAddresses:                        "test@site.com,test@site.com",
 		NotificationLabels:                                "HW_HEALTH",

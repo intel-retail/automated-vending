@@ -15,6 +15,11 @@ Clients:
     Host: localhost
     Port: 59860
 
+  core-command:
+    Protocol: "http"
+    Host: "localhost"
+    Port: 59882
+
 MessageBus:
   Optional:
     ClientId: as-controller-board-status
@@ -24,7 +29,8 @@ ControllerBoardStatus:
   DeviceName: controller-board
   MaxTemperatureThreshold: 83.0
   MinTemperatureThreshold: 10.0
-  DoorStatusCommandEndpoint: http://localhost:59882/api/v3/device/name/Inference-device/inferenceDoorStatus
+  InferenceDeviceName: "Inference-device"
+  InferenceDoorStatusCmd: "inferenceDoorStatus"
   NotificationCategory: HW_HEALTH
   NotificationEmailAddresses: your-email@site.com
   NotificationLabels: HW_HEALTH

@@ -91,6 +91,12 @@ func (app *boardStatusAppService) CreateAndRunAppService(serviceKey string, newS
 	app.boardStatus.MaxTemperatureThreshold = app.boardStatus.Configuration.MaxTemperatureThreshold
 	app.boardStatus.MinTemperatureThreshold = app.boardStatus.Configuration.MinTemperatureThreshold
 
+	app.boardStatus.CommandClient = app.service.CommandClient()
+	if app.boardStatus.CommandClient == nil {
+		app.lc.Error("error command service missing from client's configuration")
+		return 1
+	}
+
 	// Create the function pipeline to run when an event is read on the device channels
 	err = app.service.SetDefaultFunctionsPipeline(
 		transforms.NewFilterFor([]string{app.boardStatus.Configuration.DeviceName}).FilterByDeviceName,

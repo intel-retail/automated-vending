@@ -4,7 +4,9 @@
 package functions
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -227,8 +229,8 @@ func AvgTemp(measurements []TempMeasurement, duration time.Duration) (float64, i
 }
 
 // processVendingDoorState checks to see if the vending door state has changed
-// and if it has changed, it will then submit EdgeX commands (REST calls)
-// to the MQTT device service and the central vending state endpoint.
+// and if it has changed, it will then submit the new state to the central vending state endpoint
+// and to EdgeX via command client.
 func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingClient, doorClosed bool) error {
 	if boardStatus.DoorClosed != doorClosed {
 		// Set the boardStatus's DoorClosed value to the new value
@@ -246,14 +248,48 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 			return fmt.Errorf("failed to submit the controller board's status to the central vending state service: %v", err.Error())
 		}
 
-		// Prepare a message to be sent to the MQTT bus. Depending on the state
-		// of the door, this message may trigger a CV inference
-		err = boardStatus.RESTCommandJSON(boardStatus.Configuration.DoorStatusCommandEndpoint, http.MethodPut, VendingDoorStatus{
-			VendingDoorStatus: strconv.FormatBool(doorClosed),
-		})
+		// Prepare and send EdgeX command. Depending on the state of the door, this message may trigger a CV inference
+		settings := make(map[string]string)
+		settings["VendingDoorStatus"] = strconv.FormatBool(doorClosed)
+		err = boardStatus.SendCommand(lc, http.MethodPut, boardStatus.Configuration.InferenceDeviceName, boardStatus.Configuration.InferenceDoorStatusCmd,
+			settings)
 		if err != nil {
-			return fmt.Errorf("failed to submit the vending door state to the MQTT device service: %v", err.Error())
+			return fmt.Errorf("failed to submit the vending door state to the command client: %v", err.Error())
 		}
+	}
+
+	return nil
+}
+
+// SendCommand issues CommandClient GET and SET command calls, CommandClient takes care of http calls,
+// here the requirement are actionName, deviceName, commandName and settings, logger client is needed for logging
+func (boardStatus *CheckBoardStatus) SendCommand(lc logger.LoggingClient, actionName string, deviceName string,
+	commandName string, settings map[string]string) error {
+	lc.Debug("Sending Command")
+
+	switch actionName {
+	case http.MethodPut:
+		lc.Debugf("executing %s action", actionName)
+		lc.Debugf("Issuing SET command '%s' for device '%s'", commandName, deviceName)
+
+		response, err := boardStatus.CommandClient.IssueSetCommandByName(context.Background(), deviceName, commandName, settings)
+		if err != nil {
+			return fmt.Errorf("failed to issue '%s' set command to '%s' device: %s", commandName, deviceName, err.Error())
+		}
+
+		lc.Debugf("response status: %d", response.StatusCode)
+
+	case http.MethodGet:
+		lc.Debugf("executing %s action", actionName)
+		lc.Debugf("Issuing GET command '%s' for device '%s'", commandName, deviceName)
+		response, err := boardStatus.CommandClient.IssueGetCommandByName(context.Background(), deviceName, commandName, false, true)
+		if err != nil {
+			return fmt.Errorf("failed to issue '%s' get command to '%s' device: %s", commandName, deviceName, err.Error())
+		}
+		lc.Debugf("response status: %d", response.StatusCode)
+
+	default:
+		return errors.New("Invalid action requested: " + actionName)
 	}
 
 	return nil

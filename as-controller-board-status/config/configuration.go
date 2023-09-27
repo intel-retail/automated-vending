@@ -19,7 +19,8 @@ type ControllerBoardStatusConfig struct {
 	DeviceName                                        string
 	MaxTemperatureThreshold                           float64
 	MinTemperatureThreshold                           float64
-	DoorStatusCommandEndpoint                         string
+	InferenceDeviceName                               string
+	InferenceDoorStatusCmd                            string
 	NotificationCategory                              string
 	NotificationEmailAddresses                        string
 	NotificationLabels                                string
