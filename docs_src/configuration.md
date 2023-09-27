@@ -44,11 +44,16 @@ The following items can be configured via the `DriverConfig` section of the serv
 
 This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-retail/automated-vending/tree/main/res/device-mqtt/profiles/inference-mqtt-device-profile.yml) and are volume mounted into the device service's running Docker container.
 
-The following items can be configured via `device-mqtt.environment` section of the service's [docker-compose.edgex.yml](https://github.com/intel-retail/automated-vending/tree/main/docker-compose.edgex.yml) file.
+The following `MQTTBrokerInfo` configuration items can be configured via `device-mqtt.environment` section of the service's [docker-compose.edgex.yml](https://github.com/intel-retail/automated-vending/tree/main/docker-compose.edgex.yml) file.
 
-`device-mqtt.environment`
+`MQTTBrokerInfo via device-mqtt.environment`
 
+- `MQTTBROKERINFO_SCHEMA` - Data schema type, aka protocol
 - `MQTTBROKERINFO_HOST` - Host name of the response MQTT Broker
+- `MQTTBROKERINFO_PORT` - Port number of the response MQTT Broker
+- `MQTTBROKERINFO_QOS` - Quality of service agreement between sender and receiver
+- `MQTTBROKERINFO_KEEPALIVE` - Keep alive duration for the response MQTT Broker
+- `MQTTBROKERINFO_CLIENTID` - Client ID for the response MQTT Broker
 - `MQTTBROKERINFO_INCOMINGTOPIC` - Subscribe topic for incoming data from MQTT Broker
 - `MQTTBROKERINFO_RESPONSETOPIC` - Subscribe topic for the response MQTT Broker
 
