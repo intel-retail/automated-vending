@@ -59,9 +59,9 @@ services:
     image: "automated-vending/ms-ledger:dev"
     container_name: automated-vending_ms-ledger
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
     environment:
       EDGEX_SECURITY_SECRET_STORE: "false"
@@ -84,12 +84,12 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
   ds-card-reader:
-    image: "automated-checkout/ds-card-reader:dev"
+    image: "automated-vending/ds-card-reader:dev"
     container_name: automated-checkout_ds-card-reader
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
       consul:
         condition: service_started
@@ -117,9 +117,9 @@ services:
     image: "automated-vending/ds-controller-board:dev"
     container_name: automated-vending-controller-board
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
       consul:
         condition: service_started
@@ -144,7 +144,7 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
   ds-cv-inference:
-    image: "automated-checkout/ds-cv-inference:dev"
+    image: "automated-vending/ds-cv-inference:dev"
     container_name: automated-checkout_ds-cv-inference
     command: ["/go/src/ds-cv-inference/images","mqtt-broker:1883","0.85","/go/src/ds-cv-inference/skumapping.json"]
     depends_on:
@@ -195,12 +195,12 @@ services:
       options: { max-file: "5", max-size: 100m }
     user: "2000:2000"
   as-controller-board-status:
-    image: "automated-checkout/as-controller-board-status:dev"
+    image: "automated-vending/as-controller-board-status:dev"
     container_name: automated-checkout_as-controller-board-status
     depends_on:
-      data:
+      core-data:
         condition: service_started
-      command:
+      core-command:
         condition: service_started
       consul:
         condition: service_started
