@@ -3,7 +3,7 @@
 This page lists all of the relevant configuration parameters for each service in the Automated Vending reference implementation.
 
 !!!info
-    Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the [EdgeX Foundry GitHub repositories](https://github.com/edgexfoundry) or in the [official EdgeX documentation here](https://docs.edgexfoundry.org/2.2/).
+    Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the [EdgeX Foundry GitHub repositories](https://github.com/edgexfoundry) or in the [official EdgeX documentation here](https://docs.edgexfoundry.org/3.0/).
 
 ## Environment overrides
 
@@ -42,9 +42,9 @@ The following items can be configured via the `DriverConfig` section of the serv
 
 ## EdgeX MQTT device service
 
-This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/res/device-mqtt/profiles/inference-mqtt-device-profile.yml) and are volume mounted into the device service's running Docker container.
+This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-retail/automated-vending/tree/main/res/device-mqtt/profiles/inference-mqtt-device-profile.yml) and are volume mounted into the device service's running Docker container.
 
-The following items can be configured via `device-mqtt.environment` section of the service's [docker-compose.edgex.yml](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/docker-compose.edgex.yml) file.
+The following items can be configured via `device-mqtt.environment` section of the service's [docker-compose.edgex.yml](https://github.com/intel-retail/automated-vending/tree/main/docker-compose.edgex.yml) file.
 
 `device-mqtt.environment`
 

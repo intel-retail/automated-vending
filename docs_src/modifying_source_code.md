@@ -22,7 +22,7 @@ Next, build the specific service's image:
 make ds-card-reader
 ```
 
-After Docker builds the image (by executing the steps in [`ds-card-reader/Dockerfile`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ds-card-reader/Dockerfile)), proceed to the next section.
+After Docker builds the image (by executing the steps in [`ds-card-reader/Dockerfile`](https://github.com/intel-retail/automated-vending/tree/main/ds-card-reader/Dockerfile)), proceed to the next section.
 
 ## Remove and update the running service
 

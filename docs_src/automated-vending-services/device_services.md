@@ -29,12 +29,12 @@ The `ds-card-reader` service is much simpler than the `ds-controller-board` serv
 
 ---
 
-#### `PUT`: `http://localhost:48098/api/v2/device/name/card-reader/card-number`
+#### `PUT`: `http://localhost:48098/api/v3/device/name/card-reader/card-number`
 
 The `PUT` API endpoint will push the badge ID (which is sent as part of the API request body) into the card reader device service. Once the card reader device service receives the badge ID, the badge ID will be pushed into the EdgeX bus for other application services to utilize.
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278200"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278200"}' http://localhost:48098/api/v3/device/name/card-reader/card-number
 ```
 
 Sample response:
@@ -48,12 +48,12 @@ Sample response:
 
 ---
 
-#### `GET`: `http://localhost:48098/api/v2/device/name/card-reader/status`
+#### `GET`: `http://localhost:48098/api/v3/device/name/card-reader/status`
 
 The `GET` API endpoint returns data that is not meant to be consumed for any particular purpose. When triggering this endpoint, it will execute a function (in the Go source code) called `CardReaderStatus` that is used as an auto-remediation mechanism to attempt to "grab" the physical card reader HID device (via [`evdev`](https://en.wikipedia.org/wiki/Evdev)). If it succeeds in grabbing the underlying device, that means that the `ds-card-reader` device service has lost its hold on the card reader, and we need to restart the service. This endpoint is meant to be hit frequently.
 
 ```bash
-curl -X GET http://localhost:48098/api/v2/device/name/card-reader/status
+curl -X GET http://localhost:48098/api/v3/device/name/card-reader/status
 ```
 
 Sample response:
@@ -95,25 +95,25 @@ Therefore, if you have multiple serial devices plugged into your system, please 
 
 ---
 
-#### `PUT`: `http://localhost:48097/api/v2/device/name/controller-board/lock1`
+#### `PUT`: `http://localhost:48097/api/v3/device/name/controller-board/lock1`
 
 This `PUT` command will operate magnetic `lock1`. Depending on the numeric value of `lock1` (boolean `0/1`), the lock state will either be locked or unlocked.
 
 Simple usage example:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"lock1":"0"}' http://localhost:59882/api/v2/device/name/controller-board/lock1
+curl -X PUT -H "Content-Type: application/json" -d '{"lock1":"0"}' http://localhost:59882/api/v3/device/name/controller-board/lock1
 ```
 
 This will make the request directly to the device service itself instead of proxying through the EdgeX command API:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"lock1":"0"}' http://localhost:48097/api/v2/device/name/controller-board/lock1
+curl -X PUT -H "Content-Type: application/json" -d '{"lock1":"0"}' http://localhost:48097/api/v3/device/name/controller-board/lock1
 ```
 
 ---
 
-#### `PUT`: `http://localhost:48097/api/v2/device/name/controller-board/lock2`
+#### `PUT`: `http://localhost:48097/api/v3/device/name/controller-board/lock2`
 
 This `PUT` command will operate magnetic `lock2`. Depending on the numeric value of `lock2` (boolean `0/1`), the lock state will either be locked or unlocked.
 
@@ -123,13 +123,13 @@ This `PUT` command will operate magnetic `lock2`. Depending on the numeric value
 Sample usage:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"lock2":"1"}' http://localhost:59882/api/v2/device/name/controller-board/lock2
+curl -X PUT -H "Content-Type: application/json" -d '{"lock2":"1"}' http://localhost:59882/api/v3/device/name/controller-board/lock2
 ```
 
 This will make the request directly to the device service itself instead of proxying through the EdgeX command API:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"lock2":"1"}' http://localhost:48097/api/v2/device/name/controller-board/lock2
+curl -X PUT -H "Content-Type: application/json" -d '{"lock2":"1"}' http://localhost:48097/api/v3/device/name/controller-board/lock2
 ```
 
 !!! success
@@ -140,20 +140,20 @@ curl -X PUT -H "Content-Type: application/json" -d '{"lock2":"1"}' http://localh
 
 ---
 
-#### `PUT`: `http://localhost:48097/api/v2/device/name/controller-board/displayRow0`
+#### `PUT`: `http://localhost:48097/api/v3/device/name/controller-board/displayRow0`
 
 This `PUT` command will operate the display (LCD) and control the text to be put on the first line of the display.
 
 Simple usage :
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"displayRow0":"The Earth is round"}' http://localhost:59882/api/v2/device/name/controller-board/displayRow0
+curl -X PUT -H "Content-Type: application/json" -d '{"displayRow0":"The Earth is round"}' http://localhost:59882/api/v3/device/name/controller-board/displayRow0
 ```
 
 This will make the request directly to the device service itself instead of proxying through the EdgeX command API:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"displayRow0":"The Earth is round"}' http://localhost:48097/api/v2/device/name/controller-board/displayRow0
+curl -X PUT -H "Content-Type: application/json" -d '{"displayRow0":"The Earth is round"}' http://localhost:48097/api/v3/device/name/controller-board/displayRow0
 ```
 
 !!!info
@@ -167,7 +167,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{"displayRow0":"The Earth is
 
 ---
 
-#### `PUT`: `http://localhost:48097/api/v2/device/name/controller-board/setTemperature`
+#### `PUT`: `http://localhost:48097/api/v3/device/name/controller-board/setTemperature`
 
 This `PUT` command will emulate the temperature sensed by the controller board as a persistent value.
 
@@ -177,13 +177,13 @@ This `PUT` command will emulate the temperature sensed by the controller board a
 Simple usage :
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"12.00"}' http://localhost:59882/api/v2/device/name/controller-board/setTemperature
+curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"12.00"}' http://localhost:59882/api/v3/device/name/controller-board/setTemperature
 ```
 
 This will make the request directly to the device service itself instead of proxying through the EdgeX command API:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"12.00"}' http://localhost:48097/api/v2/device/name/controller-board/setTemperature
+curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"12.00"}' http://localhost:48097/api/v3/device/name/controller-board/setTemperature
 ```
 
 !!! success
@@ -194,7 +194,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"12.00"}' 
 
 ---
 
-#### `PUT`: `http://localhost:48097/api/v2/device/name/controller-board/setHumidity`
+#### `PUT`: `http://localhost:48097/api/v3/device/name/controller-board/setHumidity`
 
 This `PUT` command will emulate the humidity sensed by the controller board as a persistent value.
 
@@ -204,13 +204,13 @@ This `PUT` command will emulate the humidity sensed by the controller board as a
 Simple usage example:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setHumidity":"12"}' http://localhost:59882/api/v2/device/name/controller-board/setHumidity
+curl -X PUT -H "Content-Type: application/json" -d '{"setHumidity":"12"}' http://localhost:59882/api/v3/device/name/controller-board/setHumidity
 ```
 
 This will make the request directly to the device service itself instead of proxying through the EdgeX command API:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setHumidity":"12"}' http://localhost:48097/api/v2/device/name/controller-board/setHumidity
+curl -X PUT -H "Content-Type: application/json" -d '{"setHumidity":"12"}' http://localhost:48097/api/v3/device/name/controller-board/setHumidity
 ```
 
 !!! success
@@ -221,7 +221,7 @@ curl -X PUT -H "Content-Type: application/json" -d '{"setHumidity":"12"}' http:/
 
 ---
 
-#### `PUT`: `http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed`
+#### `PUT`: `http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed`
 
 This `PUT` command will emulate the "door-closed" state sensed by the controller board as a persistent value.
 
@@ -231,13 +231,13 @@ This `PUT` command will emulate the "door-closed" state sensed by the controller
 Simple usage example:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:59882/api/v2/device/name/controller-board/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:59882/api/v3/device/name/controller-board/setDoorClosed
 ```
 
 This will make the request directly to the device service itself instead of proxying through the EdgeX command API:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed
 ```
 
 !!! success
@@ -269,30 +269,30 @@ The Automated Vending architecture uses three MQTT topics:
 
 | Topic                       | Description                                                                                             |
 | ----------------------------- | ------------------------------------------------------------------------------------------------ |
-| Inference/CommandTopic                  | All events pushed from EdgeX's command API are fed into this topic. The [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) and [`as-controller-board-status`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-controller-board-status) are two services that make requests to this API, typically for making door close/open and heartbeat events. |
+| Inference/CommandTopic                  | All events pushed from EdgeX's command API are fed into this topic. The [`as-vending`](https://github.com/intel-retail/automated-vending/tree/main/as-vending) and [`as-controller-board-status`](https://github.com/intel-retail/automated-vending/tree/main/as-controller-board-status) are two services that make requests to this API, typically for making door close/open and heartbeat events. |
 | Inference/ResponseTopic  | The Automated Vending cv inference service will respond to published messages on the `Inference/CommandTopic` topic on the `Inference/ResponseTopic` topic. |
-| Inference/DataTopic                | The cv inference service publishes delta SKUs on this topic, then the MQTT device service converts them into EdgeX event readings, and finally the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service processes the event readings and pushes them to downstream services. |
+| Inference/DataTopic                | The cv inference service publishes delta SKUs on this topic, then the MQTT device service converts them into EdgeX event readings, and finally the [`as-vending`](https://github.com/intel-retail/automated-vending/tree/main/as-vending) service processes the event readings and pushes them to downstream services. |
 
 ### CV inference APIs
 
 ---
 
-#### `GET`: `http://localhost:59982/api/v2/device/name/Inference-device/inferenceHeartbeat`
+#### `GET`: `http://localhost:59982/api/v3/device/name/Inference-device/inferenceHeartbeat`
 
-The `GET` call to the EdgeX MQTT device service's `inferenceHearbeat` command will act as a health-check for the Automated Vending cv inference service. It must return `200 OK` upon swiping an RFID card in order for the vending workflow to begin. If it does not, the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) service will enter maintenance mode.
+The `GET` call to the EdgeX MQTT device service's `inferenceHearbeat` command will act as a health-check for the Automated Vending cv inference service. It must return `200 OK` upon swiping an RFID card in order for the vending workflow to begin. If it does not, the [`as-vending`](https://github.com/intel-retail/automated-vending/tree/main/as-vending) service will enter maintenance mode.
 
 Simple usage example:
 
 Through EdgeX command API:
 
 ```bash
-curl -X GET http://localhost:59882/api/v2/device/name/Inference-device/inferenceHeartbeat
+curl -X GET http://localhost:59882/api/v3/device/name/Inference-device/inferenceHeartbeat
 ```
 
 To MQTT device service itself:
 
 ```bash
-curl -X GET http://localhost:59982/api/v2/device/name/Inference-device/inferenceHeartbeat
+curl -X GET http://localhost:59982/api/v3/device/name/Inference-device/inferenceHeartbeat
 ```
 
 Sample response, `200 OK`:
@@ -314,7 +314,7 @@ Sample response, `200 OK`:
 
 ---
 
-#### `PUT`: `http://localhost:59982/api/v2/device/name/Inference-device/inferenceDoorStatus`
+#### `PUT`: `http://localhost:59982/api/v3/device/name/Inference-device/inferenceDoorStatus`
 
 The `PUT` call to the EdgeX MQTT device service's `inferenceDoorStatus` command will cause the cv inference service to consume the message, and if the JSON `PUT` key `inferenceDoorStatus` has the string value `"true"`, an inference attempt will begin. The service will subsequently respond with a message containing the inventory delta (aka SKU delta).
 
@@ -323,13 +323,13 @@ Simple usage example:
 Through EdgeX command API:
 
 ```bash
-curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:59882/api/v2/device/name/Inference-device/inferenceDoorStatus
+curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:59882/api/v3/device/name/Inference-device/inferenceDoorStatus
 ```
 
 To MQTT device service itself:
 
 ```bash
-curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:59982/api/v2/device/name/Inference-device/inferenceDoorStatus
+curl -X PUT -d '{"inferenceDoorStatus":"true"}' http://localhost:59982/api/v3/device/name/Inference-device/inferenceDoorStatus
 ```
 
 !!! success

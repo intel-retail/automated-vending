@@ -189,9 +189,9 @@ The `ms-authentication` microservice contains an index of all cards, accounts, a
 
 First, navigate to the `ms-authentication` directory in the root of the repository. These three `.json` files dictate the `ms-authentication` service's behavior:
 
-- [`people.json`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-authentication/people.json)
-- [`accounts.json`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-authentication/accounts.json)
-- [`cards.json`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-authentication/cards.json)
+- [`people.json`](https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/people.json)
+- [`accounts.json`](https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/accounts.json)
+- [`cards.json`](https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/cards.json)
 
 In this case, we're only going to add a new card and associate it with the person with ID 1. A typical card will look like this:
 

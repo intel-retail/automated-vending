@@ -4,7 +4,7 @@
 
 This document aims to help provide a simple introduction to how we interact with the various microservices in the Automated Vending reference implementation, as well as demonstrating how EdgeX command API's are leveraged.
 
-The steps in this guide show how to simulate the automated Vending workflow using [`curl`](https://github.com/curl/curl) REST API calls. It is a step-by-step walkthrough with specific commands to run on the command line.
+The steps in this guide show how to simulate the Automated Vending workflow using [`curl`](https://github.com/curl/curl) REST API calls. It is a step-by-step walkthrough with specific commands to run on the command line.
 
 The documentation in [phase 2](./phase2.md) and [phase 3](./phase3.md) will discuss more advanced methods of adding physical hardware and customized device services.
 
@@ -110,14 +110,14 @@ The following diagram represents the flow for swiping your badge and unlocking t
 To simulate this, perform this REST API call to the `ds-card-reader` service ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003293374"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003293374"}' http://localhost:48098/api/v3/device/name/card-reader/card-number
 ```
 
 !!! note
     There should not be any response message when running this EdgeX command successfully.
 
 !!! info
-    By default, the card number `0003293374` corresponds to a card in the [`ms-authentication/cards.json`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-authentication/cards.json) file that has the "stocker" role associated to it.
+    By default, the card number `0003293374` corresponds to a card in the [`ms-authentication/cards.json`](https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/cards.json) file that has the "stocker" role associated to it.
 
 JSON object for `cardId` 0003293374.
 
@@ -169,7 +169,7 @@ Then open the door, and close it afterwards, while waiting approximately 3-4 sec
 The following command makes a REST API call to the `ds-controller-board` service to open the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed
 ```
 
 Wait 3.75 seconds:
@@ -186,7 +186,7 @@ sleep 3.75
 The following command makes a REST API call to the `ds-controller-board` service to close the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed
 ```
 
 Wait about 20-30 seconds for the inventory to be discovered by the CV inference service, and also for background processing of events to occur. **The time-sensitive sequence has been completed.**
@@ -207,7 +207,7 @@ curl -X GET http://localhost:48095/inventory
   <summary><i>(Click to Expand)</i> Inventory API Response Example</summary>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/tree/main/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -235,7 +235,7 @@ curl -X GET http://localhost:48095/auditlog
   <summary><i>(Click to Expand)</i> Audit Log API Response Example</summary>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/tree/main/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -261,11 +261,11 @@ Since this a stocking event and not a customer transaction, there is no ledger e
 </p>
 
 <p>
-By default, the ledger service has six registered accounts (accounts 1-6) for consumers. The valid accounts match the account ID's that have authorized access to the cooler through the <code>ms-authentication</code> service (see the <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-authentication/accounts.json"><code>ms-authentication/accounts.json</code></a> file).
+By default, the ledger service has six registered accounts (accounts 1-6) for consumers. The valid accounts match the account ID's that have authorized access to the cooler through the <code>ms-authentication</code> service (see the <a href="https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/accounts.json"><code>ms-authentication/accounts.json</code></a> file).
 </p>
 
 <p>
-The (unaltered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
+The (unaltered) contents of <a href="https://github.com/intel-retail/automated-vending/tree/main/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -316,7 +316,7 @@ That's it! Each of the above actions has a corresponding REST API call that we w
 To begin, start by performing the following REST command to simulate a customer swiping their badge to open the cooler ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278380"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278380"}' http://localhost:48098/api/v3/device/name/card-reader/card-number
 ```
 
 !!! note
@@ -355,7 +355,7 @@ Then open the door, and close it afterwards, while waiting approximately 3-4 sec
 The following command makes a REST API call to the `ds-controller-board` service to open the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"0"}' http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed
 ```
 
 Wait 3.75 seconds:
@@ -367,7 +367,7 @@ sleep 3.75
 The following command makes a REST API call to the `ds-controller-board` service to close the door (no response body expected) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v2/device/name/controller-board/setDoorClosed
+curl -X PUT -H "Content-Type: application/json" -d '{"setDoorClosed":"1"}' http://localhost:48097/api/v3/device/name/controller-board/setDoorClosed
 ```
 
 At this point we are done simulating customer interactions with the Automated Vending. The next steps are to get the inventory, ledger, and audit logs, and verify that they all show consistent information ***(not time sensitive, but may need to wait 20-30 seconds for background processing)***:
@@ -384,7 +384,7 @@ A few items have been removed from the inventory in the below API response. Care
 </p>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/tree/main/ms-inventory/inventory.json"><code>ms-inventory/inventory.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -419,7 +419,7 @@ The audit log has a new transaction that corresponds to this customer interactio
 </p>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/tree/main/ms-inventory/auditlog.json"><code>ms-inventory/auditlog.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -447,7 +447,7 @@ Note that this API response now includes a financial transaction indicating what
 </p>
 
 <p>
-The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
+The (altered) contents of <a href="https://github.com/intel-retail/automated-vending/tree/main/ms-ledger/ledger.json"><code>ms-ledger/ledger.json</code></a> are contained in the <code>content</code> key below.
 </p>
 
 ```json
@@ -538,7 +538,7 @@ This scenario walks through the following steps:
 To begin the scenario, first start by setting the temperature of the cooler to `99.00` degrees Fahrenheit. The following command will make a REST API call to the `ds-controller-board` service ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"99.00"}' http://localhost:48097/api/v2/device/name/controller-board/setTemperature
+curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"99.00"}' http://localhost:48097/api/v3/device/name/controller-board/setTemperature
 ```
 
 !!! note
@@ -583,7 +583,7 @@ For the sake of simplicity in this walkthrough, we will first fix the temperatur
 First, set the temperature to a normal value (45 degrees) a few times over the span of 15 seconds (minimum) ***(time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"45.00"}' http://localhost:48097/api/v2/device/name/controller-board/setTemperature
+curl -X PUT -H "Content-Type: application/json" -d '{"setTemperature":"45.00"}' http://localhost:48097/api/v3/device/name/controller-board/setTemperature
 ```
 
 !!! note
@@ -594,7 +594,7 @@ Now that a new, proper average temperature value has been set, the maintenance w
 To do this, follow a familiar step, only this time use a card that has been assigned to a maintenance worker role ***(not time sensitive)***:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278385"}' http://localhost:48098/api/v2/device/name/card-reader/card-number
+curl -X PUT -H "Content-Type: application/json" -d '{"card-number":"0003278385"}' http://localhost:48098/api/v3/device/name/card-reader/card-number
 ```
 
 !!! note

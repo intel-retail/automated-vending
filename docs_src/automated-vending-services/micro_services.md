@@ -23,7 +23,7 @@ This repository contains logic for working within the following schemas:
 - _Account/Accounts_ - represents a bank account to charge. Multiple people can be associated with an account, such as a married couple
 - _Person/People_ - a person can carry multiple cards but is only associated with one account
 
-The [`ds-card-reader`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader) service is responsible for pushing card "swipe" events to the EdgeX framework, which will then feed into the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) microservice that then performs a REST HTTP API call to this microservice. The response is processed by the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) microservice and the workflow continues there.
+The [`ds-card-reader`](https://github.com/intel-retail/automated-vending/tree/main/ds-card-reader) service is responsible for pushing card "swipe" events to the EdgeX framework, which will then feed into the [`as-vending`](https://github.com/intel-retail/automated-vending/tree/main/as-vending) microservice that then performs a REST HTTP API call to this microservice. The response is processed by the [`as-vending`](https://github.com/intel-retail/automated-vending/tree/main/as-vending) microservice and the workflow continues there.
 
 ### Authentication service APIs
 
@@ -88,7 +88,7 @@ This repository contains logic for working within the following schemas:
   - `createdAt` - the transaction date
   - `auditEntryId` - and a UUID representing the transaction itself uniquely
 
-The `ms-inventory` microservice receives REST API calls from the upstream [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) application service during a typical vending workflow. Typically, an individual will swipe a card, the workflow will start, and the inventory will be manipulated after an individual has removed or added items to the vending machine and an inference has completed. REST API calls to this service are not locked behind any authentication mechanism.
+The `ms-inventory` microservice receives REST API calls from the upstream [`as-vending`](https://github.com/intel-retail/automated-vending/tree/main/as-vending) application service during a typical vending workflow. Typically, an individual will swipe a card, the workflow will start, and the inventory will be manipulated after an individual has removed or added items to the vending machine and an inference has completed. REST API calls to this service are not locked behind any authentication mechanism.
 
 ### Inventory service APIs
 
@@ -351,7 +351,7 @@ If the `{auditEntryId}` parameter does not correspond to an existing audit log e
 
 The `ms-ledger` microservice updates a ledger with the current transaction information (products purchased, quantity, total price, transaction timestamp). Transactions are added to the consumer's account. Transactions also have an `isPaid` attribute to designate which transactions have been paid/unpaid.
 
-This microservice returns the current transaction to the [`as-vending`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending) microservice, which then calls the [`ds-controller-board`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-controller-board) microservice to display the items purchased and the total price of the transaction on the LCD.
+This microservice returns the current transaction to the [`as-vending`](https://github.com/intel-retail/automated-vending/tree/main/as-vending) microservice, which then calls the [`ds-controller-board`](https://github.com/intel-retail/automated-vending/tree/main/ds-controller-board) microservice to display the items purchased and the total price of the transaction on the LCD.
 
 ### Ledger service APIs
 
