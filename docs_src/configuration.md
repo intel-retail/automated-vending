@@ -1,29 +1,13 @@
 # Configuration
 
-This page lists all of the relevant configuration parameters for each service in the Automated Checkout reference implementation.
+This page lists all of the relevant configuration parameters for each service in the Automated Vending reference implementation.
 
 !!!info
-    Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the [EdgeX Foundry GitHub repositories](https://github.com/edgexfoundry) or in the [official EdgeX documentation here](https://docs.edgexfoundry.org/2.2/).
+    Note that this document likely does not cover EdgeX-specific configuration parameters. Application and device service SDK documentation can be found in the [EdgeX Foundry GitHub repositories](https://github.com/edgexfoundry) or in the [official EdgeX documentation here](https://docs.edgexfoundry.org/3.0/).
 
 ## Environment overrides
 
-The simplest way to change one of the configuration values described below is via the use of environment variable overrides in the docker compose file. The value of each configuration item in a service's configuration can be overridden with an environment variable specific to that item. The name of the environment variable is the path to the item in the configuration tree with underscores separating the nodes. The character case of each node in the environment variable name must match that found in the service's configuration. Here are a few examples for the `DriverConfig` section:
-
-```toml
-[DriverConfig]
-  VID = "65535" # 0xFFFF
-  PID = "53"    # 0x0035
-```
-
-```yaml
-Driver_VID: "256" ** Good **
-Driver_PID: "26"  ** Good **
-
-DRIVER_VID: "256" ** BAD **
-driver_pid: "26"  ** BAD **
-```
-
-These overrides are placed in the target service's environment section of the compose file. Here is an example:
+The simplest way to change one of the service's configuration values described below is via the use of environment variable overrides in the docker compose file. The value of each configuration item in a service's configuration can be overridden with an environment variable specific to that item. The name of the environment variable is the path to the item in the configuration tree with underscores separating the nodes. The enviroment variable name is upper case version of the setting that found in the service's configuration. These overrides are placed in the target service's environment section of the compose file. Here is an example:
 
 ```yaml
   ds-card-reader:
@@ -39,7 +23,7 @@ These overrides are placed in the target service's environment section of the co
 
 ## Card reader device service
 
-The following items can be configured via the `DriverConfig` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader/res/configuration.toml) file. All values are strings.
+The following items can be configured via the `DriverConfig` section of the service's [configuration.yaml](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ds-card-reader/res/configuration.yaml) file. All values are strings.
 
 - `DeviceSearchPath` - the bash globstar expression to use when searching for the raw input device, default is `/dev/input/event*`
 - `VID` - the `uint16` value (as a base-10 string) corresponding to the Vendor ID of the USB device (run `lsusb` to list VID and PID values of connected USB devices). For example, if the VID is `ffff` in the output of `lsusb`, it is `"65535"` in the configuration file
@@ -48,7 +32,7 @@ The following items can be configured via the `DriverConfig` section of the serv
 
 ## Controller board device service
 
-The following items can be configured via the `DriverConfig` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-controller-board/res/configuration.toml) file. All values are strings.
+The following items can be configured via the `DriverConfig` section of the service's [configuration.yaml](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ds-controller-board/res/configuration.yaml) file. All values are strings.
 
 - `DisplayTimeout` - The value in seconds corresponding to the display timeout length before resetting the display to the status display.
 - `LockTimeout` - The value in seconds corresponding to the lock timeout used to automatically lock the door in case no lock command was sent
@@ -58,19 +42,20 @@ The following items can be configured via the `DriverConfig` section of the serv
 
 ## EdgeX MQTT device service
 
-This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/profiles/inference-mqtt-device-profile.yml) and are volume mounted into the device service's running Docker container.
+This reference implementation uses the [MQTT Device Service](https://github.com/edgexfoundry/device-mqtt-go) from EdgeX with custom device profiles. These device profiles YAML files are located [here](https://github.com/intel-retail/automated-vending/tree/main/res/device-mqtt/profiles/inference-mqtt-device-profile.yml) and are volume mounted into the device service's running Docker container.
 
-The following items can be configured via `MQTTBrokerInfo` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/res/device-mqtt/configuration.toml) file. All values are strings.
+The following `MQTTBrokerInfo` configuration items can be configured via `device-mqtt.environment` section of the service's [docker-compose.edgex.yml](https://github.com/intel-retail/automated-vending/tree/main/docker-compose.edgex.yml) file.
 
-`MQTTBrokerInfo`
+`MQTTBrokerInfo via device-mqtt.environment`
 
-- `Schema` - Data schema type, aka protocol
-- `Host` - Host name of the response MQTT Broker
-- `Port` - Port number of the response MQTT Broker
-- `Qos` - Quality of service agreement between sender and receiver
-- `KeepAlive` - Keep alive duration for the response MQTT Broker
-- `ClientId` - Client ID for the response MQTT Broker
-- `ResponseTopic` - Subscribe topic for the response MQTT Broker
+- `MQTTBROKERINFO_SCHEMA` - Data schema type, aka protocol
+- `MQTTBROKERINFO_HOST` - Host name of the response MQTT Broker
+- `MQTTBROKERINFO_PORT` - Port number of the response MQTT Broker
+- `MQTTBROKERINFO_QOS` - Quality of service agreement between sender and receiver
+- `MQTTBROKERINFO_KEEPALIVE` - Keep alive duration for the response MQTT Broker
+- `MQTTBROKERINFO_CLIENTID` - Client ID for the response MQTT Broker
+- `MQTTBROKERINFO_INCOMINGTOPIC` - Subscribe topic for incoming data from MQTT Broker
+- `MQTTBROKERINFO_RESPONSETOPIC` - Subscribe topic for the response MQTT Broker
 
 ## CV inference device service
 
@@ -101,7 +86,7 @@ Example:
 
 ## Controller board status application service
 
-The following items can be configured via the `ControllerBoardStatus` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-controller-board-status/res/configuration.toml) file. All values are strings.
+The following items can be configured via the `ControllerBoardStatus` section of the service's [configuration.yaml](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/as-controller-board-status/res/configuration.yaml) file. All values are strings.
 
 - `AverageTemperatureMeasurementDuration` - The time-duration string (i.e. `-15s`, `-10m`) value of how long to process temperature measurements for calculating an average temperature. This calculation determines how quickly a "temperature threshold exceeded" notification is sent
 - `DeviceName` - The string name of the upstream EdgeX device that will be pushing events & readings to this application service
@@ -112,7 +97,7 @@ The following items can be configured via the `ControllerBoardStatus` section of
 - `NotificationEmailAddresses` - A comma-separated values (CSV) string of emails to send notifications to
 - `NotificationLabels` - A comma-separated values (CSV) string of labels to apply to notifications, which are handled by EdgeX
 - `NotificationReceiver` - The human-readable string name of the person/entity receiving the notification, such as `System Administrator`
-- `NotificationSender` - The human-readable string name of the person/entity sending the notification, such as `Automated Checkout Maintenance Notification`
+- `NotificationSender` - The human-readable string name of the person/entity sending the notification, such as `Automated Vending Maintenance Notification`
 - `NotificationSeverity` - A string tag indicating the severity of the notification, such as `CRITICAL`
 - `NotificationName` - A string that is a short label that may be used as part of a URL to delineate the notification subscription, such as `sys-admin`. The EdgeX official documentation says, _"Effectively a name or key that labels the notification"_.
 - `NotificationSubscriptionMaxRESTRetries` - The integer value that represents the maximum number of times to try creating a subscription in the EdgeX notification service, such as `10`
@@ -124,7 +109,7 @@ The following items can be configured via the `ControllerBoardStatus` section of
 
 ## Vending application service
 
-The following items can be configured via the `ApplicationSettings` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/as-vending/res/configuration.toml) file. All values are strings.
+The following items can be configured via the `ApplicationSettings` section of the service's [configuration.yaml](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/as-vending/res/configuration.yaml) file. All values are strings.
 
 - `AuthenticationEndpoint` - Endpoint for authentication microservice
 - `ControllerBoarddisplayResetCmd` - EdgeX Command service command for Resetting the LCD text
@@ -157,6 +142,6 @@ For this particular microservice, there are no specific configuration options. F
 
 ## Ledger microservice
 
-The following items can be configured via the `[ApplicationSettings]` section of the service's [configuration.toml](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-ledger/res/configuration.toml) file. All values are strings.
+The following items can be configured via the `[ApplicationSettings]` section of the service's [configuration.yaml](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/ms-ledger/res/configuration.yaml) file. All values are strings.
 
 - `InventoryEndpoint` - Endpoint that correlates to the Inventory microservice. This is used to query Inventory data used to generate the ledgers.

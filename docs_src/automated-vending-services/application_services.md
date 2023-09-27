@@ -1,12 +1,12 @@
 
 # Application Services
 
-The **Automated Checkout** reference implementation utilizes two application services that are used to consume event data from the EdgeX framework.
+The **Automated Vending** reference implementation utilizes two application services that are used to consume event data from the EdgeX framework.
 
 ## List of application services
 
 - Controller Board Status – Handles events coming from the controller board device service.
-- Vending – The main business logic for the Automated Checkout application. This service handles events directly from the card reader device service and inference engine as well as coordinates data between each of the microservices.
+- Vending – The main business logic for the Automated Vending application. This service handles events directly from the card reader device service and inference engine as well as coordinates data between each of the microservices.
 
 ## Controller board status application service
 
@@ -118,7 +118,7 @@ If the `door_closed` property is different than what `as-vending` currently beli
 
 ### `POST`: `/resetDoorLock`
 
-The `POST` call will simply reset the Automated Checkout's internal `vendingState`. This API endpoint has no logic to process any input data - it just responds to a simple `POST`.
+The `POST` call will simply reset the Automated Vending's internal `vendingState`. This API endpoint has no logic to process any input data - it just responds to a simple `POST`.
 
 Simple usage example:
 
