@@ -6,7 +6,7 @@ networks:
     driver: bridge
 services:
   ms-authentication:
-    container_name: automated-checkout_ms-authentication
+    container_name: automated-vending_ms-authentication
     depends_on:
       core-data:
         condition: service_started
@@ -16,7 +16,7 @@ services:
       EDGEX_SECURITY_SECRET_STORE: "false"
       SERVICE_HOST: ms-authentication
     hostname: ms-authentication
-    image: automated-checkout/ms-authentication:dev
+    image: automated-vending/ms-authentication:dev
     networks:
       edgex-network: {}
     ports:
@@ -65,7 +65,6 @@ services:
         condition: service_started
     environment:
       EDGEX_SECURITY_SECRET_STORE: "false"
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: ms-ledger
       APPLICATIONSETTINGS_INVENTORYENDPOINT: "http://ms-inventory:48095/inventory"
     hostname: ms-ledger
@@ -85,7 +84,7 @@ services:
     user: "2000:2000"
   ds-card-reader:
     image: "automated-vending/ds-card-reader:dev"
-    container_name: automated-checkout_ds-card-reader
+    container_name: automated-vending_ds-card-reader
     depends_on:
       core-data:
         condition: service_started
@@ -94,12 +93,7 @@ services:
       consul:
         condition: service_started
     environment:
-      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
-      CLIENTS_CORE_DATA_HOST: edgex-core-data
-      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
       EDGEX_SECURITY_SECRET_STORE: "false"
-      MESSAGEQUEUE_HOST: edgex-mqtt-broker
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: ds-card-reader
     hostname: ds-card-reader
     networks:
@@ -124,12 +118,7 @@ services:
       consul:
         condition: service_started
     environment:
-      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
-      CLIENTS_CORE_DATA_HOST: edgex-core-data
-      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
       EDGEX_SECURITY_SECRET_STORE: "false"
-      MESSAGEQUEUE_HOST: edgex-mqtt-broker
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: ds-controller-board
     hostname: ds-controller-board
     networks:
@@ -145,12 +134,13 @@ services:
     user: "2000:2000"
   ds-cv-inference:
     image: "automated-vending/ds-cv-inference:dev"
-    container_name: automated-checkout_ds-cv-inference
+    container_name: automated-vending_ds-cv-inference
     command: ["/go/src/ds-cv-inference/images","mqtt-broker:1883","0.85","/go/src/ds-cv-inference/skumapping.json"]
     depends_on:
       mqtt-broker:
         condition: service_started
     environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
       SERVICE_HOST: ds-cv-inference
     hostname: ds-cv-inference
     networks:
@@ -175,7 +165,6 @@ services:
       consul:
         condition: service_started
     environment:
-      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
       EDGEX_SECURITY_SECRET_STORE: "false"
       SERVICE_HOST: as-vending
       VENDING_AUTHENTICATIONENDPOINT: http://ms-authentication:48096/authentication
@@ -196,7 +185,7 @@ services:
     user: "2000:2000"
   as-controller-board-status:
     image: "automated-vending/as-controller-board-status:dev"
-    container_name: automated-checkout_as-controller-board-status
+    container_name: automated-vending_as-controller-board-status
     depends_on:
       core-data:
         condition: service_started
@@ -206,13 +195,8 @@ services:
         condition: service_started
     environment:
       CLIENTS_CORE_COMMAND_HOST: edgex-core-command
-      CLIENTS_CORE_DATA_HOST: edgex-core-data
-      CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
       CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
       EDGEX_SECURITY_SECRET_STORE: "false"
-      TRIGGER_EDGEXMESSAGEBUS_PUBLISHHOST_HOST: mqtt-broker
-      TRIGGER_EDGEXMESSAGEBUS_SUBSCRIBEHOST_HOST: mqtt-broker
-      REGISTRY_HOST: edgex-core-consul
       SERVICE_HOST: as-controller-board-status
       CONTROLLERBOARDSTATUS_DOORSTATUSCOMMANDENDPOINT: "http://edgex-core-command:59882/api/v2/device/name/Inference-device/inferenceDoorStatus"
       CONTROLLERBOARDSTATUS_VENDINGENDPOINT: "http://as-vending:48099/boardStatus"
