@@ -15,6 +15,11 @@ Clients:
     Host: localhost
     Port: 59860
 
+  core-command:
+    Protocol: "http"
+    Host: "localhost"
+    Port: 59882
+
 MessageBus:
   Optional:
     ClientId: as-controller-board-status

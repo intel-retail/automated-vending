@@ -269,24 +269,24 @@ func (boardStatus *CheckBoardStatus) SendCommand(lc logger.LoggingClient, action
 
 	switch actionName {
 	case http.MethodPut:
-		lc.Infof("executing %s action", actionName)
-		lc.Infof("Issuing SET command '%s' for device '%s'", commandName, deviceName)
+		lc.Debugf("executing %s action", actionName)
+		lc.Debugf("Issuing SET command '%s' for device '%s'", commandName, deviceName)
 
 		response, err := boardStatus.CommandClient.IssueSetCommandByName(context.Background(), deviceName, commandName, settings)
 		if err != nil {
 			return fmt.Errorf("failed to issue '%s' set command to '%s' device: %s", commandName, deviceName, err.Error())
 		}
 
-		lc.Infof("response status: %d", response.StatusCode)
+		lc.Debugf("response status: %d", response.StatusCode)
 
 	case http.MethodGet:
-		lc.Infof("executing %s action", actionName)
-		lc.Infof("Issuing GET command '%s' for device '%s'", commandName, deviceName)
+		lc.Debugf("executing %s action", actionName)
+		lc.Debugf("Issuing GET command '%s' for device '%s'", commandName, deviceName)
 		response, err := boardStatus.CommandClient.IssueGetCommandByName(context.Background(), deviceName, commandName, false, true)
 		if err != nil {
 			return fmt.Errorf("failed to issue '%s' get command to '%s' device: %s", commandName, deviceName, err.Error())
 		}
-		lc.Infof("response status: %d", response.StatusCode)
+		lc.Debugf("response status: %d", response.StatusCode)
 
 	default:
 		return errors.New("Invalid action requested: " + actionName)
