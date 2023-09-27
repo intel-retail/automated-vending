@@ -151,7 +151,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/ms-authentication:dev'
+            image-ref: 'automated-vending/ms-authentication:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-ms-authentication.sarif'
