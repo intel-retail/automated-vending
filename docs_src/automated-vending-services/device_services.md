@@ -12,7 +12,7 @@ The **Automated Vending** reference implementation utilizes three device service
 
 ### Card reader description
 
-The `ds-card-reader` device service is an EdgeX device service that allows a USB-based RFID card reader to grant access to the Automated Vending. At a high level, this device service is responsible for discovering a specific card reader device, watching for input from that device, parsing that input, and then forwarding the input into the EdgeX framework.
+The `ds-card-reader` device service is an EdgeX device service that allows a USB-based RFID card reader to read user's card for accessing to the Automated Vending. At a high level, this device service is responsible for discovering a specific card reader device, watching for input from that device, parsing that input, and then forwarding the input through the EdgeX framework to the ms-authentication service which authorizes/denies access to the Automated Vending.
 
 There are two different modes available to this device service:
 
