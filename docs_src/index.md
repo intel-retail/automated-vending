@@ -126,22 +126,22 @@ docker ps --format 'table{{.Image}}\t{{.Status}}'
 
     | IMAGE                                                | STATUS            |
     |------------------------------------------------------|-------------------|
-    | automated-vending/ms-ledger:dev                     | Up 53 seconds     |
-    | eclipse-mosquitto:2.0.14                             | Up 52 seconds     |
-    | automated-vending/as-vending:dev                    | Up 52 seconds     |
-    | automated-vending/ms-inventory:dev                  | Up 52 seconds     |
-    | automated-vending/ds-controller-board:dev           | Up 52 seconds     |
-    | automated-vending/ms-authentication:dev             | Up 55 seconds     |
-    | edgexfoundry/device-mqtt:2.2.0                       | Up 53 seconds     |
-    | automated-vending/ds-card-reader:dev                | Up 53 seconds     |
-    | automated-vending/as-controller-board-status:dev    | Up 52 seconds     |
-    | edgexfoundry/core-command:2.2.0                      | Up About a minute |
-    | edgexfoundry/core-data:2.2.0                         | Up About a minute |
-    | edgexfoundry/core-metadata:2.2.0                     | Up About a minute |
-    | edgexfoundry/support-notifications:2.2.0             | Up About a minute |
-    | edgexfoundry/consul:1.10.10                          | Up About a minute |
-    | automated-vending/ds-cv-inference:dev               | Up 51 seconds     |
-    | redis:6.2-alpine                                     | Up About a minute |
+    | automated-vending/ms-ledger:dev                      | Up 53 seconds     |
+    | eclipse-mosquitto:2.0.15                             | Up 52 seconds     |
+    | automated-vending/as-vending:dev                     | Up 52 seconds     |
+    | automated-vending/ms-inventory:dev                   | Up 52 seconds     |
+    | automated-vending/ds-controller-board:dev            | Up 52 seconds     |
+    | automated-vending/ms-authentication:dev              | Up 55 seconds     |
+    | edgexfoundry/device-mqtt:3.0.0                       | Up 53 seconds     |
+    | automated-vending/ds-card-reader:dev                 | Up 53 seconds     |
+    | automated-vending/as-controller-board-status:dev     | Up 52 seconds     |
+    | edgexfoundry/core-command:3.0.0                      | Up About a minute |
+    | edgexfoundry/core-data:3.0.0                         | Up About a minute |
+    | edgexfoundry/core-metadata:3.0.0                     | Up About a minute |
+    | edgexfoundry/support-notifications:3.0.0             | Up About a minute |
+    | edgexfoundry/consul:1.15.2                           | Up About a minute |
+    | automated-vending/ds-cv-inference:dev                | Up 51 seconds     |
+    | redis:7.0.11-alpine                                  | Up About a minute |
 
 You can also use Portainer to check the status of the services. You must run Portainer service first:
 
@@ -175,12 +175,12 @@ After completing the steps in the Getting Started section, it may be helpful to 
 
 ### How to use the Compose Files
 
-The docker-compose files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the [`makefile`](https://github.com/intel-retail/automated-vending/blob/Edgex-3.0/Makefile) to manage the various compose files:
+The docker-compose files are segmented to allow for fine control of physical and simulated devices, as well as allowing you the choice of running Portainer. Use the [`makefile`](https://github.com/intel-retail/automated-vending/tree/main/Makefile) to manage the various compose files:
 
 | Compose file              | Purpose                                         | Makefile Command                     |
 |---------------------------|-------------------------------------------------|--------------------------------------|
 | Portainer                 | Container management                            | `make run-portainer`                 |
-| All Services (simulated)  | Automated Vending and EdgeX services           | `make run`                           |
+| All Services (simulated)  | Automated Vending and EdgeX services            | `make run`                           |
 | Physical Environment      | Mounts physical devices                         | `make run-physical`                  |
 | Physical Card Reader      | Allows just the card reader to be physical      | `make run-physical-card-reader`      |
 | Physical Controller Board | Allows just the controller board to be physical | `make run-physical-controller-board` |
