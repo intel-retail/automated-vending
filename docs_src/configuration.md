@@ -7,7 +7,7 @@ This page lists all of the relevant configuration parameters for each service in
 
 ## Environment overrides
 
-The simplest way to change one of the configuration values described below is via the use of environment variable overrides in the docker compose file. The value of each configuration item in a service's configuration can be overridden with an environment variable specific to that item. The name of the environment variable is the path to the item in the configuration tree with underscores separating the nodes. The character case of each node in the environment variable name must match that found in the service's configuration. These overrides are placed in the target service's environment section of the compose file. Here is an example:
+The simplest way to change one of the service's configuration values described below is via the use of environment variable overrides in the docker compose file. The value of each configuration item in a service's configuration can be overridden with an environment variable specific to that item. The name of the environment variable is the path to the item in the configuration tree with underscores separating the nodes. The enviroment variable name is upper case version of the setting that found in the service's configuration. These overrides are placed in the target service's environment section of the compose file. Here is an example:
 
 ```yaml
   ds-card-reader:
@@ -16,7 +16,7 @@ The simplest way to change one of the configuration values described below is vi
       - /dev/input:/dev/input
     environment:
       DRIVERCONFIG_SIMULATEDEVICE: "false"
-      DRIVERCONFIG__DEVICESEARCHPATH: "/dev/input/event*"
+      DRIVERCONFIG_DEVICESEARCHPATH: "/dev/input/event*"
       DRIVERCONFIG_VID: 65535 # 0xFFFF
       DRIVERCONFIG_PID: 53    # 0x0035
 ```
