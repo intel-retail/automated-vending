@@ -139,9 +139,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_started
-    environment:
-      EDGEX_SECURITY_SECRET_STORE: "false"
-      SERVICE_HOST: ds-cv-inference
     hostname: ds-cv-inference
     networks:
       edgex-network: {}
@@ -165,6 +162,7 @@ services:
       consul:
         condition: service_started
     environment:
+      CLIENTS_CORE_COMMAND_HOST: edgex-core-command
       EDGEX_SECURITY_SECRET_STORE: "false"
       SERVICE_HOST: as-vending
       VENDING_AUTHENTICATIONENDPOINT: http://ms-authentication:48096/authentication
@@ -198,7 +196,6 @@ services:
       CLIENTS_SUPPORT_NOTIFICATIONS_HOST: edgex-support-notifications
       EDGEX_SECURITY_SECRET_STORE: "false"
       SERVICE_HOST: as-controller-board-status
-      CONTROLLERBOARDSTATUS_DOORSTATUSCOMMANDENDPOINT: "http://edgex-core-command:59882/api/v2/device/name/Inference-device/inferenceDoorStatus"
       CONTROLLERBOARDSTATUS_VENDINGENDPOINT: "http://as-vending:48099/boardStatus"
       CONTROLLERBOARDSTATUS_MAXTEMPERATURETHRESHOLD: "83"
       CONTROLLERBOARDSTATUS_MINTEMPERATURETHRESHOLD: "10"
