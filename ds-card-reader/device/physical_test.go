@@ -9,7 +9,6 @@ package device
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -32,7 +31,7 @@ const (
 )
 
 func clearLogs() error {
-	return ioutil.WriteFile(physicalLogFile, []byte{}, 0644)
+	return os.WriteFile(physicalLogFile, []byte{}, 0644)
 }
 
 func doesLogFileContainString(input string) (bool, error) {

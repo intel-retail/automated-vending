@@ -13,7 +13,6 @@ import (
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 type Controller struct {
@@ -55,8 +54,17 @@ func (c *Controller) AddAllRoutes() error {
 // GetMaintenanceMode will return a JSON response containing the boolean state
 // of the vendingState's maintenance mode.
 func (c *Controller) GetMaintenanceMode(writer http.ResponseWriter, req *http.Request) {
-	mm, _ := utilities.GetAsJSON(functions.MaintenanceMode{MaintenanceMode: c.vendingState.MaintenanceMode})
-	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, mm, false)
+
+	// TODO: Do we want to have the error handling here?
+	mm, err := json.Marshal(functions.MaintenanceMode{MaintenanceMode: c.vendingState.MaintenanceMode})
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to marshal requested state: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
+		return
+	}
+	writer.Write(mm)
 }
 
 func (c *Controller) errorAddRouteHandler(err error) error {

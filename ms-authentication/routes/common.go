@@ -4,9 +4,9 @@
 package routes
 
 import (
-	"errors"
-
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"encoding/json"
+	"fmt"
+	"os"
 )
 
 // PeopleFileName is the name of the respective struct data file that
@@ -23,32 +23,59 @@ const CardsFileName = "cards.json"
 
 // WritePeople writes data to the respective JSON file
 func (people *People) WritePeople() (err error) {
-	return utilities.WriteToJSONFile(PeopleFileName, people, 0644)
+	peopleJson, err := json.Marshal(people)
+	if err != nil {
+		return fmt.Errorf("failed to marshal people: %s", err.Error())
+	}
+	err = os.WriteFile(PeopleFileName, peopleJson, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write people data to file: %s", err.Error())
+	}
+	return nil
 }
 
 // WriteAccounts writes data to the respective JSON file
 func (accounts *Accounts) WriteAccounts() (err error) {
-	return utilities.WriteToJSONFile(AccountsFileName, accounts, 0644)
+	accountsJson, err := json.Marshal(accounts)
+	if err != nil {
+		return fmt.Errorf("failed to marshal accounts: %s", err.Error())
+	}
+	err = os.WriteFile(AccountsFileName, accountsJson, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write accounts data to file: %s", err.Error())
+	}
+	return
 }
 
 // WriteCards writes data to the respective JSON file
 func (cards *Cards) WriteCards() (err error) {
-	return utilities.WriteToJSONFile(CardsFileName, cards, 0644)
+	cardsJson, err := json.Marshal(cards)
+	if err != nil {
+		return fmt.Errorf("failed to marshal cards: %s", err.Error())
+	}
+	err = os.WriteFile(CardsFileName, cardsJson, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write cards data to file: %s", err.Error())
+	}
+	return
 }
 
 // DeletePeople writes an empty list to the respective JSON file
 func DeletePeople() (err error) {
-	return utilities.WriteToJSONFile(PeopleFileName, People{People: []Person{}}, 0644)
+	people := People{People: []Person{}}
+	return people.WritePeople()
 }
 
 // DeleteAccounts writes an empty list to the respective JSON file
 func DeleteAccounts() (err error) {
-	return utilities.WriteToJSONFile(AccountsFileName, Accounts{Accounts: []Account{}}, 0644)
+	accounts := Accounts{Accounts: []Account{}}
+	return accounts.WriteAccounts()
 }
 
 // DeleteCards writes an empty list to the respective JSON file
 func DeleteCards() (err error) {
-	return utilities.WriteToJSONFile(CardsFileName, Cards{Cards: []Card{}}, 0644)
+	cards := Cards{Cards: []Card{}}
+	return cards.WriteCards()
 }
 
 // DeletePerson deletes from the list
@@ -83,33 +110,36 @@ func (cards *Cards) DeleteCard(cardToDelete Card) {
 
 // GetPeopleData reads the data from the respective JSON file
 func GetPeopleData() (people People, err error) {
-	err = utilities.LoadFromJSONFile(PeopleFileName, &people)
+	data, err := os.ReadFile(PeopleFileName)
 	if err != nil {
-		return people, errors.New(
-			"Failed to load people from JSON file: " + err.Error(),
-		)
+		return People{}, fmt.Errorf("failed to read from people JSON file: %s", err.Error())
+	}
+	if err = json.Unmarshal(data, &people); err != nil {
+		return People{}, fmt.Errorf("failed to unmarshal people from JSON file: %s", err.Error())
 	}
 	return
 }
 
 // GetAccountsData reads the data from the respective JSON file
 func GetAccountsData() (accounts Accounts, err error) {
-	err = utilities.LoadFromJSONFile(AccountsFileName, &accounts)
+	data, err := os.ReadFile(AccountsFileName)
 	if err != nil {
-		return accounts, errors.New(
-			"Failed to load accounts from JSON file: " + err.Error(),
-		)
+		return Accounts{}, fmt.Errorf("failed to read from accounts JSON file: %s", err.Error())
+	}
+	if err = json.Unmarshal(data, &accounts); err != nil {
+		return Accounts{}, fmt.Errorf("failed to unmarshal accounts from JSON file: %s", err.Error())
 	}
 	return
 }
 
 // GetCardsData reads the data from the respective JSON file
 func GetCardsData() (cards Cards, err error) {
-	err = utilities.LoadFromJSONFile(CardsFileName, &cards)
+	data, err := os.ReadFile(CardsFileName)
 	if err != nil {
-		return cards, errors.New(
-			"Failed to load cards from JSON file: " + err.Error(),
-		)
+		return Cards{}, fmt.Errorf("failed to read from cards JSON file: %s", err.Error())
+	}
+	if err = json.Unmarshal(data, &cards); err != nil {
+		return Cards{}, fmt.Errorf("failed to unmarshal cards from JSON file: %s", err.Error())
 	}
 	return
 }

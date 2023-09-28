@@ -5,23 +5,24 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
+	"os"
 	"time"
-
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 // DeltaInventorySKUPost allows a change in inventory (a delta), via HTTP Post
 // REST requests to occur
 func (c *Controller) DeltaInventorySKUPost(writer http.ResponseWriter, req *http.Request) {
-	response := utilities.GetHTTPResponseTemplate()
 
 	// Read request body
 	body := make([]byte, req.ContentLength)
 	if _, err := io.ReadFull(req.Body, body); err != nil {
 		c.lc.Errorf("Failed to process the posted delta inventory item(s): %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to process the posted delta inventory item(s): "+err.Error(), true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Failed to process the posted delta inventory item(s): " + err.Error()))
 		return
 	}
 
@@ -30,17 +31,25 @@ func (c *Controller) DeltaInventorySKUPost(writer http.ResponseWriter, req *http
 	err := json.Unmarshal(body, &deltaInventorySKUList)
 	if err != nil {
 		c.lc.Errorf("Failed to process the posted delta inventory item(s): %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to process the posted delta inventory item(s): "+err.Error(), true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Failed to process the posted delta inventory item(s): " + err.Error()))
 		return
 	}
 
 	// load the inventory.json file
 	var inventoryItems Products
-	err = utilities.LoadFromJSONFile(c.inventoryFileName, &inventoryItems)
+	data, err := os.ReadFile(c.inventoryFileName)
 	if err != nil {
-		c.lc.Errorf("Failed to retrieve all inventory items: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all inventory items: "+err.Error(), true)
-		return
+		errMsg := fmt.Sprintf("failed to read from inventory items JSON file: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
+	}
+	if err = json.Unmarshal(data, &inventoryItems); err != nil {
+		errMsg := fmt.Sprintf("failed to unmarshal inventory items from JSON file: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
 	}
 
 	// iterate over all deltaInventorySKU's and find their corresponding SKU in inventory
@@ -61,41 +70,49 @@ func (c *Controller) DeltaInventorySKUPost(writer http.ResponseWriter, req *http
 	// Nothing was done, so return "Not Modified" status
 	if !performedUpdate {
 		c.lc.Info("No change made to inventory")
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusNotModified, "", false)
+		writer.WriteHeader(http.StatusNotModified)
+		writer.Write([]byte(""))
 		return
 	}
 
 	// Write the updated inventory to the inventory json file
-	err = utilities.WriteToJSONFile(c.inventoryFileName, inventoryItems, 0644)
+	inventoryData, err := json.Marshal(inventoryItems)
 	if err != nil {
-		c.lc.Errorf("Failed to write inventory: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to write inventory: "+err.Error(), true)
-		return
+		errMsg := fmt.Sprintf("failed to marshal inventory : %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
 	}
+	err = os.WriteFile(c.inventoryFileName, inventoryData, 0644)
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to write inventory data to file: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
+	}
+
 	// return the new/updated items as JSON, or if for some reason it cannot be processed back into
 	// JSON for returning to the user, fallback to a simple string
-	updatedInventoryItemsJSON, err := utilities.GetAsJSON(updatedInventoryItems)
+	updatedInventoryItemsJSON, err := json.Marshal(updatedInventoryItems)
 	if err != nil {
 		c.lc.Info("Updated inventory successfully")
-		response.SetStringHTTPResponseFields(http.StatusOK, "Updated inventory successfully", false)
+		writer.Write([]byte("Updated inventory successfully"))
 	} else {
 		c.lc.Infof("Updated inventory successfully: %s", updatedInventoryItemsJSON)
-		response.SetJSONHTTPResponseFields(http.StatusOK, updatedInventoryItemsJSON, false)
+		writer.Write(updatedInventoryItemsJSON)
 	}
-	response.WriteHTTPResponse(writer, req)
 }
 
 // InventoryPost allows new items to be added to inventory, as well as updating
 // existing items
 func (c *Controller) InventoryPost(writer http.ResponseWriter, req *http.Request) {
-	// Use the ProcessCORS "decorator" function to reduce code repetition
-	response := utilities.GetHTTPResponseTemplate()
 
 	// Read request body
 	body := make([]byte, req.ContentLength)
 	if _, err := io.ReadFull(req.Body, body); err != nil {
 		c.lc.Errorf("Failed to process the posted inventory item(s): %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to process the posted inventory item(s): "+err.Error(), true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Failed to process the posted inventory item(s): " + err.Error()))
 		return
 	}
 
@@ -109,17 +126,25 @@ func (c *Controller) InventoryPost(writer http.ResponseWriter, req *http.Request
 	err := json.Unmarshal(body, &deltaInventoryList)
 	if err != nil {
 		c.lc.Errorf("Failed to process the posted inventory item(s): %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to process the posted inventory item(s): "+err.Error(), true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Failed to process the posted inventory item(s): " + err.Error()))
 		return
 	}
 
 	// load the inventory.json file
 	var inventoryItems Products
-	err = utilities.LoadFromJSONFile(c.inventoryFileName, &inventoryItems)
+	data, err := os.ReadFile(c.inventoryFileName)
 	if err != nil {
-		c.lc.Errorf("Failed to retrieve all inventory items: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all inventory items: "+err.Error(), true)
-		return
+		errMsg := fmt.Sprintf("failed to read from inventory items JSON file: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
+	}
+	if err = json.Unmarshal(data, &inventoryItems); err != nil {
+		errMsg := fmt.Sprintf("failed to unmarshal inventory items from JSON file: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
 	}
 
 	// Keep track of the items that get added so that the user can be informed of them in our response
@@ -179,7 +204,7 @@ func (c *Controller) InventoryPost(writer http.ResponseWriter, req *http.Request
 				inventoryItems.Data[i].UpdatedAt = time.Now().UnixNano()
 				inventoryChanged = true
 				newInventoryItems = append(newInventoryItems, inventoryItems.Data[i])
-				response.SetStringHTTPResponseFields(http.StatusOK, "Updated inventory", false)
+				writer.Write([]byte("Updated inventory"))
 			}
 		}
 		if !postedInventoryItemFound {
@@ -237,42 +262,48 @@ func (c *Controller) InventoryPost(writer http.ResponseWriter, req *http.Request
 			inventoryItems.Data = append(inventoryItems.Data, newProduct)
 			inventoryChanged = true
 			newInventoryItems = append(newInventoryItems, newProduct)
-			response.SetStringHTTPResponseFields(http.StatusOK, "Updated inventory", false)
+			writer.Write([]byte("Updated inventory"))
 		}
 	}
 
 	if inventoryChanged {
 		// Write the updated audit log to the audit log json file
-		err = utilities.WriteToJSONFile(c.inventoryFileName, inventoryItems, 0644)
+		inventoryData, err := json.Marshal(inventoryItems)
 		if err != nil {
+			errMsg := fmt.Sprintf("failed to marshal inventory data: %s", err.Error())
+			c.lc.Errorf(errMsg)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte(errMsg))
+			return
+		}
+		if err = os.WriteFile(c.inventoryFileName, inventoryData, 0644); err != nil {
 			c.lc.Errorf("Failed to write inventory: %s", err.Error())
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to write inventory: "+err.Error(), true)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte("Failed to write inventory: " + err.Error()))
 			return
 		}
 		// return the new/updated items as JSON, or if for some reason it cannot be processed back into
 		// JSON for returning to the user, fallback to a simple string
-		newInventoryItemsJSON, err := utilities.GetAsJSON(newInventoryItems)
+		newInventoryItemsJSON, err := json.Marshal(newInventoryItems)
 		if err != nil {
 			c.lc.Info("Updated inventory successfully")
-			response.SetStringHTTPResponseFields(http.StatusOK, "Updated inventory successfully", false)
+			writer.Write([]byte("Updated inventory successfully"))
 		} else {
 			c.lc.Infof("Updated inventory successfully: %s", newInventoryItemsJSON)
-			response.SetJSONHTTPResponseFields(http.StatusOK, newInventoryItemsJSON, false)
+			writer.Write(newInventoryItemsJSON)
 		}
 	}
-	response.WriteHTTPResponse(writer, req)
 }
 
 // AuditLogPost allows for a new audit log entry to be added
 func (c *Controller) AuditLogPost(writer http.ResponseWriter, req *http.Request) {
-	// Use the ProcessCORS "decorator" function to reduce code repetition
-	response := utilities.GetHTTPResponseTemplate()
 
 	// Read request body
 	body := make([]byte, req.ContentLength)
 	if _, err := io.ReadFull(req.Body, body); err != nil {
 		c.lc.Errorf("Failed to process the posted audit log entry: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to process the posted audit log entry: "+err.Error(), true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Failed to process the posted audit log entry: " + err.Error()))
 		return
 	}
 
@@ -281,7 +312,8 @@ func (c *Controller) AuditLogPost(writer http.ResponseWriter, req *http.Request)
 	err := json.Unmarshal(body, &postedAuditLogEntry)
 	if err != nil {
 		c.lc.Errorf("Failed to process the posted audit log entry: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Failed to process the posted audit log entry: "+err.Error(), true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Failed to process the posted audit log entry: " + err.Error()))
 		return
 	}
 
@@ -289,12 +321,13 @@ func (c *Controller) AuditLogPost(writer http.ResponseWriter, req *http.Request)
 	// and reject it if it has
 	if postedAuditLogEntry.AuditEntryID != "" {
 		c.lc.Error("The posted audit log entry is not defined")
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "The submitted audit log entry must not have an auditEntryId defined.", true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("The submitted audit log entry must not have an auditEntryId defined."))
 		return
 	}
 
 	// assign a new UUID to our new audit log entry
-	postedAuditLogEntry.AuditEntryID = utilities.GenUUID()
+	postedAuditLogEntry.AuditEntryID = uuid.New().String()
 
 	// assign the CreatedAt value to right now, if the user hasn't passed it
 	if postedAuditLogEntry.CreatedAt == 0 {
@@ -302,11 +335,20 @@ func (c *Controller) AuditLogPost(writer http.ResponseWriter, req *http.Request)
 	}
 
 	// load the auditlog.json file
-	var auditLog AuditLog
-	err = utilities.LoadFromJSONFile(c.auditLogFileName, &auditLog)
+	data, err := os.ReadFile(c.auditLogFileName)
 	if err != nil {
-		c.lc.Errorf("Failed to retrieve all audit log entries: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to retrieve all audit log entries: "+err.Error(), true)
+		errMsg := fmt.Sprintf("failed to read from cards JSON file: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
+		return
+	}
+	var auditLog AuditLog
+	if err = json.Unmarshal(data, &auditLog); err != nil {
+		errMsg := fmt.Sprintf("failed to unmarshal cards from JSON file: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
 		return
 	}
 
@@ -319,35 +361,43 @@ func (c *Controller) AuditLogPost(writer http.ResponseWriter, req *http.Request)
 		if postedAuditLogEntry.AuditEntryID == auditLogEntry.AuditEntryID {
 			foundEntry = true
 			c.lc.Errorf("Failed to process the requested audit log entry: %s", postedAuditLogEntry.AuditEntryID)
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to process the requested audit log entry "+postedAuditLogEntry.AuditEntryID+" as it already exists", true)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte("Failed to process the requested audit log entry " + postedAuditLogEntry.AuditEntryID + " as it already exists"))
 			break
 		}
 	}
 	// Happy path
 	// If we haven't found any conflicting UUID's and there have been no errors,
 	// proceed to update the list
-	if !foundEntry && !response.Error {
+	if !foundEntry {
 		// write the result
 		auditLog.Data = append(auditLog.Data, postedAuditLogEntry)
 
-		err = utilities.WriteToJSONFile(c.auditLogFileName, auditLog, 0644)
+		auditLogData, err := json.Marshal(auditLog)
 		if err != nil {
-			c.lc.Errorf("Failed to write the audit log entry: %s : %s", postedAuditLogEntry.AuditEntryID, err.Error())
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to write the audit log entry "+postedAuditLogEntry.AuditEntryID+": "+err.Error(), true)
+			errMsg := fmt.Sprintf("failed to marshal audit log: %s", err.Error())
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte(errMsg))
+			return
+		}
+		if err = os.WriteFile(c.auditLogFileName, auditLogData, 0644); err != nil {
+			errMsg := fmt.Sprintf("failed to write audit log data to file: %s", err.Error())
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte(errMsg))
 			return
 		}
 
 		// return the posted audit log entry to the user once added
-		result, err := utilities.GetAsJSON(postedAuditLogEntry)
+		result, err := json.Marshal(postedAuditLogEntry)
 		if err != nil {
 			c.lc.Errorf("Failed to return the requested audit log entry to the user: %s : %s", postedAuditLogEntry.AuditEntryID, err.Error())
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to return the requested audit log entry to the user "+postedAuditLogEntry.AuditEntryID+": "+err.Error(), true)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte("Failed to return the requested audit log entry to the user " + postedAuditLogEntry.AuditEntryID + ": " + err.Error()))
 			return
 		}
 
 		// Happy path HTTP response
 		c.lc.Infof("Successfully added new entry to audit log: %s", postedAuditLogEntry.AuditEntryID)
-		response.SetJSONHTTPResponseFields(http.StatusOK, result, false)
+		writer.Write(result)
 	}
-	response.WriteHTTPResponse(writer, req)
 }

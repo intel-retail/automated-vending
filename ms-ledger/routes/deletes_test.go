@@ -5,7 +5,7 @@ package routes
 
 import (
 	"bytes"
-	"io/ioutil"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,7 +16,6 @@ import (
 	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/gorilla/mux"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -66,9 +65,13 @@ func TestLedgerDelete(t *testing.T) {
 			require.NoError(err)
 
 			if currentTest.InvalidLedger {
-				err = ioutil.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
+				err = os.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
 			} else {
-				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+				data, err := json.Marshal(accountLedgers)
+				require.NoError(err)
+
+				err = os.WriteFile(c.ledgerFileName, data, 0644)
+				require.NoError(err)
 			}
 			require.NoError(err)
 			defer func() {

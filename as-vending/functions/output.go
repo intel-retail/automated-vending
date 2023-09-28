@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 const (
@@ -110,16 +110,18 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 							return false, err
 						}
 
-						defer resp.Body.Close()
-
 						lc.Info("Successfully updated the user's ledger")
 
 						var currentLedger Ledger
-						_, err = utilities.ParseJSONHTTPResponseContent(resp.Body, &currentLedger)
+						defer resp.Body.Close()
+						body, err := io.ReadAll(resp.Body)
 						if err != nil {
-							return false, fmt.Errorf("Unable to unmarshal ledger response")
+							lc.Errorf("Failed to read response body: %s", err.Error())
 						}
-
+						err = json.Unmarshal(body, &currentLedger)
+						if err != nil {
+							lc.Errorf("Failed to unmarshal Ledger from response body: %s", err.Error())
+						}
 						// Display Ledger Total on LCD
 						if displayErr := vendingState.displayLedger(lc, vendingState.Configuration.ControllerBoardDeviceName, currentLedger); displayErr != nil {
 							return false, displayErr
@@ -374,12 +376,16 @@ func (vendingState *VendingState) getCardAuthInfo(lc logger.LoggingClient, authE
 		return
 	}
 
-	defer resp.Body.Close()
-
 	var auth OutputData
-	_, err = utilities.ParseJSONHTTPResponseContent(resp.Body, &auth)
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		lc.Errorf("Could not read response body from AuthenticationEndpoint: %v", err)
+		lc.Errorf("Failed to read response body from Authentication for card ID %s: %s", cardID, err.Error())
+		return
+	}
+	err = json.Unmarshal(body, &auth)
+	if err != nil {
+		lc.Errorf("Could not unmarshal from AuthenticationEndpoint for card ID %s: %s", cardID, err.Error())
 		return
 	}
 

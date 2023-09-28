@@ -4,12 +4,10 @@
 package routes
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/require"
 )
 
@@ -71,8 +69,7 @@ func TestWriteInventory(t *testing.T) {
 	}()
 
 	// load product from file to validate
-	productsFromFile := Products{}
-	err = utilities.LoadFromJSONFile(c.inventoryFileName, &productsFromFile)
+	productsFromFile, err := c.GetInventoryItems()
 	require.NoError(t, err)
 
 	// Check to make sure items match
@@ -201,14 +198,14 @@ func TestGetInventoryItemErrors(t *testing.T) {
 	}()
 
 	t.Run("Test GetInventoryItems Error", func(t *testing.T) {
-		err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
+		err := os.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
 		_, err = c.GetInventoryItems()
 		require.NotNil(t, err, "Expected inventory get to fail")
 	})
 	t.Run("Test GetInventoryItemBySKU Error", func(t *testing.T) {
-		err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
+		err := os.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
 		_, _, err = c.GetInventoryItemBySKU(products.Data[0].SKU)
@@ -296,7 +293,7 @@ func TestWriteAuditLog(t *testing.T) {
 
 	// load audits from file to validate
 	auditsFromFile := AuditLog{}
-	err = utilities.LoadFromJSONFile(AuditLogFileName, &auditsFromFile)
+	auditsFromFile, err = c.GetAuditLog()
 	require.NoError(t, err)
 
 	// Check to make sure audit entries match
@@ -437,14 +434,14 @@ func TestGetAuditLogErrors(t *testing.T) {
 	entryIDToReturn := "1"
 
 	t.Run("Test GetAuditLog Error", func(t *testing.T) {
-		err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
+		err := os.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
 		_, err = c.GetAuditLog()
 		require.NotNil(t, err, "Expected audit log get to fail")
 	})
 	t.Run("Test GetAuditLogEntryByID Error", func(t *testing.T) {
-		err := ioutil.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
+		err := os.WriteFile(AuditLogFileName, []byte("invalid json test"), 0644)
 		require.NoError(t, err)
 
 		_, _, err = c.GetAuditLogEntryByID(entryIDToReturn)

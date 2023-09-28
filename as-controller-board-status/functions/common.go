@@ -5,10 +5,9 @@ package functions
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
-
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 const (
@@ -22,13 +21,14 @@ const (
 // and submit it as part of the outbound REST request.
 func (boardStatus *CheckBoardStatus) RESTCommandJSON(restURL string, restMethod string, inputInterface interface{}) (err error) {
 	// Serialize the inputInterface
-	inputInterfaceJSON, err := utilities.GetAsJSON(inputInterface)
+	inputInterfaceJSON, err := json.Marshal(inputInterface)
+
 	if err != nil {
 		return fmt.Errorf("failed to serialize the input interface as JSON: %v", err.Error())
 	}
 
 	// Build out the request
-	req, err := http.NewRequest(restMethod, restURL, bytes.NewBuffer([]byte(inputInterfaceJSON)))
+	req, err := http.NewRequest(restMethod, restURL, bytes.NewBuffer(inputInterfaceJSON))
 	if err != nil {
 		return fmt.Errorf("failed to build the REST %v request for the URL %v due to error: %v", restMethod, restURL, err.Error())
 	}

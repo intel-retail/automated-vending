@@ -5,7 +5,6 @@ package routes
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -55,7 +54,7 @@ func TestInventoryDelete(t *testing.T) {
 			}()
 
 			if currentTest.BadInventory {
-				err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
+				err := os.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteInventory()
@@ -124,7 +123,7 @@ func TestAuditLogDelete(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadAuditID {
-				err := ioutil.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
+				err := os.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteAuditLog()

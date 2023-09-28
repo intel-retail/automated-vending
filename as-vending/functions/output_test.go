@@ -5,8 +5,10 @@ package functions
 
 import (
 	"as-vending/config"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,8 +20,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 	edgexError "github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -86,8 +86,12 @@ func TestGetCardAuthInfo(t *testing.T) {
 				output := OutputData{
 					CardID: tc.cardID,
 				}
-				authDataJSON, _ := utilities.GetAsJSON(output)
-				utilities.WriteJSONHTTPResponse(w, r, tc.statusCode, authDataJSON, false)
+
+				authDataJSON, err := json.Marshal(output)
+				require.NoError(t, err)
+
+				w.WriteHeader(tc.statusCode)
+				w.Write(authDataJSON)
 			}))
 
 			defer testServer.Close()
@@ -176,23 +180,17 @@ func TestHandleMqttDeviceReading(t *testing.T) {
 					LineTotal:     20.5,
 				}
 
-				outputJSON, _ := utilities.GetAsJSON(output)
+				outputJSON, err := json.Marshal(output)
+				require.NoError(t, err)
 
-				writeError := false
 				writeContentType := "json"
 				if tc.Expected != nil {
-					writeError = true
 					writeContentType = "string"
 				}
 
-				httpResponse := utilities.HTTPResponse{
-					Content:     outputJSON,
-					ContentType: writeContentType,
-					StatusCode:  tc.statusCode,
-					Error:       writeError,
-				}
-
-				httpResponse.WriteHTTPResponse(w, r)
+				w.WriteHeader(tc.statusCode)
+				w.Header().Set("Content-Type", writeContentType)
+				w.Write(outputJSON)
 			}))
 
 			// VendingState initialization
@@ -290,8 +288,10 @@ func TestVerifyDoorAccess(t *testing.T) {
 				output := OutputData{
 					RoleID: tc.RoleID,
 				}
-				authDataJSON, _ := utilities.GetAsJSON(output)
-				utilities.WriteJSONHTTPResponse(w, r, http.StatusOK, authDataJSON, false)
+
+				authDataJSON, err := json.Marshal(output)
+				require.NoError(t, err)
+				w.Write(authDataJSON)
 			}))
 
 			vendingState := VendingState{
