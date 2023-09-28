@@ -1,6 +1,6 @@
 ---
 
-# Copyright © 2020 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
 version: '3.4'
@@ -8,7 +8,7 @@ version: '3.4'
 services:
 
 #################################################################
-# Automated Checkout Microservices
+# Automated Vending Microservices
 #################################################################
 
   # this device service must be run as root to mount the device
