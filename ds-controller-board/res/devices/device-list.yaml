@@ -3,10 +3,13 @@
 
 # Pre-define Devices
 deviceList:
-  name: controller-board
-  profileName: ds-controller-board
-  protocols: 
-  autoEvents:
-    interval: 3s
-    onChange: true
-    sourceName: controller-board-status
+  - name: controller-board
+    profileName: ds-controller-board
+    protocols:
+      other:
+        Address: ds-controller-board
+        Port: 48097
+    autoEvents:
+      - interval: 3s
+        onChange: true
+        sourceName: controller-board-status

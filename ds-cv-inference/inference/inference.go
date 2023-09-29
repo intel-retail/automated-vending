@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package inference
@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"os"
+	"io/ioutil"
 
 	"gocv.io/x/gocv"
 )
@@ -94,8 +94,6 @@ func StartInference(inferenceDeltasChannel chan []byte, InferenceDoorOpenChannel
 		return
 	}
 	defer net.Close()
-
-	fmt.Println("gocv ReadNet successfully")
 
 	// OpenVINO backend
 	if err := net.SetPreferableBackend(gocv.NetBackendOpenVINO); err != nil {
@@ -267,7 +265,7 @@ func calculateDelta(originalCount map[string]int, afterCount map[string]int, sku
 }
 
 func countImages(directory string) (int, error) {
-	files, err := os.ReadDir(directory)
+	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		fmt.Printf("Error opening directory: %v\n", directory)
 		return 0, err

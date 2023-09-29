@@ -8,7 +8,7 @@ go 1.20
 require (
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/stretchr/testify v1.8.0
-	gocv.io/x/gocv v0.31.0
+	gocv.io/x/gocv v0.27.0
 )
 
 require (
