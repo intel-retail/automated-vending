@@ -166,7 +166,7 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 				"test": make(chan bool),
 			},
 			HTTPTestServer: testServerStatusOK,
-			Output:         fmt.Errorf("failed to serialize the input interface as JSON: Failed to marshal into JSON string: json: unsupported type: chan bool"),
+			Output:         fmt.Errorf("failed to serialize the input interface as JSON: json: unsupported type: chan bool"),
 		})
 	output = append(output,
 		testTableRESTCommandJSONStruct{
