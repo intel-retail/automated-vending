@@ -7,8 +7,9 @@ ENV GOPATH /go
 RUN go get -u -d gocv.io/x/gocv
 
 WORKDIR /tmp
-RUN wget https://apt.repos.intel.com/openvino/2021/GPG-PUB-KEY-INTEL-OPENVINO-2021
-RUN apt-key add GPG-PUB-KEY-INTEL-OPENVINO-2021 && apt-key list
+RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+RUN apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && apt-key list
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN echo "deb https://apt.repos.intel.com/openvino/2021 all main" | tee /etc/apt/sources.list.d/intel-openvino-2021.list
 RUN apt update
 RUN apt install intel-openvino-dev-ubuntu18-2021.3.394 -y
