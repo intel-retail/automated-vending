@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -31,14 +30,11 @@ func main() {
 	flag.Parse()
 
 	//Read skuMappingJSON
-	skuMappingJSONFile, err := os.Open(*skuMapping)
+	skuMappingJSONByte, err := os.ReadFile(*skuMapping)
 	if err != nil {
 		fmt.Printf("Error reading from SKU Mapping file: %v\n", *skuMapping)
 		os.Exit(1)
 	}
-	defer skuMappingJSONFile.Close()
-
-	skuMappingJSONByte, _ := io.ReadAll(skuMappingJSONFile)
 
 	inferenceInit(*directory, *model, *configFile, *confidence, skuMappingJSONByte)
 

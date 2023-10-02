@@ -8,8 +8,8 @@ go 1.20
 require (
 	github.com/edgexfoundry/app-functions-sdk-go/v3 v3.0.1
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/intel-iot-devkit/automated-checkout-utilities v1.0.0
 	github.com/stretchr/testify v1.8.2
 )
 
@@ -36,7 +36,6 @@ require (
 	github.com/go-redis/redis/v7 v7.3.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gomodule/redigo v1.8.9 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/consul/api v1.20.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect

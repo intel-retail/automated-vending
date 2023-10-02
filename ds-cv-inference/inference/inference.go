@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"io/ioutil"
+	"os"
 
 	"gocv.io/x/gocv"
 )
@@ -267,7 +267,7 @@ func calculateDelta(originalCount map[string]int, afterCount map[string]int, sku
 }
 
 func countImages(directory string) (int, error) {
-	files, err := ioutil.ReadDir(directory)
+	files, err := os.ReadDir(directory)
 	if err != nil {
 		fmt.Printf("Error opening directory: %v\n", directory)
 		return 0, err

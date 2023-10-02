@@ -9,7 +9,6 @@ require (
 	github.com/edgexfoundry/app-functions-sdk-go/v3 v3.0.1
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0
 	github.com/gorilla/mux v1.8.0
-	github.com/intel-iot-devkit/automated-checkout-utilities v1.0.0
 	github.com/stretchr/testify v1.8.4
 )
 

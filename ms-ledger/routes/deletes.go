@@ -4,12 +4,13 @@
 package routes
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 // LedgerDelete will delete a specific ledger for an account
@@ -19,8 +20,9 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 	accountLedgers, err := c.GetAllLedgers()
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to retrieve all ledgers for accounts: %v", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
 		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
 		return
 	}
 
@@ -30,8 +32,9 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 	tid, tiderr := strconv.ParseInt(tidstr, 10, 64)
 	if tiderr != nil {
 		errMsg := "transactionID contains bad data"
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
 		c.lc.Error("%s: %s", errMsg, tiderr.Error())
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte(errMsg))
 		return
 	}
 
@@ -39,8 +42,9 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 	accountID, accountIDerr := strconv.Atoi(accountIDstr)
 	if accountIDerr != nil {
 		errMsg := "accountID contains bad data"
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
 		c.lc.Error("%s: %s", errMsg, accountIDerr.Error())
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte(errMsg))
 		return
 	}
 
@@ -52,28 +56,39 @@ func (c *Controller) LedgerDelete(writer http.ResponseWriter, req *http.Request)
 					if tid == ledger.TransactionID {
 						accountLedgers.Data[accountIndex].Ledgers = append(account.Ledgers[:ledgerIndex], account.Ledgers[ledgerIndex+1:]...)
 
-						err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+						data, err := json.Marshal(accountLedgers)
 						if err != nil {
-							errMsg := "Failed to update ledger with deleted transaction"
-							utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
+							errMsg := "marshal failed for update ledger with deleted transaction"
 							c.lc.Errorf("%s: %s", errMsg, err.Error())
+							writer.WriteHeader(http.StatusInternalServerError)
+							writer.Write([]byte(errMsg))
 							return
 						}
-						utilities.WriteStringHTTPResponse(writer, req, http.StatusOK, "Deleted ledger "+tidstr, false)
+
+						if err = os.WriteFile(c.ledgerFileName, data, 0644); err != nil {
+							errMsg := "write failed for update ledger with deleted transaction"
+							c.lc.Errorf("%s: %s", errMsg, err.Error())
+							writer.WriteHeader(http.StatusInternalServerError)
+							writer.Write([]byte(errMsg))
+							return
+						}
 						c.lc.Info("Deleted ledger successfully")
+						writer.Write([]byte("Deleted ledger " + tidstr))
 						return
 					}
 				}
 				errMsg := fmt.Sprintf("Could not find Transaction %v", strconv.FormatInt(tid, 10))
-				utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
 				c.lc.Errorf(errMsg)
+				writer.WriteHeader(http.StatusBadRequest)
+				writer.Write([]byte(errMsg))
 				return
 			}
 		}
 
 		errMsg := fmt.Sprintf("Could not find account %v", strconv.Itoa(accountID))
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, errMsg, true)
 		c.lc.Errorf(errMsg)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte(errMsg))
 		return
 	}
 }

@@ -4,9 +4,10 @@
 package routes
 
 import (
+	"encoding/json"
 	"errors"
-
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"fmt"
+	"os"
 )
 
 // DeleteAllQueryString is a string used across this module to enable
@@ -18,13 +19,14 @@ const (
 // GetInventoryItems returns a list of InventoryItems by reading the inventory
 // JSON file
 func (c *Controller) GetInventoryItems() (inventoryItems Products, err error) {
-	err = utilities.LoadFromJSONFile(c.inventoryFileName, &inventoryItems)
+	data, err := os.ReadFile(c.inventoryFileName)
 	if err != nil {
-		c.lc.Errorf("Failed to load inventory JSON file: %s", err.Error())
-		return inventoryItems, errors.New(
-			"Failed to load inventory JSON file: " + err.Error(),
-		)
+		return inventoryItems, fmt.Errorf("failed to read from inventory file: %s", err.Error())
 	}
+	if err := json.Unmarshal(data, &inventoryItems); err != nil {
+		return inventoryItems, fmt.Errorf("failed to unmarshal inventory file: %s", err.Error())
+	}
+
 	return
 }
 
@@ -49,13 +51,15 @@ func (c *Controller) GetInventoryItemBySKU(SKU string) (inventoryItem Product, i
 // GetAuditLog returns a list of audit log entries by reading from the
 // audit log JSON file
 func (c *Controller) GetAuditLog() (auditLog AuditLog, err error) {
-	err = utilities.LoadFromJSONFile(c.auditLogFileName, &auditLog)
+	data, err := os.ReadFile(c.auditLogFileName)
 	if err != nil {
-		c.lc.Errorf("Failed to load audit log JSON file: %s", err.Error())
-		return auditLog, errors.New(
-			"Failed to load audit log JSON file: " + err.Error(),
-		)
+		return auditLog, fmt.Errorf("failed to read from audit log JSON file: %s", err.Error())
 	}
+
+	if err := json.Unmarshal(data, &auditLog); err != nil {
+		return auditLog, fmt.Errorf("failed to unmarshal audit log JSON file: %s", err.Error())
+	}
+
 	return
 }
 
@@ -91,8 +95,16 @@ func (c *Controller) DeleteAuditLog() error {
 
 // WriteJSON is a shorthand for writing an interface to JSON
 func (c *Controller) WriteJSON(fileName string, content interface{}) error {
-	c.lc.Debugf("Wrote: %s to Inventory JSON: %s", content, fileName)
-	return utilities.WriteToJSONFile(fileName, content, 0644)
+	c.lc.Debugf("Writing: %s to Inventory JSON: %s", content, fileName)
+	data, err := json.Marshal(content)
+	if err != nil {
+		return fmt.Errorf("failed to marshal data: %s", err.Error())
+	}
+	err = os.WriteFile(fileName, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write data to file: %s", err.Error())
+	}
+	return nil
 }
 
 // WriteInventory is a shorthand for writing the inventory quickly

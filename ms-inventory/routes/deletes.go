@@ -4,11 +4,11 @@
 package routes
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 // InventoryDelete allows deletion of an inventory item or multiple items
@@ -18,7 +18,8 @@ func (c *Controller) InventoryDelete(writer http.ResponseWriter, req *http.Reque
 	SKU := vars["sku"]
 	if SKU == "" {
 		c.lc.Errorf("Empty inventory item SKU")
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Please enter a valid inventory item in the form of /inventory/{sku}", true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Please enter a valid inventory item in the form of /inventory/{sku}"))
 		return
 	}
 	// if the user wants to delete all inventory, do it
@@ -26,17 +27,18 @@ func (c *Controller) InventoryDelete(writer http.ResponseWriter, req *http.Reque
 		err := c.DeleteInventory()
 		if err != nil {
 			c.lc.Errorf("Failed to properly reset inventory: %s", err.Error())
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to properly reset inventory: "+err.Error(), true)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte("Failed to properly reset inventory: " + err.Error()))
 			return
 		}
-		emptyInventoryResponseJSON, err := utilities.GetAsJSON(Products{Data: []Product{}})
+		emptyInventoryResponseJSON, err := json.Marshal(Products{Data: []Product{}})
 		if err != nil {
 			c.lc.Errorf("Failed to serialize empty inventory response: %s", err.Error())
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to serialize empty inventory response: "+err.Error(), true)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte("Failed to serialize empty inventory response: " + err.Error()))
 			return
 		}
-
-		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, emptyInventoryResponseJSON, false)
+		writer.Write(emptyInventoryResponseJSON)
 		return
 	}
 	// look up the requested inventory item by SKU
@@ -44,14 +46,16 @@ func (c *Controller) InventoryDelete(writer http.ResponseWriter, req *http.Reque
 	c.inventoryItems = inventoryItems
 	if err != nil {
 		c.lc.Errorf("Failed to get requested inventory item by SKU: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to get requested inventory item by SKU: "+err.Error(), true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Failed to get requested inventory item by SKU: " + err.Error()))
 		return
 	}
 
 	// check if GetInventoryItemBySKU found an inventory item to delete
 	if inventoryItemToDelete.SKU == "" {
 		c.lc.Info("Item does not exist")
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusNotFound, "Item does not exist", false)
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte("Item does not exist"))
 		return
 	}
 	// delete the inventory item & write the modified inventory
@@ -59,16 +63,18 @@ func (c *Controller) InventoryDelete(writer http.ResponseWriter, req *http.Reque
 	err = c.WriteInventory()
 	if err != nil {
 		c.lc.Errorf("Failed to write updated inventory: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to write updated inventory", true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Failed to write updated inventory"))
 		return
 	}
-	inventoryItemToDeleteJSON, err := utilities.GetAsJSON(inventoryItemToDelete)
+	inventoryItemToDeleteJSON, err := json.Marshal(inventoryItemToDelete)
 	if err != nil {
 		c.lc.Errorf("Successfully deleted the item from inventory, but failed to serialize it so that it could be sent back to the requester: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, fmt.Sprintf("Successfully deleted the item from inventory, but failed to serialize it so that it could be sent back to the requester: %v", err.Error()), true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(fmt.Sprintf("Successfully deleted the item from inventory, but failed to serialize it so that it could be sent back to the requester: %v", err.Error())))
 	}
 	c.lc.Infof("Successfully deleted the item: %s from inventory", inventoryItemToDelete.SKU)
-	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, inventoryItemToDeleteJSON, false)
+	writer.Write(inventoryItemToDeleteJSON)
 }
 
 // AuditLogDelete allows deletion of one or more audit log entry items
@@ -78,7 +84,8 @@ func (c *Controller) AuditLogDelete(writer http.ResponseWriter, req *http.Reques
 	entryID := vars["entry"]
 	if entryID == "" {
 		c.lc.Error("EntryID is empty")
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Please enter a valid audit log entry ID in the form of /auditlog/{entryId}", true)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Please enter a valid audit log entry ID in the form of /auditlog/{entryId}"))
 		return
 	}
 	// if the user wants to delete all inventory, do it
@@ -86,16 +93,18 @@ func (c *Controller) AuditLogDelete(writer http.ResponseWriter, req *http.Reques
 		err := c.DeleteAuditLog()
 		if err != nil {
 			c.lc.Errorf("Failed to reset audit log: %s", err.Error())
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to properly reset audit log: "+err.Error(), true)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte("Failed to properly reset audit log: " + err.Error()))
 			return
 		}
-		emptyAuditLogResponseJSON, err := utilities.GetAsJSON(AuditLog{Data: []AuditLogEntry{}})
+		emptyAuditLogResponseJSON, err := json.Marshal(AuditLog{Data: []AuditLogEntry{}})
 		if err != nil {
 			c.lc.Errorf("Failed to serialize empty audit log response: %s", err.Error())
-			utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, fmt.Sprintf("Failed to serialize empty audit log response: %v", err.Error()), true)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Write([]byte(fmt.Sprintf("Failed to serialize empty audit log response: %v", err.Error())))
 		}
 		c.lc.Info("Successfully deleted audit log")
-		utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, emptyAuditLogResponseJSON, false)
+		writer.Write(emptyAuditLogResponseJSON)
 		return
 	}
 	// look up the requested audit log entry by EntryID
@@ -103,14 +112,16 @@ func (c *Controller) AuditLogDelete(writer http.ResponseWriter, req *http.Reques
 	c.auditLog = auditLog
 	if err != nil {
 		c.lc.Errorf("Failed to get audit log entry ID: %s with error: %s", entryID, err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to get requested audit log entry by ID: "+err.Error(), true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Failed to get requested audit log entry by ID: " + err.Error()))
 		return
 	}
 
 	// check if GetAuditLogEntryByID found an audit log entry to delete
 	if auditLogEntryToDelete.AuditEntryID == "" {
 		c.lc.Errorf("Item with entry ID: %s does not exist", auditLogEntryToDelete.AuditEntryID)
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusNotFound, "Item does not exist", false)
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte("Item does not exist"))
 		return
 	}
 	// delete the audit log entry & write the modified audit log
@@ -118,14 +129,16 @@ func (c *Controller) AuditLogDelete(writer http.ResponseWriter, req *http.Reques
 	err = c.WriteAuditLog()
 	if err != nil {
 		c.lc.Error("Failed to write updated audit log")
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to write updated audit log", true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("Failed to write updated audit log"))
 		return
 	}
-	auditLogEntryToDeleteJSON, err := utilities.GetAsJSON(auditLogEntryToDelete)
+	auditLogEntryToDeleteJSON, err := json.Marshal(auditLogEntryToDelete)
 	if err != nil {
 		c.lc.Errorf("Successfully deleted item: %s from audit log, but failed to serialize information back to the requester: %s", auditLogEntryToDelete.AuditEntryID, err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, fmt.Sprintf("Successfully deleted item from audit log, but failed to serialize information back to the requester: %v", err.Error()), true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(fmt.Sprintf("Successfully deleted item from audit log, but failed to serialize information back to the requester: %v", err.Error())))
 	}
 	c.lc.Infof("Succssfully deleted item: %s from audit log", auditLogEntryToDelete.AuditEntryID)
-	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, auditLogEntryToDeleteJSON, false)
+	writer.Write(auditLogEntryToDeleteJSON)
 }

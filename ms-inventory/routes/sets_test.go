@@ -5,7 +5,6 @@ package routes
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -51,7 +50,7 @@ func TestInventoryPost(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
-				err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
+				err := os.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteInventory()
@@ -116,7 +115,7 @@ func TestAuditLogPost(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadAuditLog {
-				err := ioutil.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
+				err := os.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteAuditLog()
@@ -212,7 +211,7 @@ func TestDeltaInventorySKUPost(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
-				err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
+				err := os.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteInventory()

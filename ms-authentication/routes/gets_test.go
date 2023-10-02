@@ -6,16 +6,16 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"testing"
 
 	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/gorilla/mux"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -228,19 +228,19 @@ func TestAuthenticationGet(t *testing.T) {
 		WriteInvalidFile string
 		AuthData         AuthData
 		StatusCode       int
-		CompareValues    bool
+		ExpectedError    string
 	}{
-		{"cardID length not eq 10", true, "", AuthData{CardID: "00"}, http.StatusBadRequest, false},
-		{"Successful auth sequence", true, "", validAuthData, http.StatusOK, true},
-		{"Test inactive person", true, "", AuthData{CardID: cards.Cards[1].CardID}, http.StatusUnauthorized, false},
-		{"Test inactive account", true, "", AuthData{CardID: cards.Cards[2].CardID}, http.StatusUnauthorized, false},
-		{"Test inactive card", true, "", AuthData{CardID: cards.Cards[3].CardID}, http.StatusUnauthorized, false},
-		{"Test unknown card", true, "", AuthData{CardID: "ffffffffff"}, http.StatusUnauthorized, false},
-		{"Test unknown person", true, "", AuthData{CardID: "0001230005"}, http.StatusUnauthorized, false},
-		{"Test unknown account", true, "", AuthData{CardID: "0001230006"}, http.StatusUnauthorized, false},
-		{"TestAuthenticationGet invalid cards JSON", true, CardsFileName, validAuthData, http.StatusInternalServerError, false},
-		{"TestAuthenticationGet invalid accounts JSON", true, AccountsFileName, validAuthData, http.StatusInternalServerError, false},
-		{"TestAuthenticationGet invalid people JSON", true, PeopleFileName, validAuthData, http.StatusInternalServerError, false},
+		{"cardID length not eq 10", true, "", AuthData{CardID: "00"}, http.StatusBadRequest, "Please pass in a 10-character card ID as a URL parameter, like this: /authentication/0001230001"},
+		{"Successful auth sequence", true, "", validAuthData, http.StatusOK, ""},
+		{"Test inactive person", true, "", AuthData{CardID: cards.Cards[1].CardID}, http.StatusUnauthorized, "Card ID is associated with an inactive person"},
+		{"Test inactive account", true, "", AuthData{CardID: cards.Cards[2].CardID}, http.StatusUnauthorized, "Card ID is associated with an inactive account"},
+		{"Test inactive card", true, "", AuthData{CardID: cards.Cards[3].CardID}, http.StatusUnauthorized, "Card ID is not a valid card"},
+		{"Test unknown card", true, "", AuthData{CardID: "ffffffffff"}, http.StatusUnauthorized, "Card ID is not an authorized card"},
+		{"Test unknown person", true, "", AuthData{CardID: "0001230005"}, http.StatusUnauthorized, "Card ID is associated with an unknown person"},
+		{"Test unknown account", true, "", AuthData{CardID: "0001230006"}, http.StatusUnauthorized, "Card ID is associated with an unknown account"},
+		{"TestAuthenticationGet invalid cards JSON", true, CardsFileName, validAuthData, http.StatusInternalServerError, "failed to read authentication data"},
+		{"TestAuthenticationGet invalid accounts JSON", true, AccountsFileName, validAuthData, http.StatusInternalServerError, "failed to read accounts data"},
+		{"TestAuthenticationGet invalid people JSON", true, PeopleFileName, validAuthData, http.StatusInternalServerError, "failed to read people data"},
 	}
 	for _, test := range tests {
 		currentTest := test
@@ -257,7 +257,7 @@ func TestAuthenticationGet(t *testing.T) {
 			}
 
 			if currentTest.WriteInvalidFile != "" {
-				err := ioutil.WriteFile(currentTest.WriteInvalidFile, []byte("invalid json test"), 0644)
+				err := os.WriteFile(currentTest.WriteInvalidFile, []byte("invalid json test"), 0644)
 				require.NoError(err, "Failed to write to test file")
 			}
 
@@ -268,24 +268,22 @@ func TestAuthenticationGet(t *testing.T) {
 			resp := w.Result()
 			defer resp.Body.Close()
 
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			require.NoError(err, "Failed to read response body")
-
-			responseContent := utilities.HTTPResponse{}
-			err = json.Unmarshal(body, &responseContent)
-			require.NoError(err, "Failed to unmarshal response")
 
 			assert.Equal(resp.StatusCode, currentTest.StatusCode, "Expected status code to be OK: "+strconv.Itoa(resp.StatusCode))
 
-			if currentTest.CompareValues {
+			if resp.StatusCode == http.StatusOK {
 				// Unmarshal the string contents of request into a proper structure
 				responseAuthData := AuthData{}
-				err := json.Unmarshal([]byte(responseContent.Content.(string)), &responseAuthData)
+				err := json.Unmarshal(body, &responseAuthData)
 				assert.NoError(err, "Failed to unmarshal the authentication data")
 
-				assert.False(responseContent.Error, "Expected error to be false")
 				assert.Equal(responseAuthData, currentTest.AuthData)
+				return
 			}
+			// check that the error message is as expected
+			assert.Contains(string(body), currentTest.ExpectedError)
 		})
 	}
 }
