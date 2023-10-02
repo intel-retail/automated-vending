@@ -116,11 +116,11 @@ func (vendingState *VendingState) HandleMqttDeviceReading(lc logger.LoggingClien
 						defer resp.Body.Close()
 						body, err := io.ReadAll(resp.Body)
 						if err != nil {
-							lc.Errorf("Failed to read response body: %s", err.Error())
+							return false, fmt.Errorf("Failed to read response body: %s", err.Error())
 						}
 						err = json.Unmarshal(body, &currentLedger)
 						if err != nil {
-							lc.Errorf("Failed to unmarshal Ledger from response body: %s", err.Error())
+							return false, fmt.Errorf("Failed to unmarshal Ledger from response body: %s", err.Error())
 						}
 						// Display Ledger Total on LCD
 						if displayErr := vendingState.displayLedger(lc, vendingState.Configuration.ControllerBoardDeviceName, currentLedger); displayErr != nil {
