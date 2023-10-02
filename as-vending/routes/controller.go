@@ -55,7 +55,6 @@ func (c *Controller) AddAllRoutes() error {
 // of the vendingState's maintenance mode.
 func (c *Controller) GetMaintenanceMode(writer http.ResponseWriter, req *http.Request) {
 
-	// TODO: Do we want to have the error handling here?
 	mm, err := json.Marshal(functions.MaintenanceMode{MaintenanceMode: c.vendingState.MaintenanceMode})
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to marshal requested state: %s", err.Error())

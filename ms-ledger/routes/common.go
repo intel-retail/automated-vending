@@ -45,7 +45,6 @@ func (c *Controller) DeleteAllLedgers() error {
 	return nil
 }
 
-// TODO: refactor this into the utilities package
 func (c *Controller) sendCommand(method string, commandURL string, inputBytes []byte) (*http.Response, error) {
 	// Create the http request based on the parameters
 	request, _ := http.NewRequest(method, commandURL, bytes.NewBuffer(inputBytes))
