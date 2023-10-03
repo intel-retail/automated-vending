@@ -68,6 +68,8 @@ do
     curl -X GET http://localhost:48093/ledger | jq .
     echo
     echo "Get ledger!!!!!!!!!!!!"
-    sleep 30
+    sleep 5
     echo "GOING TO NEXT CARD NUMBER"
 done
+
+echo "NO MORE CARD NUMBERS. DONE!"

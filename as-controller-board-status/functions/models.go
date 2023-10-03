@@ -79,15 +79,6 @@ type CheckBoardStatus struct {
 	notificationLabels                        []string
 }
 
-// VendingDoorStatus is a string representation of a boolean whose state corresponds
-// to the whether the doorClosed state is true or false. This data is sent
-// to the MQTT device service for processing by the Automated Vending inference
-// algorithm, which will act if the door state flips from open (false) to
-// closed (true).
-type VendingDoorStatus struct {
-	VendingDoorStatus string `json:"inferenceDoorStatus"` // TODO: remove inference and rename to vendingDoorStatus
-}
-
 func (checkBoardStatus *CheckBoardStatus) ParseStringConfigurations() error {
 	var err error
 	checkBoardStatus.notificationEmailAddresses = strings.Split(checkBoardStatus.Configuration.NotificationEmailAddresses, ",")

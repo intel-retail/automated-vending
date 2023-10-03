@@ -221,8 +221,8 @@ services:
       EDGEX_SECURITY_SECRET_STORE: "false"
       MQTTBROKERINFO_HOST: edgex-mqtt-broker
       SERVICE_HOST: edgex-device-mqtt
-      MQTTBROKERINFO_INCOMINGTOPIC: Inference/DataTopic
-      MQTTBROKERINFO_RESPONSETOPIC: Inference/ResponseTopic
+      MQTTBROKERINFO_INCOMINGTOPIC: Inference/DataTopic/#
+      MQTTBROKERINFO_RESPONSETOPIC: Inference/ResponseTopic/#
     hostname: edgex-device-mqtt
     image: edgexfoundry/device-mqtt:3.0.0
     networks:
@@ -241,7 +241,32 @@ services:
     volumes:
       - ./res/device-mqtt/devices:/res/devices
       - ./res/device-mqtt/profiles:/res/profiles
-
+  ui:
+    container_name: edgex-ui-go
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-ui-go
+    hostname: edgex-ui-go
+    image: nexus3.edgexfoundry.org:10004/edgex-ui:3.0.0
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        target: 4000
+        published: "4000"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
 volumes:
   consul-config:
     name: edgex_consul-config

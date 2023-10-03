@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	commandTopic  = "Inference/CommandTopic"
+	commandTopic  = "Inference/CommandTopic/#"
 	responseTopic = "Inference/ResponseTopic"
 	dataTopic     = "Inference/DataTopic"
 	retryCount    = 5
@@ -59,8 +59,13 @@ func NewMqttConnection(connectionString string) Connection {
 
 // define a function for the default message handler
 var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
+	var edgeXMessage map[string]string
+	if err := json.Unmarshal(msg.Payload(), &edgeXMessage); err != nil {
+		fmt.Println(http.StatusBadRequest, "Failed to unmarshal body")
+		return
+	}
 
-	fmt.Printf("received message on topic: %s", msg.Topic())
+	fmt.Printf("received message on topic %s: %v+\n", msg.Topic(), edgeXMessage)
 
 	words := strings.Split(msg.Topic(), "/")
 	numWords := len(words)
@@ -74,37 +79,42 @@ var commandTopicFunction MQTT.MessageHandler = func(client MQTT.Client, msg MQTT
 	uuid := words[numWords-1]
 	publishTopic := fmt.Sprintf("%s/%s", responseTopic, uuid)
 
-	if !strings.EqualFold(method, "get") {
-		fmt.Println(http.StatusBadRequest, fmt.Sprintf("expected mqtt to have the method GET, got %s in the topic, %s", method, msg.Topic()))
-		return
-	}
+	responseMessage := make(map[string]string)
 
-	edgeXMessage := make(map[string]string)
 	switch cmd {
 	case "inferenceHeartbeat":
 		{
-			pingMessage := edgeXMessage
-			pingMessage["inferenceHeartbeat"] = "inferencePong"
 
-			pongMessage, err := json.Marshal(pingMessage)
+			if !strings.EqualFold(method, "get") {
+				fmt.Println(http.StatusBadRequest, fmt.Sprintf("expected mqtt to have the method GET, got %s in the topic, %s", method, msg.Topic()))
+				return
+			}
+			responseMessage["inferenceHeartbeat"] = "inferencePong"
+
+			data, err := json.Marshal(responseMessage)
 			if err != nil {
 				fmt.Println("Failed to marshal mqtt message")
 			}
-			token := client.Publish(publishTopic, 0, false, pongMessage)
+			token := client.Publish(publishTopic, 0, false, data)
 			token.Wait()
+			fmt.Printf("Published pong message to %s\n", publishTopic)
 		}
 	case "inferenceDoorStatus":
 		{
-			pingMessage := edgeXMessage
-			isDoorClosed := pingMessage["inferenceDoorStatus"]
-			pingMessage["inferenceDoorStatus"] = "Got it!"
+			if !strings.EqualFold(method, "set") {
+				fmt.Println(http.StatusBadRequest, fmt.Sprintf("expected mqtt to have the method SET, got %s in the topic, %s", method, msg.Topic()))
+				return
+			}
+			isDoorClosed := edgeXMessage["inferenceDoorStatus"]
+			responseMessage["inferenceDoorStatus"] = "Got it!"
 
-			pongMessage, err := json.Marshal(pingMessage)
+			data, err := json.Marshal(responseMessage)
 			if err != nil {
 				fmt.Println("Failed to marshal mqtt message")
 			}
-			token := client.Publish(publishTopic, 0, false, pongMessage)
+			token := client.Publish(publishTopic, 0, false, data)
 			token.Wait()
+			fmt.Printf("Published inference door status message to %s\n", publishTopic)
 			checkDoorStatus(isDoorClosed, client)
 		}
 	default:
@@ -159,9 +169,9 @@ func SendDeltaData(client MQTT.Client, delta []byte) {
 	edgeXMessage[cmdSKUDelta] = string(delta)
 
 	deltaMessage, _ := json.Marshal(edgeXMessage)
-	fmt.Println("Final deltaMessage is ", string(deltaMessage))
 	token := client.Publish(publishTopic, 0, false, deltaMessage)
 	token.Wait()
+	fmt.Println("published deltaMessage ", string(deltaMessage), " to topic ", publishTopic)
 }
 
 func (mqttCon *Connection) Connect(connectionString string) {
