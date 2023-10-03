@@ -106,7 +106,7 @@ func StartInference(inferenceDeltasChannel chan []byte, InferenceDoorOpenChannel
 		return
 	}
 
-	fmt.Printf("Start reading...")
+	fmt.Println("Start reading...")
 	fromImages(imageSequence, net, inferenceDeltasChannel, InferenceDoorOpenChannel, confidenceThreshold, skuMap)
 
 }

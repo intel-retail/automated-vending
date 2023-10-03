@@ -47,8 +47,12 @@ func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.A
 			if len(eventReading.Value) < 1 {
 				return false, fmt.Errorf("event reading was empty")
 			}
-
 			lc.Debugf("Received event reading value: %s", eventReading.Value)
+
+			if eventReading.ResourceName != "controller-board-status" {
+				lc.Debugf("Non controller-board-status event: %s", eventReading.ResourceName)
+				continue
+			}
 
 			// Unmarshal the event reading data into the global controllerBoardStatus variable
 			err := json.Unmarshal([]byte(eventReading.Value), &boardStatus.ControllerBoardStatus)
@@ -250,7 +254,7 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 
 		// Prepare and send EdgeX command. Depending on the state of the door, this message may trigger a CV inference
 		settings := make(map[string]string)
-		settings["VendingDoorStatus"] = strconv.FormatBool(doorClosed)
+		settings["inferenceDoorStatus"] = strconv.FormatBool(doorClosed)
 		err = boardStatus.SendCommand(lc, http.MethodPut, boardStatus.Configuration.InferenceDeviceName, boardStatus.Configuration.InferenceDoorStatusCmd,
 			settings)
 		if err != nil {

@@ -144,10 +144,10 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 		c.vendingState.MaintenanceMode = true
 	}
 
-	// Check to see if the board closed state is different than the previous state. If it is we need to update the state and
+	// Check to see if the board closed state is different from the previous state. If it is we need to update the state and
 	// set the related properties.
 	if c.vendingState.DoorClosed != boardStatus.DoorClosed {
-		c.lc.Errorf("Successfully updated the door event. Door closed: %v", boardStatus.DoorClosed)
+		c.lc.Infof("Successfully updated the door event. Door closed: %v", boardStatus.DoorClosed)
 		returnval = string("Door closed change event was received ")
 		status = http.StatusOK //FIXME: This is an issue
 		c.vendingState.DoorClosed = boardStatus.DoorClosed
