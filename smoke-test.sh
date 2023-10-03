@@ -8,7 +8,7 @@ declare -i timeoutCounter=0
 
 while true ; do 
     echo "Working..."
-    result=$(curl -X GET http://localhost:48094/status | grep -n '{\\"lock1_status\\":1,\\"lock2_status\\":1,\\"door_closed\\":true') # -n shows line number
+    result=$(curl -X GET http://localhost:48094/status | grep -n '{\"lock1_status\":1,\"lock2_status\":1,\"door_closed\":true') # -n shows line number
     echo "timeout value = $timeoutCounter"
     if [ ! -z $result ] ; then
         echo "Found correct state!"

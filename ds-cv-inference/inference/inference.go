@@ -1,4 +1,4 @@
-// Copyright © 2020 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package inference
@@ -94,8 +94,6 @@ func StartInference(inferenceDeltasChannel chan []byte, InferenceDoorOpenChannel
 		return
 	}
 	defer net.Close()
-
-	fmt.Println("gocv ReadNet successfully")
 
 	// OpenVINO backend
 	if err := net.SetPreferableBackend(gocv.NetBackendOpenVINO); err != nil {
