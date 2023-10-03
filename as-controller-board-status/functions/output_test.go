@@ -197,7 +197,8 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 		DeviceName: ControllerBoardDeviceServiceDeviceName,
 		Readings: []dtos.BaseReading{
 			{
-				DeviceName: ControllerBoardDeviceServiceDeviceName,
+				ResourceName: ControllerBoardResourceName,
+				DeviceName:   ControllerBoardDeviceServiceDeviceName,
 				SimpleReading: dtos.SimpleReading{
 					Value: controllerBoardStatusSuccessReadingValue,
 				},
@@ -211,7 +212,8 @@ func prepCheckControllerBoardStatusTest() (testTable []testTableCheckControllerB
 		DeviceName: ControllerBoardDeviceServiceDeviceName,
 		Readings: []dtos.BaseReading{
 			{
-				DeviceName: ControllerBoardDeviceServiceDeviceName,
+				ResourceName: ControllerBoardResourceName,
+				DeviceName:   ControllerBoardDeviceServiceDeviceName,
 				SimpleReading: dtos.SimpleReading{
 					Value: `invalid json value`,
 				},

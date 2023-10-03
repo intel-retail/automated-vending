@@ -24,6 +24,7 @@ const (
 	// ControllerBoardDeviceServiceDeviceName is the name of the EdgeX device
 	// corresponding to our upstream event source.
 	ControllerBoardDeviceServiceDeviceName = "controller-board"
+	ControllerBoardResourceName            = "controller-board-status"
 )
 
 // CheckControllerBoardStatus is an EdgeX function that is passed into the EdgeX SDK's function pipeline.
@@ -49,8 +50,8 @@ func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.A
 			}
 			lc.Debugf("Received event reading value: %s", eventReading.Value)
 
-			if eventReading.ResourceName != "controller-board-status" {
-				lc.Debugf("Non controller-board-status event: %s", eventReading.ResourceName)
+			if eventReading.ResourceName != ControllerBoardResourceName {
+				lc.Debugf("Non %s event: %s", ControllerBoardResourceName, eventReading.ResourceName)
 				continue
 			}
 
