@@ -21,7 +21,7 @@ WORKDIR /usr/local/bin/ms-authentication/
 COPY . .
 
 # Compile the code
-RUN make gobuild
+RUN make gobuild-authentication
 
 # Next image - Copy built Go binary into new workspace
 FROM alpine

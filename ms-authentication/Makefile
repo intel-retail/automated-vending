@@ -18,7 +18,7 @@ docker:
 		-t $(MICROSERVICE):dev \
 		.
 
-gobuild: tidy
+gobuild-authentication: tidy
 	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo main.go
 
 run:

@@ -25,7 +25,7 @@ WORKDIR /usr/local/bin/ms-ledger/
 COPY . .
 
 # Compile the code
-RUN make gobuild
+RUN make gobuild-ledger
 
 # Next image - Copy built Go binary into new workspace
 FROM alpine
