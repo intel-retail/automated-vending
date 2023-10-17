@@ -1,19 +1,19 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
-
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
-const(
+const (
 	connectionTimeout = 15
 )
 
@@ -21,21 +21,30 @@ const(
 func (c *Controller) GetAllLedgers() (Accounts, error) {
 	var accountLedgers Accounts
 
-	err := utilities.LoadFromJSONFile(c.ledgerFileName, &accountLedgers)
+	data, err := os.ReadFile(c.ledgerFileName)
 	if err != nil {
-		return Accounts{}, errors.New(
-			"Failed to load ledger JSON file: " + err.Error(),
-		)
+		return Accounts{}, errors.New("failed to load ledger JSON file: " + err.Error())
+	}
+
+	if err = json.Unmarshal(data, &accountLedgers); err != nil {
+		return Accounts{}, errors.New("Failed to unmarshal ledger JSON file: " + err.Error())
 	}
 	return accountLedgers, nil
 }
 
 // DeleteAllLedgers will reset the content of the inventory JSON file
 func (c *Controller) DeleteAllLedgers() error {
-	return utilities.WriteToJSONFile(c.ledgerFileName, Accounts{Data: []Account{}}, 0644)
+	data, err := json.Marshal(Accounts{Data: []Account{}})
+	if err != nil {
+		return errors.New("failed to marshal ledger JSON file for delete: " + err.Error())
+	}
+	if err = os.WriteFile(c.ledgerFileName, data, 0644); err != nil {
+		return errors.New("failed to write ledger JSON file for delete: " + err.Error())
+	}
+
+	return nil
 }
 
-// TODO: refactor this into the utilities package
 func (c *Controller) sendCommand(method string, commandURL string, inputBytes []byte) (*http.Response, error) {
 	// Create the http request based on the parameters
 	request, _ := http.NewRequest(method, commandURL, bytes.NewBuffer(inputBytes))

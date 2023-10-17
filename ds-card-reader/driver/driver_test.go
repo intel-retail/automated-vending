@@ -1,7 +1,7 @@
 //go:build all || physical || !physical
 // +build all physical !physical
 
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 // notes on why physical and !physical build tags are present:
@@ -20,11 +20,13 @@ import (
 	"fmt"
 	"testing"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	sdkMocks "github.com/edgexfoundry/device-sdk-go/v3/pkg/interfaces/mocks"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 	assert "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	require "github.com/stretchr/testify/require"
 )
 
@@ -370,7 +372,11 @@ func TestCardReaderDriver_Initialize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.drv.Initialize(tt.args.lc, tt.args.asyncCh, tt.args.deviceCh); (err != nil) != tt.wantErr {
+			mockSDK := &sdkMocks.DeviceServiceSDK{}
+			mockSDK.On("LoggingClient").Return(tt.args.lc)
+			mockSDK.On("AsyncValuesChannel").Return(nil)
+			mockSDK.On("LoadCustomConfig", mock.Anything, mock.Anything).Return(nil)
+			if err := tt.drv.Initialize(mockSDK); (err != nil) != tt.wantErr {
 				t.Errorf("CardReaderDriver.Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

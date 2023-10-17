@@ -1,10 +1,10 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
-	"io/ioutil"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,18 +13,14 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/gorilla/mux"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAllAccountsGet(t *testing.T) {
-	// Use community-recommended shorthand (known name clash)
-	require := require.New(t)
-
 	// Accounts slice
 	accountLedgers := getDefaultAccountLedgers()
 
@@ -50,13 +46,16 @@ func TestAllAccountsGet(t *testing.T) {
 				ledgerFileName:    LedgerFileName,
 			}
 			err := c.DeleteAllLedgers()
-			require.NoError(err)
+			require.NoError(t, err)
 			if currentTest.InvalidLedger {
-				err = ioutil.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
+				err = os.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
 			} else {
-				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+				data, err := json.Marshal(accountLedgers)
+				require.NoError(t, err)
+				err = os.WriteFile(c.ledgerFileName, data, 0644)
+				require.NoError(t, err)
 			}
-			require.NoError(err)
+			require.NoError(t, err)
 			defer func() {
 				os.Remove(c.ledgerFileName)
 			}()
@@ -73,9 +72,6 @@ func TestAllAccountsGet(t *testing.T) {
 }
 
 func TestLedgerAccountGet(t *testing.T) {
-	// Use community-recommended shorthand (known name clash)
-	require := require.New(t)
-
 	// Accounts slice
 	accountLedgers := getDefaultAccountLedgers()
 	invalidAccountID := "0"
@@ -105,13 +101,16 @@ func TestLedgerAccountGet(t *testing.T) {
 				ledgerFileName:    LedgerFileName,
 			}
 			err := c.DeleteAllLedgers()
-			require.NoError(err)
+			require.NoError(t, err)
 			if currentTest.InvalidLedger {
-				err = ioutil.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
+				err = os.WriteFile(c.ledgerFileName, []byte("invalid json test"), 0644)
 			} else {
-				err = utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+				data, err := json.Marshal(accountLedgers)
+				require.NoError(t, err)
+				err = os.WriteFile(c.ledgerFileName, data, 0644)
+				require.NoError(t, err)
 			}
-			require.NoError(err)
+			require.NoError(t, err)
 			defer func() {
 				os.Remove(c.ledgerFileName)
 			}()

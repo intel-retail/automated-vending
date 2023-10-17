@@ -4,12 +4,12 @@ The following guide will help walk you through the flow of data to address poten
 
 ## Ensuring your device services receive data
 
-All sensor data that is ingested in Automated Checkout flows through a device service as the first step. These device services are the first place we should check to ensure they are both running and ingesting data. One of the best ways to do to this is to leverage Portainer (included in EdgeX Releases).
+All sensor data that is ingested in Automated Vending flows through a device service as the first step. These device services are the first place we should check to ensure they are both running and ingesting data. One of the best ways to do to this is to leverage Portainer (included in EdgeX Releases).
 
 !!!info
     *Portainer is a tool to help manage Docker containers. To learn more visit: [https://www.portainer.io/overview/](https://www.portainer.io/overview/)*
 
-We have 3 device services of note in Automated Checkout:
+We have 3 device services of note in Automated Vending:
 
 - Controller board – Handles the interface between Arduino firmware and EdgeX.
 - Card reader – Handles the interface between an RFID card reader and EdgeX.
@@ -50,13 +50,13 @@ After ensuring that data is flowing properly to the device services, the next pl
 
     *Redis Desktop Manager is another tool to manage Redis databases: [https://redisdesktop.com/](https://redisdesktop.com/)*
 
-Redis Commander can be run in Docker by simply executing the following shell command (you may need to change the name of the `automated-checkout_default` network):
+Redis Commander can be run in Docker by simply executing the following shell command (you may need to change the name of the `automated-vending_default` network):
 
 ```bash
 docker run --rm --name redis-commander -d \
     -p 8081:8081 \
     --env REDIS_HOSTS=edgex-redis \
-    --network automated-checkout_default \
+    --network automated-vending_default \
     rediscommander/redis-commander:latest
 ```
 
@@ -75,7 +75,7 @@ After ensuring data has made it to the database, the next place to check is the 
 
 ![Portainer as-controller-board-status](./images/as-controller-board-status.png)
 
-In the unlikely event that no data is flowing at all to the Controller Board status App Service, this would lead us to an issue with the ZMQ connection from the App Service to Core Data. Double checking the TOML file configuration where the hostname, port, and topic are specified would be a good place to start. You should also check that the App Service is on the same docker network and is accessible via the network.
+Double checking the YAML file configuration where the hostname, port, and topic are specified would be a good place to start. You should also check that the App Service is on the same docker network and is accessible via the network.
 
 Once connectivity issues have been resolved, the next step is to ensure that all filters (i.e. device names) are correct and match what is shown in the database from the previous step. If they do not match, then they will be filtered out and not be processed. One easy way to confirm that data is flowing is to remove filters entirely from the pipeline to see that there is data flowing.
 

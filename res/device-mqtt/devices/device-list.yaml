@@ -1,0 +1,14 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+# Pre-define Devices
+deviceList:
+  - name: Inference-device
+    profileName: Inference-device-Profile
+    description: Inference CV Module over MQTT
+    labels:
+      - MQTT
+      - Inference
+    protocols:
+      mqtt:
+        CommandTopic: Inference/CommandTopic

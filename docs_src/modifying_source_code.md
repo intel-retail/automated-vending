@@ -1,10 +1,10 @@
 # Modifying source code
 
-When modifying source code in the Automated Checkout reference implementation, Docker images need to be rebuilt and services need to be updated to run newly built images. This document contains the steps for accomplishing this.
+When modifying source code in the Automated Vending reference implementation, Docker images need to be rebuilt and services need to be updated to run newly built images. This document contains the steps for accomplishing this.
 
 ## Assumptions
 
-This document assumes the Automated Checkout services are already running. Additionally, it assumes you've already made a code change and saved the changes.
+This document assumes the Automated Vending services are already running. Additionally, it assumes you've already made a code change and saved the changes.
 
 ## Building the service's new image
 
@@ -22,11 +22,11 @@ Next, build the specific service's image:
 make ds-card-reader
 ```
 
-After Docker builds the image (by executing the steps in [`ds-card-reader/Dockerfile`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ds-card-reader/Dockerfile)), proceed to the next section.
+After Docker builds the image (by executing the steps in [`ds-card-reader/Dockerfile`](https://github.com/intel-retail/automated-vending/tree/main/ds-card-reader/Dockerfile)), proceed to the next section.
 
 ## Remove and update the running service
 
-One of the most effective methods of updating a Docker compose service is to remove the running container, and then re-run the `make` commands to bring up the entire Automated Checkout reference implementation stack.
+One of the most effective methods of updating a Docker compose service is to remove the running container, and then re-run the `make` commands to bring up the entire Automated Vending reference implementation stack.
 
 First, identify the running container for the service (again, `ds-card-reader` in this example):
 

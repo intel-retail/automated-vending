@@ -1,7 +1,7 @@
 //go:build all || physical
 // +build all physical
 
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -9,13 +9,11 @@ package device
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	evdev "github.com/gvalkov/golang-evdev"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
@@ -33,7 +31,7 @@ const (
 )
 
 func clearLogs() error {
-	return ioutil.WriteFile(physicalLogFile, []byte{}, 0644)
+	return os.WriteFile(physicalLogFile, []byte{}, 0644)
 }
 
 func doesLogFileContainString(input string) (bool, error) {

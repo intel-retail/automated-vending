@@ -1,17 +1,17 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"as-controller-board-status/functions"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 )
 
 type Controller struct {
@@ -38,16 +38,17 @@ func (c *Controller) AddAllRoutes() error {
 }
 
 // GetStatus is a REST API endpoint that enables a web UI or some other downstream
-// service to inquire about the status of the upstream Automated Checkout hardware interface(s).
+// service to inquire about the status of the upstream Automated Vending hardware interface(s).
 func (c *Controller) GetStatus(writer http.ResponseWriter, req *http.Request) {
-	controllerBoardStatusJSON, err := utilities.GetAsJSON(c.boardStatus.ControllerBoardStatus)
+	controllerBoardStatus, err := json.Marshal(c.boardStatus.ControllerBoardStatus)
 	if err != nil {
-		errMsg := "Failed to serialize the controller board's current state"
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, errMsg, true)
-		c.lc.Errorf("%s: %s", errMsg, err.Error())
+		errMsg := fmt.Sprintf("Failed to serialize the controller board's current state: %s", err.Error())
+		c.lc.Error(errMsg)
+
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
 		return
 	}
-
-	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, controllerBoardStatusJSON, false)
 	c.lc.Info("GetStatus successfully!")
+	writer.Write(controllerBoardStatus)
 }

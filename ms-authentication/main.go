@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -7,7 +7,7 @@ import (
 	"ms-authentication/routes"
 	"os"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg"
 )
 
 const (
@@ -15,8 +15,6 @@ const (
 )
 
 func main() {
-	// TODO: See https://docs.edgexfoundry.org/2.2/microservices/application/ApplicationServices/
-	//       for documentation on application services.
 	var ok bool
 	service, ok := pkg.NewAppService(serviceKey)
 	if !ok {
@@ -30,8 +28,8 @@ func main() {
 		lc.Errorf("failed to add all Routes: %s", err.Error())
 		os.Exit(1)
 	}
-	if err := service.MakeItRun(); err != nil {
-		lc.Errorf("MakeItRun returned error: %s", err.Error())
+	if err := service.Run(); err != nil {
+		lc.Errorf("Run returned error: %s", err.Error())
 		os.Exit(1)
 	}
 

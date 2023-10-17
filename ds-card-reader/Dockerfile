@@ -1,14 +1,15 @@
-# Copyright © 2022 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-FROM golang:1.18-alpine3.16 AS builder
+FROM golang:1.20-alpine3.17 AS builder
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2022: Intel'
+  copyright='Copyright (c) 2023: Intel'
 
 
 # add git for go modules
-RUN apk update && apk add --no-cache make git gcc libc-dev zeromq-dev linux-headers
+# hadolint ignore=DL3018
+RUN apk update && apk add --no-cache make git gcc libc-dev linux-headers
 
 ENV GO111MODULE=on
 WORKDIR /usr/local/bin/
@@ -28,16 +29,17 @@ COPY . .
 RUN make gobuild
 
 # Next image - Copy built Go binary into new workspace
-FROM alpine
+FROM alpine:3.17
 
 LABEL license='SPDX-License-Identifier: BSD-3-Clause' \
-  copyright='Copyright (c) 2022: Intel'
+  copyright='Copyright (c) 2023: Intel'
 
-RUN apk add --update --no-cache zeromq dumb-init
+# hadolint ignore=DL3018
+RUN apk add --update --no-cache dumb-init
 
 COPY --from=builder /usr/local/bin/ds-card-reader/res/profiles/ds-card-reader.yaml /res/profiles/ds-card-reader.yaml
-COPY --from=builder /usr/local/bin/ds-card-reader/res/devices/device-list.toml /res/devices/device-list.toml
-COPY --from=builder /usr/local/bin/ds-card-reader/res/configuration.toml /res/configuration.toml
+COPY --from=builder /usr/local/bin/ds-card-reader/res/devices/device-list.yaml /res/devices/device-list.yaml
+COPY --from=builder /usr/local/bin/ds-card-reader/res/configuration.yaml /res/configuration.yaml
 COPY --from=builder /usr/local/bin/ds-card-reader/main /ds-card-reader
 
 CMD [ "/ds-card-reader", "-cp=consul.http://edgex-core-consul:8500", "-r"]

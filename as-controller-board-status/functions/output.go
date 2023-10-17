@@ -1,19 +1,21 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 )
 
 const (
@@ -22,13 +24,14 @@ const (
 	// ControllerBoardDeviceServiceDeviceName is the name of the EdgeX device
 	// corresponding to our upstream event source.
 	ControllerBoardDeviceServiceDeviceName = "controller-board"
+	ControllerBoardResourceName            = "controller-board-status"
 )
 
 // CheckControllerBoardStatus is an EdgeX function that is passed into the EdgeX SDK's function pipeline.
 // It is a decision function that allows for multiple devices to have their events processed
 // correctly by this application service. In this case, only one unique type of EdgeX device will come
 // through to this function, but in general this is basically a template function that is also followed
-// in other services in the Automated Checkout project.
+// in other services in the Automated Vending project.
 func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.AppFunctionContext, data interface{}) (bool, interface{}) {
 	if data == nil {
 		// We didn't receive a result
@@ -45,8 +48,12 @@ func (boardStatus *CheckBoardStatus) CheckControllerBoardStatus(ctx interfaces.A
 			if len(eventReading.Value) < 1 {
 				return false, fmt.Errorf("event reading was empty")
 			}
-
 			lc.Debugf("Received event reading value: %s", eventReading.Value)
+
+			if eventReading.ResourceName != ControllerBoardResourceName {
+				lc.Debugf("Non %s event: %s", ControllerBoardResourceName, eventReading.ResourceName)
+				continue
+			}
 
 			// Unmarshal the event reading data into the global controllerBoardStatus variable
 			err := json.Unmarshal([]byte(eventReading.Value), &boardStatus.ControllerBoardStatus)
@@ -121,7 +128,7 @@ func getTempThresholdExceededMessage(minOrMax string, avgTemp float64, tempThres
 	if minOrMax != maximum && minOrMax != minimum {
 		return "", fmt.Errorf("Please specify minOrMax as \"%v\" or \"%v\", the value given was \"%v\"", maximum, minimum, minOrMax)
 	}
-	resultMessage := fmt.Sprintf("The internal automated checkout's temperature is currently %.2f, and this temperature exceeds the configured %v temperature threshold of %v degrees. The automated checkout needs maintenance as of: %s", avgTemp, minOrMax, tempThreshold, time.Now().Format("_2 Jan, Mon | 3:04PM MST"))
+	resultMessage := fmt.Sprintf("The internal automated vending's temperature is currently %.2f, and this temperature exceeds the configured %v temperature threshold of %v degrees. The automated vending needs maintenance as of: %s", avgTemp, minOrMax, tempThreshold, time.Now().Format("_2 Jan, Mon | 3:04PM MST"))
 	return resultMessage, nil
 }
 
@@ -227,8 +234,8 @@ func AvgTemp(measurements []TempMeasurement, duration time.Duration) (float64, i
 }
 
 // processVendingDoorState checks to see if the vending door state has changed
-// and if it has changed, it will then submit EdgeX commands (REST calls)
-// to the MQTT device service and the central vending state endpoint.
+// and if it has changed, it will then submit the new state to the central vending state endpoint
+// and to EdgeX via command client.
 func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingClient, doorClosed bool) error {
 	if boardStatus.DoorClosed != doorClosed {
 		// Set the boardStatus's DoorClosed value to the new value
@@ -246,14 +253,48 @@ func (boardStatus *CheckBoardStatus) processVendingDoorState(lc logger.LoggingCl
 			return fmt.Errorf("failed to submit the controller board's status to the central vending state service: %v", err.Error())
 		}
 
-		// Prepare a message to be sent to the MQTT bus. Depending on the state
-		// of the door, this message may trigger a CV inference
-		err = boardStatus.RESTCommandJSON(boardStatus.Configuration.DoorStatusCommandEndpoint, http.MethodPut, VendingDoorStatus{
-			VendingDoorStatus: strconv.FormatBool(doorClosed),
-		})
+		// Prepare and send EdgeX command. Depending on the state of the door, this message may trigger a CV inference
+		settings := make(map[string]string)
+		settings["inferenceDoorStatus"] = strconv.FormatBool(doorClosed)
+		err = boardStatus.SendCommand(lc, http.MethodPut, boardStatus.Configuration.InferenceDeviceName, boardStatus.Configuration.InferenceDoorStatusCmd,
+			settings)
 		if err != nil {
-			return fmt.Errorf("failed to submit the vending door state to the MQTT device service: %v", err.Error())
+			return fmt.Errorf("failed to submit the vending door state to the command client: %v", err.Error())
 		}
+	}
+
+	return nil
+}
+
+// SendCommand issues CommandClient GET and SET command calls, CommandClient takes care of http calls,
+// here the requirement are actionName, deviceName, commandName and settings, logger client is needed for logging
+func (boardStatus *CheckBoardStatus) SendCommand(lc logger.LoggingClient, actionName string, deviceName string,
+	commandName string, settings map[string]string) error {
+	lc.Debug("Sending Command")
+
+	switch actionName {
+	case http.MethodPut:
+		lc.Debugf("executing %s action", actionName)
+		lc.Debugf("Issuing SET command '%s' for device '%s'", commandName, deviceName)
+
+		response, err := boardStatus.CommandClient.IssueSetCommandByName(context.Background(), deviceName, commandName, settings)
+		if err != nil {
+			return fmt.Errorf("failed to issue '%s' set command to '%s' device: %s", commandName, deviceName, err.Error())
+		}
+
+		lc.Debugf("response status: %d", response.StatusCode)
+
+	case http.MethodGet:
+		lc.Debugf("executing %s action", actionName)
+		lc.Debugf("Issuing GET command '%s' for device '%s'", commandName, deviceName)
+		response, err := boardStatus.CommandClient.IssueGetCommandByName(context.Background(), deviceName, commandName, false, true)
+		if err != nil {
+			return fmt.Errorf("failed to issue '%s' get command to '%s' device: %s", commandName, deviceName, err.Error())
+		}
+		lc.Debugf("response status: %d", response.StatusCode)
+
+	default:
+		return errors.New("Invalid action requested: " + actionName)
 	}
 
 	return nil

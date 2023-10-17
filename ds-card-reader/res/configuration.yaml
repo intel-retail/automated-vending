@@ -1,0 +1,21 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+Writable:
+  LogLevel: INFO
+Service:
+  Host: localhost
+  Port: 48098
+  StartupMsg: Card Reader device service started
+DriverConfig:
+  DeviceName: card-reader
+  DeviceSearchPath: ''
+  VID: 0
+  PID: 0
+  SimulateDevice: true
+Device:
+  ProfilesDir: ./res/profiles
+  DevicesDir: ./res/devices
+MessageBus:
+  Optional:
+    ClientId: ds-card-reader
