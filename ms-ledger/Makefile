@@ -19,7 +19,7 @@ docker:
 		-t $(MICROSERVICE):dev \
 		.
 
-gobuild: tidy
+gobuild-ledger: tidy
 	CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -a main.go
 
 run:

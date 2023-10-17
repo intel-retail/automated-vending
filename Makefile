@@ -99,3 +99,17 @@ install-go-lint:
 
 hadolint: 
 	docker run --rm -v $(pwd):/repo -i hadolint/hadolint:latest-alpine sh -c "cd /repo && hadolint -f json ./**/Dockerfile" > go-hadolint.json
+
+gobuild-authentication:
+	cd ms-authentication && \
+	cp -r *.json .. && \
+	cp ./res/configuration.toml ../res/configuration.toml && \
+	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo main.go && \
+	cp main ..
+
+gobuild-ledger:
+	cd ms-ledger && \
+	cp -r *.json .. && \
+	cp ./res/configuration.toml ../res/configuration.toml && \
+	CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -a -installsuffix cgo main.go && \
+	cp main ..
