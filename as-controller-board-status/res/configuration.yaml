@@ -1,0 +1,46 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+Writable:
+  LogLevel: INFO
+
+Service:
+  Host: localhost
+  Port: 48094
+  StartupMsg: This EdgeX application service reads events from a controller board device service and propagates the information from the controller board to other services and API endpoints
+
+Clients:
+  support-notifications:
+    Protocol: http
+    Host: localhost
+    Port: 59860
+
+  core-command:
+    Protocol: "http"
+    Host: "localhost"
+    Port: 59882
+
+MessageBus:
+  Optional:
+    ClientId: as-controller-board-status
+
+ControllerBoardStatus:
+  AverageTemperatureMeasurementDuration: -15s
+  DeviceName: controller-board
+  MaxTemperatureThreshold: 83.0
+  MinTemperatureThreshold: 10.0
+  InferenceDeviceName: "Inference-device"
+  InferenceDoorStatusCmd: "inferenceDoorStatus"
+  NotificationCategory: HW_HEALTH
+  NotificationEmailAddresses: your-email@site.com
+  NotificationLabels: HW_HEALTH
+  NotificationReceiver: SystemAdministrator
+  NotificationSender: AutomatedVendingMaintenanceNotification
+  NotificationSeverity: CRITICAL
+  NotificationName: maintenance-notification
+  NotificationSubscriptionMaxRESTRetries: 10
+  NotificationSubscriptionRESTRetryIntervalDuration: 10s
+  NotificationThrottleDuration: 1m
+  SubscriptionAdminState: UNLOCKED
+  RESTCommandTimeoutDuration: 15s
+  VendingEndpoint: http://localhost:59860/boardStatus

@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -31,19 +30,16 @@ func main() {
 	flag.Parse()
 
 	//Read skuMappingJSON
-	skuMappingJSONFile, err := os.Open(*skuMapping)
+	skuMappingJSONByte, err := os.ReadFile(*skuMapping)
 	if err != nil {
 		fmt.Printf("Error reading from SKU Mapping file: %v\n", *skuMapping)
 		os.Exit(1)
 	}
-	defer skuMappingJSONFile.Close()
-
-	skuMappingJSONByte, _ := ioutil.ReadAll(skuMappingJSONFile)
 
 	inferenceInit(*directory, *model, *configFile, *confidence, skuMappingJSONByte)
 
 	mqttConnection := mqtt.NewMqttConnection(*mqttAddress)
-	mqttConnection.SubscribeToAutomatedCheckout()
+	mqttConnection.SubscribeToAutomatedVending()
 	defer mqttConnection.Disconnect()
 
 	inference.Stream = mjpeg.NewStream()
@@ -56,17 +52,13 @@ func main() {
 }
 
 func updateMjpegServer() {
-
 	for img := range inference.StreamChannel {
 		buf, err := gocv.IMEncode(".jpg", img)
 		if err != nil {
 			fmt.Println("error on IMEncode JPG with image: ", err.Error())
 			os.Exit(1)
 		}
-		defer buf.Close()
-
-		inference.Stream.UpdateJPEG(buf.GetBytes())
-
+		inference.Stream.UpdateJPEG(buf)
 	}
 }
 

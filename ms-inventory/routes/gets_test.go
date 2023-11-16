@@ -1,16 +1,15 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gorilla/mux"
@@ -42,7 +41,7 @@ func TestInventoryGet(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadInventory {
-				err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
+				err := os.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteInventory()
@@ -94,7 +93,7 @@ func TestInventoryItemGet(t *testing.T) {
 
 			if currentTest.WriteInventory {
 				if currentTest.BadInventory {
-					err := ioutil.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
+					err := os.WriteFile(c.inventoryFileName, []byte("invalid json test"), 0644)
 					require.NoError(t, err)
 				} else {
 					err := c.WriteInventory()
@@ -145,7 +144,7 @@ func TestAuditLogGetAll(t *testing.T) {
 			require.NoError(t, err)
 
 			if currentTest.BadAuditLog {
-				err := ioutil.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
+				err := os.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
 				require.NoError(t, err)
 			} else {
 				err := c.WriteAuditLog()
@@ -201,7 +200,7 @@ func TestAuditLogGetEntry(t *testing.T) {
 
 			if currentTest.WriteAuditLog {
 				if currentTest.BadAuditLog {
-					err := ioutil.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
+					err := os.WriteFile(c.auditLogFileName, []byte("invalid json test"), 0644)
 					require.NoError(t, err)
 				} else {
 					err := c.WriteAuditLog()

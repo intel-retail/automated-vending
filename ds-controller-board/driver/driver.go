@@ -1,21 +1,21 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package driver
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"ds-controller-board/device"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/device-sdk-go/v2/pkg/service"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	"github.com/pkg/errors"
+	"github.com/edgexfoundry/device-sdk-go/v3/pkg/interfaces"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
 
 const (
@@ -42,30 +42,28 @@ type ControllerBoardDriver struct {
 	displayTimeout time.Duration
 	lockTimeout    time.Duration
 
-	svc *service.DeviceService
+	svc interfaces.DeviceServiceSDK
 }
 
 // NewControllerBoardDeviceDriver allows EdgeX to initialize the
 // ControllerBoardDriver instance
-func NewControllerBoardDeviceDriver() dsModels.ProtocolDriver {
+func NewControllerBoardDeviceDriver() interfaces.ProtocolDriver {
+
 	return new(ControllerBoardDriver)
 }
 
 // Initialize is an EdgeX function that initializes the device
-func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh chan<- *dsModels.AsyncValues, deviceCh chan<- []dsModels.DiscoveredDevice) (err error) {
-	drv.lc = lc
+func (drv *ControllerBoardDriver) Initialize(sdk interfaces.DeviceServiceSDK) (err error) {
+	drv.svc = sdk
+	drv.lc = sdk.LoggingClient()
 
 	// Only setting if nil allows for unit testing with VirtualBoard enabled
 	if drv.config == nil {
-		drv.svc = service.RunningService()
-		if drv.svc == nil {
-			return errors.New("custom controller board driver service is null")
-		}
 		drv.config = &device.ServiceConfig{}
 
 		err := drv.svc.LoadCustomConfig(drv.config, "DriverConfig")
 		if err != nil {
-			return errors.Wrap(err, "custom driver configuration failed to load")
+			return fmt.Errorf("custom driver configuration failed to load: %w", err)
 		}
 		drv.displayTimeout, drv.lockTimeout, err = drv.config.Validate()
 		if err != nil {
@@ -78,7 +76,7 @@ func (drv *ControllerBoardDriver) Initialize(lc logger.LoggingClient, asyncCh ch
 
 	drv.StopChannel = make(chan int)
 
-	drv.controllerBoard, err = device.NewControllerBoard(lc, asyncCh, &drv.config.DriverConfig)
+	drv.controllerBoard, err = device.NewControllerBoard(drv.lc, sdk.AsyncValuesChannel(), &drv.config.DriverConfig)
 	if err != nil {
 		return err
 	}
@@ -274,7 +272,22 @@ func (drv *ControllerBoardDriver) RemoveDevice(deviceName string, protocols map[
 	return nil
 }
 
-// Stop stops a device
+// Stops the device driver
 func (drv *ControllerBoardDriver) Stop(force bool) error {
+	return nil
+}
+
+// Discover new devices
+func (drv *ControllerBoardDriver) Discover() error {
+	return errors.New("driver's Discover function isn't implemented")
+}
+
+// Starts the device driver
+func (drv *ControllerBoardDriver) Start() error {
+	return nil
+}
+
+// Validates new devices before adding it
+func (drv *ControllerBoardDriver) ValidateDevice(device models.Device) error {
 	return nil
 }

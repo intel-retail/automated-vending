@@ -1,17 +1,17 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/stretchr/testify/require"
 )
 
@@ -69,8 +69,11 @@ func TestGetAllLedgers(t *testing.T) {
 	accountLedgers := getDefaultAccountLedgers()
 
 	// Write the ledger
-	err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+	data, err := json.Marshal(accountLedgers)
 	require.NoError(err)
+	err = os.WriteFile(c.ledgerFileName, data, 0644)
+	require.NoError(err)
+
 	defer func() {
 		os.Remove(c.ledgerFileName)
 	}()
@@ -104,7 +107,9 @@ func TestDeleteAllLedgers(t *testing.T) {
 	expectedLedger := Accounts{Data: []Account{}}
 
 	// Write the ledger
-	err := utilities.WriteToJSONFile(c.ledgerFileName, &accountLedgers, 0644)
+	data, err := json.Marshal(accountLedgers)
+	require.NoError(err)
+	err = os.WriteFile(c.ledgerFileName, data, 0644)
 	require.NoError(err)
 	defer func() {
 		os.Remove(c.ledgerFileName)

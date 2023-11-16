@@ -1,0 +1,15 @@
+# Copyright © 2023 Intel Corporation. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+
+# Pre-define Devices
+deviceList:
+  - name: controller-board
+    profileName: ds-controller-board
+    protocols:
+      other:
+        Address: ds-controller-board
+        Port: 48097
+    autoEvents:
+      - interval: 3s
+        onChange: true
+        sourceName: controller-board-status

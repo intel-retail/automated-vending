@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -11,9 +11,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 )
 
 type Controller struct {
@@ -55,8 +54,16 @@ func (c *Controller) AddAllRoutes() error {
 // GetMaintenanceMode will return a JSON response containing the boolean state
 // of the vendingState's maintenance mode.
 func (c *Controller) GetMaintenanceMode(writer http.ResponseWriter, req *http.Request) {
-	mm, _ := utilities.GetAsJSON(functions.MaintenanceMode{MaintenanceMode: c.vendingState.MaintenanceMode})
-	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, mm, false)
+
+	mm, err := json.Marshal(functions.MaintenanceMode{MaintenanceMode: c.vendingState.MaintenanceMode})
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to marshal requested state: %s", err.Error())
+		c.lc.Error(errMsg)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(errMsg))
+		return
+	}
+	writer.Write(mm)
 }
 
 func (c *Controller) errorAddRouteHandler(err error) error {
@@ -137,10 +144,10 @@ func (c *Controller) BoardStatus(writer http.ResponseWriter, req *http.Request) 
 		c.vendingState.MaintenanceMode = true
 	}
 
-	// Check to see if the board closed state is different than the previous state. If it is we need to update the state and
+	// Check to see if the board closed state is different from the previous state. If it is we need to update the state and
 	// set the related properties.
 	if c.vendingState.DoorClosed != boardStatus.DoorClosed {
-		c.lc.Errorf("Successfully updated the door event. Door closed: %v", boardStatus.DoorClosed)
+		c.lc.Infof("Successfully updated the door event. Door closed: %v", boardStatus.DoorClosed)
 		returnval = string("Door closed change event was received ")
 		status = http.StatusOK //FIXME: This is an issue
 		c.vendingState.DoorClosed = boardStatus.DoorClosed

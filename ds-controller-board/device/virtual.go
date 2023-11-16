@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 )
 
 // ControllerBoardVirtual is a virtualized controller board that locally handles

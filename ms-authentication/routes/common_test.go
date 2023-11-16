@@ -1,14 +1,13 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
-	"io/ioutil"
+	"os"
 	"strconv"
 	"testing"
 
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,8 +21,7 @@ func TestWritePeople(t *testing.T) {
 	writePeople := expectedPeople.WritePeople()
 	require.NoError(writePeople, "Failed WritePeople() function")
 
-	actualPeople := People{}
-	loadJSONFileErr := utilities.LoadFromJSONFile(PeopleFileName, &actualPeople)
+	actualPeople, loadJSONFileErr := GetPeopleData()
 	require.NoError(loadJSONFileErr, "Failed to load people from file")
 
 	assert.Equal(t, expectedPeople, actualPeople, "Output JSON content mismatch in "+PeopleFileName)
@@ -159,7 +157,7 @@ func TestDeletePeople(t *testing.T) {
 	assert.NoError(t, deleteErr, "Failed DeletePeople() function")
 
 	actualPeople := People{People: []Person{}}
-	loadJSONFileErr := utilities.LoadFromJSONFile(PeopleFileName, &actualPeople)
+	actualPeople, loadJSONFileErr := GetPeopleData()
 	require.NoError(t, loadJSONFileErr, "Failed to load people from file")
 
 	assert.Equal(t, actualPeople, People{People: []Person{}}, "Output JSON content mismatch in "+PeopleFileName)
@@ -171,7 +169,7 @@ func TestGetPeopleDataError(t *testing.T) {
 	writePeople := expectedPeople.WritePeople()
 	require.NoError(t, writePeople, "Failed WritePeople() function")
 
-	writeErr := ioutil.WriteFile(PeopleFileName, []byte("invalid json test"), 0644)
+	writeErr := os.WriteFile(PeopleFileName, []byte("invalid json test"), 0644)
 	require.NoError(t, writeErr, "Failed to write to test file")
 	_, err := GetPeopleData()
 	assert.Error(t, err, "Expected failure calling GetPeopleData() for invalid JSON contents but did not get one")
@@ -187,8 +185,7 @@ func TestWriteAccounts(t *testing.T) {
 	require.NoError(writeAccounts, "Failed WriteAccounts() function")
 
 	// load accounts from file to validate
-	accountsFromFile := Accounts{}
-	loadJSONFileErr := utilities.LoadFromJSONFile(AccountsFileName, &accountsFromFile)
+	accountsFromFile, loadJSONFileErr := GetAccountsData()
 	require.NoError(loadJSONFileErr, "Failed to load accounts from file")
 
 	assert.Equal(t, expectedAccounts, accountsFromFile, "Output JSON content mismatch in "+AccountsFileName)
@@ -387,8 +384,7 @@ func TestDeleteAccounts(t *testing.T) {
 	assert.NoError(t, deleteErr, "Failed DeleteAccounts() function")
 
 	// load accounts from file to validate
-	accountsFromFile := Accounts{Accounts: []Account{}}
-	loadJSONFileErr := utilities.LoadFromJSONFile(AccountsFileName, &accountsFromFile)
+	accountsFromFile, loadJSONFileErr := GetAccountsData()
 	require.NoError(t, loadJSONFileErr, "Failed to load accounts from file")
 
 	assert.Equal(t, accountsFromFile, Accounts{Accounts: []Account{}}, "Output JSON content mismatch in "+AccountsFileName)
@@ -400,7 +396,7 @@ func TestGetAccountsDataError(t *testing.T) {
 	writeAccounts := expectedAccounts.WriteAccounts()
 	require.NoError(t, writeAccounts, "Failed WriteAccounts() function")
 
-	writeErr := ioutil.WriteFile(AccountsFileName, []byte("invalid json test"), 0644)
+	writeErr := os.WriteFile(AccountsFileName, []byte("invalid json test"), 0644)
 	require.NoError(t, writeErr, "Failed to write to test file")
 	_, err := GetAccountsData()
 	assert.Error(t, err, "Expected failure calling GetAccountsData() for invalid JSON contents but did not get one")
@@ -416,8 +412,7 @@ func TestWriteCards(t *testing.T) {
 	require.NoError(writeCards, "Failed WriteCards() function")
 
 	// load cards from file to validate
-	cardsFromFile := Cards{}
-	loadJSONFileErr := utilities.LoadFromJSONFile(CardsFileName, &cardsFromFile)
+	cardsFromFile, loadJSONFileErr := GetCardsData()
 	require.NoError(loadJSONFileErr, "Failed to load cards from file")
 
 	assert.Equal(t, expectedCards, cardsFromFile, "Output JSON content mismatch in "+CardsFileName)
@@ -557,8 +552,7 @@ func TestDeleteCards(t *testing.T) {
 	require.NoError(deleteErr, "Failed DeleteCards() function")
 
 	// load cards from file to validate
-	cardsFromFile := Cards{Cards: []Card{}}
-	loadJSONFileErr := utilities.LoadFromJSONFile(CardsFileName, &cardsFromFile)
+	cardsFromFile, loadJSONFileErr := GetCardsData()
 	require.NoError(loadJSONFileErr, "Failed to load cards from file")
 
 	assert.Equal(t, cardsFromFile, Cards{Cards: []Card{}}, "Output JSON content mismatch in "+CardsFileName)
@@ -570,7 +564,7 @@ func TestGetCardsDataError(t *testing.T) {
 	writeCards := expectedCards.WriteCards()
 	require.NoError(t, writeCards, "Failed WriteCards() function")
 
-	writeErr := ioutil.WriteFile(CardsFileName, []byte("invalid json test"), 0644)
+	writeErr := os.WriteFile(CardsFileName, []byte("invalid json test"), 0644)
 	require.NoError(t, writeErr, "Failed to write to test file")
 	_, err := GetCardsData()
 	assert.Error(t, err, "Expected failure calling GetCardsData() for invalid JSON contents but did not get one")

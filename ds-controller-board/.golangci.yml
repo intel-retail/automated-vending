@@ -1,4 +1,4 @@
-# Copyright © 2022 Intel Corporation. All rights reserved.
+# Copyright © 2023 Intel Corporation. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 run:
   # timeout for analysis, e.g. 30s, 5m, default is 1m

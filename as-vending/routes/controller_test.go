@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
@@ -9,13 +9,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -92,10 +92,13 @@ func TestGetMaintenanceMode(t *testing.T) {
 
 		// parse the response
 		resp := w.Result()
-		_, err := utilities.ParseJSONHTTPResponseContent(resp.Body, &maintModeAPIResponse)
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		defer resp.Body.Close()
+		err = json.Unmarshal(body, &maintModeAPIResponse)
+		require.NoError(t, err)
+
 		assert.Equal(t, maintModeAPIResponse, maintModeTrue, "Received a maintenance mode response that was different than anticipated")
 	})
 	t.Run("TestGetMaintenanceMode MaintenanceMode=False", func(t *testing.T) {
@@ -113,10 +116,12 @@ func TestGetMaintenanceMode(t *testing.T) {
 
 		// parse the response
 		resp := w.Result()
-		_, err := utilities.ParseJSONHTTPResponseContent(resp.Body, &maintModeAPIResponse)
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		defer resp.Body.Close()
+		err = json.Unmarshal(body, &maintModeAPIResponse)
+		require.NoError(t, err)
 		assert.Equal(t, maintModeAPIResponse, maintModeFalse, "Received a maintenance mode response that was different than anticipated")
 	})
 }

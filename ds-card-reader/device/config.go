@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -8,7 +8,7 @@ type ServiceConfig struct {
 	DriverConfig Config
 }
 
-// DriverConfig holds the configurable options for a automated checkout
+// DriverConfig holds the configurable options for an automated vending solution
 // card reader device
 type Config struct {
 	DeviceName       string

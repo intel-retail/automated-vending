@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces"
 )
 
 // ControllerBoardStatusAppSettings is a data structure that holds the
@@ -19,7 +19,6 @@ type ControllerBoardStatusAppSettings struct {
 	DeviceName                                string
 	MaxTemperatureThreshold                   float64
 	MinTemperatureThreshold                   float64
-	DoorStatusCommandEndpoint                 string
 	NotificationCategory                      string
 	NotificationEmailAddresses                []string
 	NotificationLabels                        []string
@@ -70,6 +69,7 @@ type CheckBoardStatus struct {
 	Configuration                             *config.ControllerBoardStatusConfig
 	SubscriptionClient                        interfaces.SubscriptionClient
 	NotificationClient                        interfaces.NotificationClient
+	CommandClient                             interfaces.CommandClient
 	ControllerBoardStatus                     *ControllerBoardStatus
 	averageTemperatureMeasurement             time.Duration
 	notificationSubscriptionRESTRetryInterval time.Duration
@@ -77,15 +77,6 @@ type CheckBoardStatus struct {
 	restCommandTimeout                        time.Duration
 	notificationEmailAddresses                []string
 	notificationLabels                        []string
-}
-
-// VendingDoorStatus is a string representation of a boolean whose state corresponds
-// to the whether the doorClosed state is true or false. This data is sent
-// to the MQTT device service for processing by the Automated Checkout inference
-// algorithm, which will act if the door state flips from open (false) to
-// closed (true).
-type VendingDoorStatus struct {
-	VendingDoorStatus string `json:"inferenceDoorStatus"` // TODO: remove inference and rename to vendingDoorStatus
 }
 
 func (checkBoardStatus *CheckBoardStatus) ParseStringConfigurations() error {

@@ -35,7 +35,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/as-vending:dev'
+            image-ref: 'automated-vending/as-vending:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-as-vending.sarif'
@@ -64,7 +64,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/as-controller-board-status:dev'
+            image-ref: 'automated-vending/as-controller-board-status:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-as-controller-board-status.sarif'
@@ -93,7 +93,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/ds-card-reader:dev'
+            image-ref: 'automated-vending/ds-card-reader:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-ds-card-reader.sarif'
@@ -122,7 +122,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/ds-controller-board:dev'
+            image-ref: 'automated-vending/ds-controller-board:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-ds-controller-board.sarif'
@@ -151,7 +151,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/ms-authentication:dev'
+            image-ref: 'automated-vending/ms-authentication:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-ms-authentication.sarif'
@@ -180,7 +180,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/ms-inventory:dev'
+            image-ref: 'automated-vending/ms-inventory:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-ms-inventory.sarif'
@@ -209,7 +209,7 @@ jobs:
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
           with:
-            image-ref: 'automated-checkout/ms-ledger:dev'
+            image-ref: 'automated-vending/ms-ledger:dev'
             format: 'template'
             template: '@/contrib/sarif.tpl'
             output: 'trivy-results-ms-ledger.sarif'

@@ -1,13 +1,13 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package routes
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	utilities "github.com/intel-iot-devkit/automated-checkout-utilities"
 )
 
 // AuthenticationGet accepts a 10-character URL parameter in the form:
@@ -20,7 +20,8 @@ func (c *Controller) AuthenticationGet(writer http.ResponseWriter, req *http.Req
 	// check if the passed cardID is valid
 	if cardID == "" || len(cardID) != 10 {
 		c.lc.Infof("Please pass in a 10-character card ID as a URL parameter, like this: /authentication/0001230001")
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusBadRequest, "Please pass in a 10-character card ID as a URL parameter, like this: /authentication/0001230001", false)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write([]byte("Please pass in a 10-character card ID as a URL parameter, like this: /authentication/0001230001"))
 		return
 	}
 
@@ -28,20 +29,23 @@ func (c *Controller) AuthenticationGet(writer http.ResponseWriter, req *http.Req
 	cards, err := GetCardsData()
 	if err != nil {
 		c.lc.Errorf("Failed to read authentication data: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to read authentication data", true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("failed to read authentication data"))
 		return
 	}
 
 	// check if the card's ID matches our given cardID
 	card := cards.GetCardByCardID(cardID)
 	if card.CardID != cardID {
-		c.lc.Infof("CardID: %s is not an authorized card", cardID)
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusUnauthorized, "Card ID is not an authorized card", false)
+		c.lc.Infof("Card ID: %s is not an authorized card", cardID)
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("Card ID is not an authorized card"))
 		return
 	}
 	if !card.IsValid {
-		c.lc.Infof("CardID: %s is not an valid card", cardID)
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusUnauthorized, "Card ID is not a valid card", false)
+		c.lc.Infof("Card ID: %s is not an valid card", cardID)
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("Card ID is not a valid card"))
 		return
 	}
 
@@ -49,13 +53,15 @@ func (c *Controller) AuthenticationGet(writer http.ResponseWriter, req *http.Req
 	accounts, err := GetAccountsData()
 	if err != nil {
 		c.lc.Errorf("Failed to read accounts data: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to read accounts data", true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("failed to read accounts data"))
 		return
 	}
 	people, err := GetPeopleData()
 	if err != nil {
 		c.lc.Errorf("Failed to read people data: %s", err.Error())
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusInternalServerError, "Failed to read people data", true)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("failed to read people data"))
 		return
 	}
 
@@ -65,13 +71,15 @@ func (c *Controller) AuthenticationGet(writer http.ResponseWriter, req *http.Req
 	// check if the associated person is valid
 	person := people.GetPersonByPersonID(card.PersonID)
 	if person.PersonID != card.PersonID {
-		c.lc.Infof("CardID is associated with an unknown person %s", person.PersonID)
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusUnauthorized, "Card ID is associated with an unknown person", false)
+		c.lc.Infof("Card ID is associated with an unknown person %s", person.PersonID)
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("Card ID is associated with an unknown person"))
 		return
 	}
 	if !person.IsActive {
-		c.lc.Infof("CardID is associated with an inactive person %s", person.PersonID)
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusUnauthorized, "Card ID is associated with an inactive person", false)
+		c.lc.Infof("Card ID is associated with an inactive person %s", person.PersonID)
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("Card ID is associated with an inactive person"))
 		return
 	}
 
@@ -81,20 +89,26 @@ func (c *Controller) AuthenticationGet(writer http.ResponseWriter, req *http.Req
 	// check if the associated account is valid
 	account := accounts.GetAccountByAccountID(person.AccountID)
 	if account.AccountID != person.AccountID {
-		c.lc.Infof("CardID is associated with an unknown account %s", person.AccountID)
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusUnauthorized, "Card ID is associated with an unknown account", false)
+		c.lc.Infof("Card ID is associated with an unknown account %s", person.AccountID)
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("Card ID is associated with an unknown account"))
 		return
 	}
 	if !account.IsActive {
-		c.lc.Infof("CardID is associated with an inactive account %s", person.AccountID)
-		utilities.WriteStringHTTPResponse(writer, req, http.StatusUnauthorized, "Card ID is associated with an inactive account", false)
+		c.lc.Infof("Card ID is associated with an inactive account %s", person.AccountID)
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("Card ID is associated with an inactive account"))
 		return
 	}
 
 	// store the accountID in the output AuthData
 	authData.AccountID = account.AccountID
 
-	authDataJSON, _ := utilities.GetAsJSON(authData)
+	authDataJSON, err := json.Marshal(authData)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte("failed to marshal authentication data"))
+	}
 
 	// Because of how type-safe Go is, it's actually impossible to
 	// reach this error condition based on how this function is written
@@ -105,5 +119,5 @@ func (c *Controller) AuthenticationGet(writer http.ResponseWriter, req *http.Req
 	// as fact)
 
 	c.lc.Infof("Successfully authenticated person and card")
-	utilities.WriteJSONHTTPResponse(writer, req, http.StatusOK, authDataJSON, false)
+	writer.Write(authDataJSON)
 }

@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2022-2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package config
@@ -19,7 +19,8 @@ type ControllerBoardStatusConfig struct {
 	DeviceName                                        string
 	MaxTemperatureThreshold                           float64
 	MinTemperatureThreshold                           float64
-	DoorStatusCommandEndpoint                         string
+	InferenceDeviceName                               string
+	InferenceDoorStatusCmd                            string
 	NotificationCategory                              string
 	NotificationEmailAddresses                        string
 	NotificationLabels                                string

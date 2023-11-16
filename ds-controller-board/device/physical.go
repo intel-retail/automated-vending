@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package device
@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	dsModels "github.com/edgexfoundry/device-sdk-go/v2/pkg/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	dsModels "github.com/edgexfoundry/device-sdk-go/v3/pkg/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	edgexcommon "github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"go.bug.st/serial.v1"
 	"go.bug.st/serial.v1/enumerator"
@@ -21,7 +21,7 @@ const (
 	deviceResource = "controller-board-status"
 )
 
-//ControllerBoardPhysical : A physical ControllerBoard that leverages an Arduino Micro-Controller for reading/writing sensor and input values.
+// ControllerBoardPhysical : A physical ControllerBoard that leverages an Arduino Micro-Controller for reading/writing sensor and input values.
 type ControllerBoardPhysical struct {
 	AsyncCh       chan<- *dsModels.AsyncValues
 	DevStatus     string // uC -> Host : STATUS,L1,0,L2,0,D,0,T,78.58,H,19.54
@@ -112,12 +112,12 @@ func (board *ControllerBoardPhysical) Read() {
 	}
 }
 
-//GetStatus : Returns the ControllerBoard's JSON 'DevStatus' field as a String.
+// GetStatus : Returns the ControllerBoard's JSON 'DevStatus' field as a String.
 func (board *ControllerBoardPhysical) GetStatus() string {
 	return board.DevStatus
 }
 
-//FindControllerBoard : Finds the ControllerBoards TTY URI (e.g. /dev/ttyACM0) based off of its PID and VID values.
+// FindControllerBoard : Finds the ControllerBoards TTY URI (e.g. /dev/ttyACM0) based off of its PID and VID values.
 func FindControllerBoard(vid string, pid string) (string, error) {
 	ports, err := enumerator.GetDetailedPortsList()
 	if err != nil {
@@ -135,7 +135,7 @@ func FindControllerBoard(vid string, pid string) (string, error) {
 	return "", fmt.Errorf("no USB port found matching VID=%s & PID=%s", vid, pid)
 }
 
-//OpenAndConfigureSerialPort : Opens the TTY URI (e.g. /dev/ttyACM0) as a Serial connection with the appropriate configuration (e.g. baud-rate, parity, data-bits, stop-bits, etc.).
+// OpenAndConfigureSerialPort : Opens the TTY URI (e.g. /dev/ttyACM0) as a Serial connection with the appropriate configuration (e.g. baud-rate, parity, data-bits, stop-bits, etc.).
 func OpenAndConfigureSerialPort(ttyPort string) (serial.Port, error) {
 	port, err := serial.Open(ttyPort, &serial.Mode{})
 

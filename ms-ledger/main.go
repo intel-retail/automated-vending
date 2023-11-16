@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package main
@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/edgexfoundry/app-functions-sdk-go/v2/pkg"
+	"github.com/edgexfoundry/app-functions-sdk-go/v3/pkg"
 )
 
 const (
@@ -52,15 +52,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	controller := routes.NewController(lc, service, inventoryEndpoint,ledgerFileName)
+	controller := routes.NewController(lc, service, inventoryEndpoint, ledgerFileName)
 	err = controller.AddAllRoutes()
 	if err != nil {
 		lc.Errorf("failed to add all Routes: %s", err.Error())
 		os.Exit(1)
 	}
 
-	if err := service.MakeItRun(); err != nil {
-		lc.Errorf("MakeItRun returned error: %s", err.Error())
+	if err := service.Run(); err != nil {
+		lc.Errorf("Run returned error: %s", err.Error())
 		os.Exit(1)
 	}
 

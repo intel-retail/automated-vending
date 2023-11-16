@@ -1,4 +1,4 @@
-// Copyright © 2022 Intel Corporation. All rights reserved.
+// Copyright © 2023 Intel Corporation. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 
 package functions
@@ -20,7 +20,6 @@ const (
 	DeviceName                                = "DeviceName"
 	MaxTemperatureThreshold                   = "MaxTemperatureThreshold"
 	MinTemperatureThreshold                   = "MinTemperatureThreshold"
-	DoorStatusCommandEndpoint                 = "DoorStatusCommandEndpoint"
 	NotificationCategory                      = "NotificationCategory"
 	NotificationEmailAddresses                = "NotificationEmailAddresses"
 	NotificationLabels                        = "NotificationLabels"
@@ -43,12 +42,13 @@ func GetCommonSuccessConfig() *config.ControllerBoardStatusConfig {
 		DeviceName:                                        "controller-board",
 		MaxTemperatureThreshold:                           83.0,
 		MinTemperatureThreshold:                           10.0,
-		DoorStatusCommandEndpoint:                         "http://localhost:48082/api/v2/device/name/Inference-device/vendingDoorStatus",
+		InferenceDeviceName:                               "Inference-device",
+		InferenceDoorStatusCmd:                            "inferenceDoorStatus",
 		NotificationCategory:                              "HW_HEALTH",
 		NotificationEmailAddresses:                        "test@site.com,test@site.com",
 		NotificationLabels:                                "HW_HEALTH",
 		NotificationReceiver:                              "System Administrator",
-		NotificationSender:                                "Automated Checkout Maintenance Notification",
+		NotificationSender:                                "Automated Vending Maintenance Notification",
 		NotificationSeverity:                              "CRITICAL",
 		NotificationName:                                  "maintenance-notification",
 		NotificationSubscriptionMaxRESTRetries:            10,
@@ -166,7 +166,7 @@ func prepRESTCommandJSONTest() ([]testTableRESTCommandJSONStruct, []*httptest.Se
 				"test": make(chan bool),
 			},
 			HTTPTestServer: testServerStatusOK,
-			Output:         fmt.Errorf("failed to serialize the input interface as JSON: Failed to marshal into JSON string: json: unsupported type: chan bool"),
+			Output:         fmt.Errorf("failed to serialize the input interface as JSON: json: unsupported type: chan bool"),
 		})
 	output = append(output,
 		testTableRESTCommandJSONStruct{

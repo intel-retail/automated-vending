@@ -1,12 +1,12 @@
 # Phase 2 - Add Card Reader Device
 
-In [phase 1](./phase1.md), the scenarios presented a breakdown of the various modes, events, and services that are working together within the Automated Checkout reference implementation. Everything in phase 1 was simulated and all interactions were done via REST API calls.
+In [phase 1](./phase1.md), the scenarios presented a breakdown of the various modes, events, and services that are working together within the Automated Vending reference implementation. Everything in phase 1 was simulated and all interactions were done via REST API calls.
 
 Phase 2 will be mostly the same, except there will now be a physical card reader device. This device is actually just a keyboard that types 10 digits and then presses enter, which is what a common RFID card reader also might do.
 
 ## Setup
 
-If the Automated Checkout services are still running from phase 1, the services can stay running. The only service that will be terminated and re-created is `ds-card-reader` (which will be done as part of this guide).
+If the Automated Vending services are still running from phase 1, the services can stay running. The only service that will be terminated and re-created is `ds-card-reader` (which will be done as part of this guide).
 
 Start by removing the `ds-card-reader` service. In order to do this, first identify the container's name using this command:
 
@@ -21,7 +21,7 @@ docker rm -f container_name_or_id_from_previous_command
 ```
 
 !!! note
-    If you encounter any issues with the `ds-card-reader` later in this guide, consider cleaning up all of the Automated Checkout services. The best way to guarantee a clean run through of this phase is to tear down any existing Automated Checkout environment and start from fresh. This can be accomplished by running the following steps.
+    If you encounter any issues with the `ds-card-reader` later in this guide, consider cleaning up all of the Automated Vending services. The best way to guarantee a clean run through of this phase is to tear down any existing Automated Vending environment and start from fresh. This can be accomplished by running the following steps.
 
     Navigate to the root of this repository - this can vary based on where you chose to clone the repository:
 
@@ -35,7 +35,7 @@ docker rm -f container_name_or_id_from_previous_command
     make down && make clean-docker
     ```
 
-    This will destroy any existing ledger entries, audit log entries, inventory changes, and EdgeX event readings and data associated with Automated Checkout. However, this will not alter any other non-Automated Checkout Docker images, containers, or volumes. The scope of the above command is limited to only Automated Checkout.
+    This will destroy any existing ledger entries, audit log entries, inventory changes, and EdgeX event readings and data associated with Automated Vending. However, this will not alter any other non-Automated Vending Docker images, containers, or volumes. The scope of the above command is limited to only Automated Vending.
 
 ## Plug in the card reader device
 
@@ -62,7 +62,7 @@ Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 The particular _vendor ID_ and _product ID_ are spelled out clearly for each USB device. The card reader input device itself has been plugged in and has the vendor ID `ffff` and the product ID `0035`.
 
 !!! note
-    The VID and PID values are hexadecimal, base 16. A value of `ffff` is equal to `65535` in decimal, base 10, and `0035` in base 16 is equal to `53` in base 10. The configuration files in the Automated Checkout reference implementation device services may require some conversion between the two. If needed, consider searching online for a hexadecimal to decimal conversion calculator to make the process easier.
+    The VID and PID values are hexadecimal, base 16. A value of `ffff` is equal to `65535` in decimal, base 10, and `0035` in base 16 is equal to `53` in base 10. The configuration files in the Automated Vending reference implementation device services may require some conversion between the two. If needed, consider searching online for a hexadecimal to decimal conversion calculator to make the process easier.
 
 Once the VID and PID have been identified, the next step is to configure the `ds-card-reader` device service to grab that device and listen for input events.
 
@@ -141,9 +141,9 @@ ds-card-reader:
     DRIVERCONFIG_PID: 53    # 0x0035
 ```
 
-## Run the Automated Checkout reference implementation
+## Run the Automated Vending reference implementation
 
-Run the Automated Checkout reference implementation with the physical card reader component included:
+Run the Automated Vending reference implementation with the physical card reader component included:
 
 ```bash
 make run-physical-card-reader
@@ -162,7 +162,7 @@ For example, in [phase 1](./phase1.md#walkthrough-of-scenarios), the card number
 
 ## Dive deeper
 
-Now that the card reader is working with a physical device, it may be time to make some changes to the underlying authentication data to allow your own cards to authenticate. The following sections illustrate the steps needed in order to extend the Automated Checkout reference implementation to work with your cards.
+Now that the card reader is working with a physical device, it may be time to make some changes to the underlying authentication data to allow your own cards to authenticate. The following sections illustrate the steps needed in order to extend the Automated Vending reference implementation to work with your cards.
 
 ### Extending the card reader
 
@@ -189,9 +189,9 @@ The `ms-authentication` microservice contains an index of all cards, accounts, a
 
 First, navigate to the `ms-authentication` directory in the root of the repository. These three `.json` files dictate the `ms-authentication` service's behavior:
 
-- [`people.json`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-authentication/people.json)
-- [`accounts.json`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-authentication/accounts.json)
-- [`cards.json`](https://github.com/intel-iot-devkit/automated-checkout/blob/master/ms-authentication/cards.json)
+- [`people.json`](https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/people.json)
+- [`accounts.json`](https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/accounts.json)
+- [`cards.json`](https://github.com/intel-retail/automated-vending/tree/main/ms-authentication/cards.json)
 
 In this case, we're only going to add a new card and associate it with the person with ID 1. A typical card will look like this:
 
@@ -241,7 +241,7 @@ make ds-card-reader
 
 ### Running the updated service
 
-If the Automated Checkout services are already running, the best way to update the running `ms-authentication` service is to remove the `ms-authentication` container and then re-run the command to bring up the whole stack.
+If the Automated Vending services are already running, the best way to update the running `ms-authentication` service is to remove the `ms-authentication` container and then re-run the command to bring up the whole stack.
 
 First, remove the `ms-authentication` container:
 
@@ -274,7 +274,7 @@ make run-physical-card-reader
     make run-physical-card-reader
     ```
 
-    If there are still issues, consider completely cleaning the Automated Checkout containers and volumes by running
+    If there are still issues, consider completely cleaning the Automated Vending containers and volumes by running
 
     ```
     make down && make clean-docker
@@ -293,4 +293,4 @@ The `ds-card-reader` service should be listening for input events. If your card 
 
 ## Summary
 
-The usage of a physical card reader device only requires a few changes from the simulated mode. In the `ds-card-reader` device service, the device's VID and PID are configured, the service's image gets rebuilt, and the service itself gets updated to use the new image. The device's interactions are captured by Go routines running in the device service itself, and EdgeX event readings are propagated throughout a handful of services to ensure a smooth Automated Checkout workflow.
+The usage of a physical card reader device only requires a few changes from the simulated mode. In the `ds-card-reader` device service, the device's VID and PID are configured, the service's image gets rebuilt, and the service itself gets updated to use the new image. The device's interactions are captured by Go routines running in the device service itself, and EdgeX event readings are propagated throughout a handful of services to ensure a smooth Automated Vending workflow.
