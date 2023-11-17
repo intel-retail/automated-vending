@@ -1,17 +1,6 @@
 version: 2
 updates:
-  # Maintain dependencies for npm modules
-  - package-ecosystem: "gomod"
-    directory: "/"
+  - package-ecosystem: "pip" # See documentation for possible values
+    directory: "/" # Location of package manifests
     schedule:
-      interval: "daily"
-
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: daily
-
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: daily
+      interval: "weekly"
