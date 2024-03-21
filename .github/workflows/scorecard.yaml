@@ -3,7 +3,7 @@
 # policy, and support documentation.
 
 name: Scorecard automated-vending
-on:
+on: workflow_dispatch  
   # For Branch-Protection check. Only the default branch is supported. See
   # https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection
   branch_protection_rule:
@@ -13,10 +13,7 @@ on:
   #   - cron: '34 11 * * 3'
   # push:
   #   branches: [ "main" ]
-  push:
-    branches:
-    - master
-  pull_request:
+
 
 # Declare default permissions as read only.
 permissions: read-all
