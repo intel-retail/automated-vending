@@ -1,8 +1,0 @@
-runner:
-  hadolint:
-    cmd: './bin/hadolint -c .github/.hadolint.yaml ./**/Dockerfile -f json | jq -f ".github/.rdjson.jq" -c | tee "$PWD"/scan_results/hadolintResults.txt'
-    format: rdjson
-    level: error # (optional. same as -level flag. [info,warning,error])
-  golangci-lint:
-    cmd: 'make go-lint | cat goLintResults.txct | tee "$PWD"/scan_results/goLintResults.txt'
-    format: golangci-lint
